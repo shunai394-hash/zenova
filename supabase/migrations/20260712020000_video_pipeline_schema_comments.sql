@@ -1,0 +1,59 @@
+-- =============================================================================
+-- Zenova 動画パイプライン — テーブル設計コメント（実行不要のドキュメント）
+--
+-- 目的: ProductInput / VideoResult と DB を対応づける設計メモ。
+-- 既存マイグレーションを壊さない。必要になったら ADD COLUMN で拡張する。
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- products
+-- ---------------------------------------------------------------------------
+-- id            uuid PK
+-- name          text          -- 商品名（既存 name / product_name）
+-- image         text          -- 画像URL（既存 image_url）
+-- url           text          -- 商品URL（既存 product_url）
+-- description   text
+-- category      text
+-- target        text
+-- selling_points jsonb        -- 将来: ProductInput.selling_points
+-- source        text          -- manual | url | amazon | rakuten | tiktok_shop
+-- user_id       uuid
+-- created_at    timestamptz
+-- updated_at    timestamptz
+
+-- ---------------------------------------------------------------------------
+-- videos（論理名）= public.generated_videos
+-- ---------------------------------------------------------------------------
+-- id             uuid PK
+-- user_id        uuid
+-- product_id     uuid REFERENCES products(id)
+-- video_url      text
+-- thumbnail_url  text
+-- status         text
+--   -- パイプライン UI: idle | analyzing | planning | generating | completed | failed
+--   -- 現行 DB:         pending | processing | completed | failed
+-- caption        text
+-- score          integer
+-- style          text
+-- duration_sec   integer
+-- video_plan     jsonb        -- VideoPlan
+-- analysis_result jsonb       -- AnalysisResult
+-- provider       text
+-- marketing_score integer     -- 投稿前AIマーケ診断 販売力 0–100
+-- conversion_score integer    -- 購入誘導 0–100
+-- ai_feedback    text         -- 診断サマリ
+-- created_at     timestamptz
+-- updated_at     timestamptz
+
+-- 将来の拡張例（未実行）:
+-- alter table public.generated_videos
+--   add column if not exists caption text,
+--   add column if not exists duration_sec integer,
+--   add column if not exists video_plan jsonb,
+--   add column if not exists analysis_result jsonb,
+--   add column if not exists provider text,
+--   add column if not exists marketing_score integer,
+--   add column if not exists conversion_score integer,
+--   add column if not exists ai_feedback text;
+
+select 1; -- no-op（コメント専用ファイルでも SQL として有効）
