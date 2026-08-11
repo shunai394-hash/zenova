@@ -9,7 +9,7 @@ import {
   parseNarrationInputFromBody,
 } from "@/lib/voice-narration";
 import { composeSalesVideo } from "@/lib/video-composer";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { requireAuthUser } from "@/lib/auth/session";
 import { checkVideoLimit, consumeVideoUsage } from "@/lib/usage";
 
 export const runtime = "nodejs";
@@ -25,15 +25,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await requireAuthUser();
+    if (!user) {
       return NextResponse.json(
-        { error: "ログインが必要です" },
+        { error: "ログインが必要です", login_url: "/login" },
         { status: 401 }
       );
     }

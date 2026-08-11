@@ -1535,18 +1535,31 @@ export default function Home() {
     setEnginePrepMessage(null);
     setError(null);
 
-    // 課金ゲート: Free / 上限超過 → /pricing。有料枠内はエンジン接続準備中（動画API未接続）
+    // 課金ゲート: 未ログインのみ /login。Free / 上限超過 → /pricing。有料枠内はエンジン接続準備中
     try {
-      const usageRes = await fetch("/api/usage");
+      const usageRes = await fetch("/api/usage", { credentials: "same-origin" });
       const usageData = await usageRes.json();
-      const plan = String(usageData?.plan ?? "free").toLowerCase();
-      const remaining = Number(usageData?.remaining ?? 0);
-      const authenticated = Boolean(usageData?.authenticated);
 
-      if (!authenticated) {
-        router.push("/login?next=/pricing");
+      // ネットワーク/API 障害時はログイン画面へ送らない
+      if (!usageRes.ok && usageData?.authenticated !== false) {
+        throw new Error(
+          typeof usageData?.error === "string"
+            ? usageData.error
+            : "利用状況の確認に失敗しました"
+        );
+      }
+
+      // 明示的に未ログインのときだけ誘導
+      if (usageData?.authenticated === false) {
+        router.push(
+          `/login?next=${encodeURIComponent("/analyze#generate-video")}`
+        );
         return;
       }
+
+      const plan = String(usageData?.plan ?? "free").toLowerCase();
+      const remaining = Number(usageData?.remaining ?? 0);
+
       if (plan === "free" || remaining <= 0) {
         router.push("/pricing");
         return;

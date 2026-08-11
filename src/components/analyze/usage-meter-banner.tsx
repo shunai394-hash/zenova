@@ -17,9 +17,9 @@ export function UsageMeterBanner({
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/usage");
+      const res = await fetch("/api/usage", { credentials: "same-origin" });
       const data = await res.json();
-      if (!res.ok && !data?.plan) {
+      if (!res.ok && data?.authenticated !== false && !data?.plan) {
         setError(
           typeof data?.error === "string"
             ? data.error
@@ -34,7 +34,14 @@ export function UsageMeterBanner({
         remaining: Number(data.remaining ?? 0),
         extra_credit: Number(data.extra_credit ?? 0),
       });
-      setAuthenticated(Boolean(data.authenticated));
+      // 明示的な false のときだけ未ログイン扱い（欠落で誤誘導しない）
+      setAuthenticated(
+        data?.authenticated === false
+          ? false
+          : data?.authenticated === true
+            ? true
+            : null
+      );
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

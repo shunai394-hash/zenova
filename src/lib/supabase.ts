@@ -1,9 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+} from "@/lib/supabase/env";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
+/**
+ * データアクセス用（anon）クライアント。
+ * 認証セッションには使わないこと。
+ * ログイン / OAuth は `@/lib/supabase/client` の createSupabaseBrowserClient を使う。
+ */
 export const supabase = createClient(
-  supabaseUrl,
-  supabaseKey
+  getSupabaseUrl(),
+  getSupabasePublishableKey()
 );

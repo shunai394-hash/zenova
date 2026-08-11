@@ -63,6 +63,7 @@ function CheckoutContent() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ plan_id: selected.id }),
       });
       const data = await res.json();

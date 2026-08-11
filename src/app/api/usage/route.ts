@@ -12,6 +12,7 @@ export const runtime = "nodejs";
  * 未ログイン時は Free（動画生成 0）として返す。
  */
 export async function GET() {
+  // Cookie セッション（Proxy 更新済み）からユーザーを解決
   const user = await getOptionalAuthUser();
 
   if (!user) {
