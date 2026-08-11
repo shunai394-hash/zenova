@@ -12,6 +12,7 @@ export function UsageMeterBanner({
   refreshToken?: number;
 }) {
   const [summary, setSummary] = useState<UsageSummary | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +35,11 @@ export function UsageMeterBanner({
         remaining: Number(data.remaining ?? 0),
         extra_credit: Number(data.extra_credit ?? 0),
       });
+      setEmail(
+        typeof data?.email === "string" && data.email.trim()
+          ? data.email.trim()
+          : null
+      );
       // 明示的な false のときだけ未ログイン扱い（欠落で誤誘導しない）
       setAuthenticated(
         data?.authenticated === false
@@ -126,6 +132,7 @@ export function UsageMeterBanner({
       )}
       <p className="mt-2 text-[11px] text-gray-600">
         プラン: {summary.plan || "—"}
+        {email ? ` · ログイン中: ${email}` : ""}
       </p>
     </div>
   );

@@ -26,6 +26,7 @@ export async function GET() {
       remaining: 0,
       extra_credit: 0,
       authenticated: false,
+      email: null,
     });
   }
 
@@ -54,6 +55,7 @@ export async function GET() {
       extra_credit: summary.extra_credit,
       authenticated: true,
       user_id: user.id,
+      email: user.email,
       ...(video_test_allowance ? { video_test_allowance: true } : {}),
     });
   } catch (error) {
@@ -66,6 +68,7 @@ export async function GET() {
       extra_credit: 0,
       authenticated: true,
       user_id: user.id,
+      email: user.email,
       error: error instanceof Error ? error.message : String(error),
     });
   }

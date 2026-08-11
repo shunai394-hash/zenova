@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { BRAND_NAME, NAV_LINKS } from "@/lib/landing/copy";
+import { AuthAccountStatus } from "@/components/auth-account-status";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="text-sm font-semibold tracking-[0.18em] text-white"
+          className="shrink-0 text-sm font-semibold tracking-[0.18em] text-white"
         >
           {BRAND_NAME}
         </Link>
@@ -29,6 +30,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
+        <div className="hidden md:block">
+          <AuthAccountStatus />
+        </div>
+
         <button
           type="button"
           className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-gray-300 md:hidden"
@@ -42,6 +47,9 @@ export function SiteHeader() {
 
       {open && (
         <nav className="border-t border-zinc-900 px-4 py-3 md:hidden">
+          <div className="mb-3 border-b border-zinc-900 pb-3">
+            <AuthAccountStatus />
+          </div>
           <ul className="space-y-2">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
