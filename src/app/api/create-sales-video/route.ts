@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     const image = String(body.image ?? body.image_base64 ?? "");
     const userId = user.id;
 
-    const limit = await checkVideoLimit(userId);
+    const limit = await checkVideoLimit(userId, { email: user.email });
     if (!limit.allowed) {
       const message =
         limit.code === "rate"
@@ -231,13 +231,17 @@ export async function POST(req: NextRequest) {
 
     // 成功かつ generated_videos 保存時のみカウント（失敗はカウントしない）
     if (result.success && result.steps?.saved) {
-      const consumed = await consumeVideoUsage(userId, {
-        product_id: result.product_id,
-        video_id: result.video_id,
-        video_url: result.video_url,
-        provider: result.provider,
-        watermark_applied: result.watermark_applied,
-      });
+      const consumed = await consumeVideoUsage(
+        userId,
+        {
+          product_id: result.product_id,
+          video_id: result.video_id,
+          video_url: result.video_url,
+          provider: result.provider,
+          watermark_applied: result.watermark_applied,
+        },
+        { email: user.email }
+      );
       if (!consumed.ok) {
         console.warn(
           "[create-sales-video] usage consume failed:",

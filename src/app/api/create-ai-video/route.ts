@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const limit = await checkVideoLimit(user.id);
+    const limit = await checkVideoLimit(user.id, { email: user.email });
     if (!limit.allowed) {
       return NextResponse.json(
         {
@@ -111,10 +111,14 @@ export async function POST(req: NextRequest) {
 
     usedProvider = result.provider;
 
-    const consumed = await consumeVideoUsage(user.id, {
-      provider: result.provider,
-      product_name: productHint,
-    });
+    const consumed = await consumeVideoUsage(
+      user.id,
+      {
+        provider: result.provider,
+        product_name: productHint,
+      },
+      { email: user.email }
+    );
     if (!consumed.ok) {
       console.warn(
         "[create-ai-video] usage consume failed:",

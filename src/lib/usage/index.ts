@@ -32,3 +32,8 @@ export {
   recordVideoGenerationAttempt,
 } from "./check-limit";
 export { consumeVideoUsage } from "./consume";
+export {
+  getVideoTestDailyLimit,
+  getVideoTestDailyStatus,
+  isVideoTestAccount,
+} from "./video-test-allowance";

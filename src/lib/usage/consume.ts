@@ -11,6 +11,11 @@ import {
   getVideoMonthlyLimit,
   startOfCurrentMonthJstIso,
 } from "@/lib/billing/plans";
+import {
+  getVideoTestDailyStatus,
+  isVideoTestAccount,
+  VIDEO_TEST_DAILY_LIMIT_ERROR,
+} from "./video-test-allowance";
 
 /**
  * 動画生成成功（generated_videos 保存後）に使用数を記録。
@@ -18,7 +23,8 @@ import {
  */
 export async function consumeVideoUsage(
   userId: string,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
+  options?: { email?: string | null }
 ): Promise<{
   ok: boolean;
   summary: UsageSummary | null;
@@ -35,12 +41,32 @@ export async function consumeVideoUsage(
     const planRemaining = Math.max(0, videoLimit - used);
     const remaining = planRemaining + Math.max(0, extraCredit);
 
+    const testAccount = isVideoTestAccount(options?.email);
+    let consumeViaTestAllowance = false;
+
     if (remaining <= 0) {
-      return {
-        ok: false,
-        summary: await getUsageSummary(userId),
-        error: "動画生成の利用上限に達しています",
-      };
+      if (!testAccount || planId !== "free") {
+        return {
+          ok: false,
+          summary: await getUsageSummary(userId),
+          error: "動画生成の利用上限に達しています",
+        };
+      }
+      const daily = await getVideoTestDailyStatus(userId);
+      if (daily.remaining <= 0) {
+        return {
+          ok: false,
+          summary: {
+            plan: planId,
+            video_limit: daily.limit,
+            used: daily.used,
+            remaining: 0,
+            extra_credit: extraCredit,
+          },
+          error: VIDEO_TEST_DAILY_LIMIT_ERROR,
+        };
+      }
+      consumeViaTestAllowance = true;
     }
 
     await insertUsageLog({
@@ -49,17 +75,36 @@ export async function consumeVideoUsage(
       amount: 1,
       metadata: {
         ...metadata,
-        consumed_from: planRemaining > 0 ? "plan" : "credit",
+        consumed_from: consumeViaTestAllowance
+          ? "test_allowance"
+          : planRemaining > 0
+            ? "plan"
+            : "credit",
         counted_at: "generated_videos_save",
       },
     });
 
-    if (planRemaining <= 0) {
+    if (!consumeViaTestAllowance && planRemaining <= 0) {
       await insertVideoCredit({
         user_id: userId,
         credits: -1,
         source: "consume",
       });
+    }
+
+    if (consumeViaTestAllowance) {
+      const daily = await getVideoTestDailyStatus(userId);
+      return {
+        ok: true,
+        summary: {
+          plan: planId,
+          video_limit: daily.limit,
+          used: daily.used,
+          remaining: daily.remaining,
+          extra_credit: extraCredit,
+        },
+        error: null,
+      };
     }
 
     const summary = await getUsageSummary(userId);

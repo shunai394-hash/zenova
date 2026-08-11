@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getOptionalAuthUser } from "@/lib/auth/session";
 import { getUsageSummary } from "@/lib/usage";
 import { getVideoMonthlyLimit } from "@/lib/billing/plans";
+import {
+  getVideoTestDailyStatus,
+  isVideoTestAccount,
+} from "@/lib/usage/video-test-allowance";
 
 export const runtime = "nodejs";
 
@@ -12,7 +16,6 @@ export const runtime = "nodejs";
  * 未ログイン時は Free（動画生成 0）として返す。
  */
 export async function GET() {
-  // Cookie セッション（Proxy 更新済み）からユーザーを解決
   const user = await getOptionalAuthUser();
 
   if (!user) {
@@ -29,16 +32,29 @@ export async function GET() {
   try {
     const summary = await getUsageSummary(user.id);
     const plan = (summary.plan || "free").toLowerCase();
-    const remaining = plan === "free" ? 0 : summary.remaining;
+    let remaining = plan === "free" ? 0 : summary.remaining;
+    let used = summary.used;
+    let video_limit = summary.video_limit;
+    let video_test_allowance = false;
+
+    // テスト用アカウントのみ: Free でも当日残枠を返す（フロント課金ゲート通過用）
+    if (plan === "free" && isVideoTestAccount(user.email)) {
+      const daily = await getVideoTestDailyStatus(user.id);
+      remaining = daily.remaining;
+      used = daily.used;
+      video_limit = daily.limit;
+      video_test_allowance = true;
+    }
 
     return NextResponse.json({
       plan,
-      video_limit: summary.video_limit,
-      used: summary.used,
+      video_limit,
+      used,
       remaining,
       extra_credit: summary.extra_credit,
       authenticated: true,
       user_id: user.id,
+      ...(video_test_allowance ? { video_test_allowance: true } : {}),
     });
   } catch (error) {
     console.error("[usage] GET ERROR:", error);

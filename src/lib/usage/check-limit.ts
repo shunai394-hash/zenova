@@ -17,6 +17,11 @@ import {
   countUsageSince,
 } from "@/lib/usage/repository";
 import type { UsageSummary, VideoLimitCheck } from "@/lib/usage/types";
+import {
+  getVideoTestDailyStatus,
+  isVideoTestAccount,
+  VIDEO_TEST_DAILY_LIMIT_ERROR,
+} from "@/lib/usage/video-test-allowance";
 
 /** プロセス内の直近リクエスト時刻（並列連打対策） */
 const recentAttemptTimestamps = new Map<string, number[]>();
@@ -80,16 +85,22 @@ export type VideoGenerationGuardResult = VideoLimitCheck & {
   code: "monthly" | "rate" | "free" | null;
 };
 
+export type CheckVideoLimitOptions = {
+  /** Auth ユーザーの email（テスト用 Free 許可判定） */
+  email?: string | null;
+};
+
 /**
  * 動画生成前ガード:
- * 0) Free プランは不可
+ * 0) Free プランは不可（許可リストのテストメールのみ例外・1日上限）
  * 1) 5分以内に3回以上（成功ログ or 直近試行）
  * 2) 今月の使用数 >= プラン上限
  *
  * DB障害時も無制限にはしない（安全側: 拒否 or 定数ベース）。
  */
 export async function checkVideoLimit(
-  userId: string
+  userId: string,
+  options?: CheckVideoLimitOptions
 ): Promise<VideoGenerationGuardResult> {
   const now = Date.now();
   const sinceIso = new Date(now - VIDEO_RATE_LIMIT.windowMs).toISOString();
@@ -99,13 +110,59 @@ export async function checkVideoLimit(
     const planId = (summary.plan || "free").toLowerCase();
 
     if (planId === "free") {
+      if (!isVideoTestAccount(options?.email)) {
+        return {
+          ...summary,
+          remaining: 0,
+          allowed: false,
+          reason: FREE_PLAN_VIDEO_ERROR,
+          bypassed: false,
+          code: "free",
+        };
+      }
+
+      const daily = await getVideoTestDailyStatus(userId);
+      if (daily.remaining <= 0) {
+        return {
+          plan: summary.plan,
+          video_limit: daily.limit,
+          used: daily.used,
+          remaining: 0,
+          extra_credit: summary.extra_credit,
+          allowed: false,
+          reason: VIDEO_TEST_DAILY_LIMIT_ERROR,
+          bypassed: true,
+          code: "monthly",
+        };
+      }
+
+      const recentDb = await countUsageSince(userId, "video", sinceIso);
+      const recentAttempts = pruneAndCountAttempts(userId, now);
+      const recentTotal = Math.max(recentDb, recentAttempts);
+      if (recentTotal >= VIDEO_RATE_LIMIT.maxGenerations) {
+        return {
+          plan: summary.plan,
+          video_limit: daily.limit,
+          used: daily.used,
+          remaining: daily.remaining,
+          extra_credit: summary.extra_credit,
+          allowed: false,
+          reason: VIDEO_RATE_LIMIT_ERROR,
+          bypassed: true,
+          code: "rate",
+        };
+      }
+
       return {
-        ...summary,
-        remaining: 0,
-        allowed: false,
-        reason: FREE_PLAN_VIDEO_ERROR,
-        bypassed: false,
-        code: "free",
+        plan: summary.plan,
+        video_limit: daily.limit,
+        used: daily.used,
+        remaining: daily.remaining,
+        extra_credit: summary.extra_credit,
+        allowed: true,
+        reason: null,
+        bypassed: true,
+        code: null,
       };
     }
 
@@ -146,7 +203,6 @@ export async function checkVideoLimit(
     const message = error instanceof Error ? error.message : String(error);
     console.error("[usage] checkVideoLimit failed (fail-closed):", message);
 
-    // テーブル障害時も連続生成だけはメモリで抑止
     const recentAttempts = pruneAndCountAttempts(userId, now);
     if (recentAttempts >= VIDEO_RATE_LIMIT.maxGenerations) {
       return {
@@ -162,7 +218,6 @@ export async function checkVideoLimit(
       };
     }
 
-    // 使用数が取れない場合は無料公開の無限生成を防ぐため拒否
     return {
       plan: "free",
       video_limit: getVideoMonthlyLimit("free"),

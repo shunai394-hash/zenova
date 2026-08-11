@@ -70,7 +70,8 @@ export function UsageMeterBanner({
 
   const plan = summary.plan.toLowerCase() || "free";
   const isFree = plan === "free";
-  const limited = isFree || summary.remaining <= 0;
+  // remaining を正とする（テスト用 Free 許可は remaining>0）
+  const limited = summary.remaining <= 0;
   const remaining = Math.max(0, summary.remaining);
 
   return (
@@ -82,7 +83,7 @@ export function UsageMeterBanner({
       }`}
     >
       <p className="text-sm font-medium text-white">動画生成</p>
-      {isFree ? (
+      {isFree && limited ? (
         <p className="mt-2 text-sm text-gray-200">
           Free プランでは動画生成を利用できません
         </p>
@@ -90,6 +91,7 @@ export function UsageMeterBanner({
         <>
           <p className="mt-2 text-sm text-gray-200">
             {summary.used} / {summary.video_limit}回使用済み
+            {isFree ? "（テスト枠・本日）" : ""}
           </p>
           {!limited ? (
             <p className="mt-1 text-xs text-gray-400">残り{remaining}回</p>
