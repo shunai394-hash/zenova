@@ -1,4 +1,4 @@
-import { KlingVideoProvider } from "./kling";
+import { KlingVideoProvider, sanitizeKlingApiKey } from "./kling";
 import { LumaVideoProvider } from "./luma";
 import { MockVideoProvider } from "./mock";
 import type {
@@ -11,7 +11,7 @@ import type {
 export type { GenerateVideoInput, GenerateVideoResult, VideoProviderId };
 
 function hasKlingCredentials(): boolean {
-  if (process.env.KLING_API_KEY?.trim()) return true;
+  if (sanitizeKlingApiKey(process.env.KLING_API_KEY)) return true;
   return Boolean(
     process.env.KLING_ACCESS_KEY?.trim() &&
       process.env.KLING_SECRET_KEY?.trim()

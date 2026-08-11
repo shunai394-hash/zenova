@@ -23,6 +23,60 @@ type KlingFailContext = {
   elapsedMs: number;
 };
 
+/** ログ・エラー文言から秘密を除去（Authorization 値や API キー断片） */
+function redactSecrets(text: string): string {
+  return text
+    .replace(/Bearer\s+[^\s"'\\]+/gi, "Bearer [REDACTED]")
+    .replace(/\b(sk|ak)-[A-Za-z0-9_-]{8,}\b/g, "[REDACTED]")
+    .replace(/ELEVENLABS_API_KEY\s*=\s*[^\s"']+/gi, "ELEVENLABS_API_KEY=[REDACTED]")
+    .replace(/KLING_API_KEY\s*=\s*[^\s"']+/gi, "KLING_API_KEY=[REDACTED]");
+}
+
+/**
+ * Vercel 等で KLING_API_KEY に改行や別 env（ELEVENLABS_API_KEY=...）が
+ * 混入しても、Authorization に使えるトークンだけを取り出す。
+ */
+export function sanitizeKlingApiKey(raw: string | undefined | null): string {
+  if (!raw) return "";
+
+  // 複数行ペースト対策: 最初の非空行のみ（2行目以降の別キー混入を捨てる）
+  const firstLine =
+    raw
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.length > 0) ?? "";
+
+  let key = firstLine;
+  key = key.replace(/^["']|["']$/g, "").trim();
+
+  // "KLING_API_KEY=xxx" / "ELEVENLABS_API_KEY=xxx" 形式なら値だけ
+  if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(key)) {
+    key = key.replace(/^[^=]+=/, "").trim();
+    key = key.replace(/^["']|["']$/g, "").trim();
+  }
+
+  // 先頭の Bearer を除去（二重付与防止）
+  key = key.replace(/^Bearer\s+/i, "").trim();
+
+  // 空白・制御文字で分割されたら最初のトークンのみ
+  key = (key.split(/[\s\u0000-\u001F\u007F,;]+/)[0] ?? "").trim();
+
+  // ヘッダに使えない文字を除去
+  key = key.replace(/[^\x21-\x7E]/g, "");
+
+  return key;
+}
+
+function isValidHttpHeaderValue(value: string): boolean {
+  if (!value) return false;
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i);
+    // undici: no CTL (0x00-0x1F, 0x7F)
+    if (c <= 0x1f || c === 0x7f) return false;
+  }
+  return true;
+}
+
 function logKlingFailure(ctx: KlingFailContext): void {
   console.error(
     `[video-provider:kling] FAIL ` +
@@ -33,7 +87,7 @@ function logKlingFailure(ctx: KlingFailContext): void {
       `task_status=${ctx.taskStatus ?? "n/a"} ` +
       `video_url=${ctx.videoUrl ?? "n/a"} ` +
       `elapsed_ms=${ctx.elapsedMs} ` +
-      `response_body=${ctx.responseBody ?? "n/a"}`
+      `response_body=${redactSecrets(ctx.responseBody ?? "n/a")}`
   );
 }
 
@@ -49,13 +103,28 @@ export class KlingVideoProvider implements VideoGenerationProvider {
   readonly id = "kling" as const;
 
   private getAuthorization(): string {
-    const key = process.env.KLING_API_KEY?.trim();
+    const raw = process.env.KLING_API_KEY;
+    const key = sanitizeKlingApiKey(raw);
     if (!key) {
       throw new Error(
-        "KLING_API_KEY が未設定です。Kling 実APIには API Key が必要です。"
+        "KLING_API_KEY が未設定、または Authorization に使える形式ではありません。"
       );
     }
-    return `Bearer ${key.replace(/^Bearer\s+/i, "")}`;
+
+    const header = `Bearer ${key}`;
+    if (!isValidHttpHeaderValue(header)) {
+      // キー本体はログに出さない
+      console.error(
+        `[video-provider:kling] invalid Authorization header shape ` +
+          `raw_len=${raw?.length ?? 0} sanitized_len=${key.length} ` +
+          `had_newline=${Boolean(raw && /[\r\n]/.test(raw))}`
+      );
+      throw new Error(
+        "KLING_API_KEY から有効な Authorization ヘッダーを構築できません。環境変数の改行・引用符・別キー混入を確認してください。"
+      );
+    }
+
+    return header;
   }
 
   private getBaseUrl(): string {
@@ -106,17 +175,20 @@ export class KlingVideoProvider implements VideoGenerationProvider {
       });
       createText = await createRes.text();
     } catch (error) {
+      const safe = redactSecrets(
+        error instanceof Error ? error.message : String(error)
+      );
       logKlingFailure({
         requestUrl: createUrl,
         httpStatus: null,
-        responseBody: error instanceof Error ? error.message : String(error),
+        responseBody: safe,
         modelName: model,
         taskId,
         taskStatus,
         videoUrl,
         elapsedMs: Date.now() - startedAt,
       });
-      throw error;
+      throw new Error(safe);
     }
 
     let createJson: Record<string, unknown> = {};
@@ -261,17 +333,20 @@ export class KlingVideoProvider implements VideoGenerationProvider {
         });
         text = await res.text();
       } catch (error) {
+        const safe = redactSecrets(
+          error instanceof Error ? error.message : String(error)
+        );
         logKlingFailure({
           requestUrl: pollUrl,
           httpStatus: null,
-          responseBody: error instanceof Error ? error.message : String(error),
+          responseBody: safe,
           modelName: input.modelName,
           taskId: input.taskId,
           taskStatus: null,
           videoUrl: null,
           elapsedMs: Date.now() - input.startedAt,
         });
-        throw error;
+        throw new Error(safe);
       }
 
       let json: Record<string, unknown> = {};
