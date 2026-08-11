@@ -10,6 +10,7 @@ export type StyleTemplateBeat = {
 /**
  * 動画スタイルごとの制作テンプレート。
  * 生成時に Kling / シナリオ プロンプトへ反映する。
+ * 映像演出のみを記述し、実体験・効果・未確認スペックは書かない。
  */
 export type StyleVideoTemplate = {
   id: VideoStyleId;
@@ -26,31 +27,30 @@ export type StyleVideoTemplate = {
 export const STYLE_VIDEO_TEMPLATES: Record<VideoStyleId, StyleVideoTemplate> = {
   product_review: {
     id: "product_review",
-    nameJa: "商品レビュー",
-    hookStyle: "正直レビュー、使ってみた結果から入る",
+    nameJa: "商品詳細紹介",
+    hookStyle: "商品の寄りカットで特徴を先に見せる",
     ctaStyle: "詳細・購入はプロフのリンクから",
     klingPrompt:
-      "product review TikTok, creator showing product details and daily usage, clear close-ups, natural light, vertical 9:16",
-    scriptOutline: "結論→使用感→推しポイント→向いている人→CTA",
+      "product showcase TikTok, creator holding product toward camera, clear close-ups of details, natural light, vertical 9:16",
+    scriptOutline: "結論→特徴の見せ方→推しポイント→向いている人→CTA",
     beats: [
-      { timing: "0-3", title: "結論", direction: "買ってよかった一言" },
-      { timing: "3-10", title: "レビュー", direction: "使用感を具体的に" },
+      { timing: "0-3", title: "結論", direction: "商品を画面中央に出す" },
+      { timing: "3-10", title: "詳細", direction: "手元寄りでポイントを見せる" },
       { timing: "10-end", title: "CTA", direction: "リンク誘導" },
     ],
   },
   ugc: {
     id: "ugc",
     nameJa: "UGC",
-    hookStyle: "カメラ目線で本音レビュー開始",
+    hookStyle: "カメラ目線で商品を手に持つUGC風の構図",
     ctaStyle: "プロフのリンクから同じ商品をチェック",
     klingPrompt:
-      "authentic handheld UGC TikTok, creator speaking to camera, natural room light, product in hand, slight shake, vertical 9:16",
-    scriptOutline:
-      "自己紹介→悩み→使ってみた感想→推しポイント1つ→CTA",
+      "authentic handheld UGC TikTok framing, creator holding product to camera, natural room light, slight shake, vertical 9:16",
+    scriptOutline: "自己紹介→悩み→確認済み特徴の見せ方→推しポイント1つ→CTA",
     beats: [
       { timing: "0-3", title: "フック", direction: "顔出し＋商品チラ見せ" },
-      { timing: "3-8", title: "本音", direction: "使ってよかった点を話す" },
-      { timing: "8-12", title: "証拠", direction: "使用シーンの手元カット" },
+      { timing: "3-8", title: "紹介", direction: "商品をカメラに向けて見せる" },
+      { timing: "8-12", title: "手元", direction: "使用シーンを演出する手元カット" },
       { timing: "12-end", title: "CTA", direction: "リンク誘導" },
     ],
   },
@@ -72,13 +72,13 @@ export const STYLE_VIDEO_TEMPLATES: Record<VideoStyleId, StyleVideoTemplate> = {
     id: "before_after",
     nameJa: "Before After",
     hookStyle: "変化の結論を先出し",
-    ctaStyle: "同じ変化を試すならリンクへ",
+    ctaStyle: "詳細はプロフのリンクから",
     klingPrompt:
-      "before-to-after transformation, clear contrast cuts, product usage then payoff lifestyle shot, vertical TikTok",
-    scriptOutline: "Before→商品介入→After→要点→CTA",
+      "before-to-after visual contrast cuts, product in frame then lifestyle payoff shot, vertical TikTok",
+    scriptOutline: "Before→商品登場→After→要点→CTA",
     beats: [
       { timing: "0-4", title: "Before", direction: "不満状態を見せる" },
-      { timing: "4-10", title: "転換", direction: "使用デモ" },
+      { timing: "4-10", title: "転換", direction: "商品デモの手元カット" },
       { timing: "10-end", title: "After+CTA", direction: "変化を対比で見せる" },
     ],
   },
@@ -118,26 +118,40 @@ export function getStyleVideoTemplate(styleId: string): StyleVideoTemplate {
 }
 
 /**
- * Kling / 動画生成向けに、テンプレート＋既存プロンプトを結合する。
+ * Kling / 動画生成向けに、スタイル演出 + confirmed 事実 + 既存プロンプトを結合する。
+ * 商品事実は confirmed のみ。style template から事実・体験を発明しない。
  */
 export function buildStyleAwareKlingPrompt(input: {
   videoStyle: string;
   basePrompt?: string | null;
   productName?: string;
   durationSec?: number;
+  /** ProductAnalysis.confirmed（商品事実の正本） */
+  confirmed?: string[] | null;
+  /** ProductAnalysis.excluded（肯定禁止） */
+  excluded?: string[] | null;
 }): string {
   const tmpl = getStyleVideoTemplate(input.videoStyle);
+  const confirmed = (input.confirmed || []).map((c) => c.trim()).filter(Boolean);
+  const excluded = (input.excluded || []).map((c) => c.trim()).filter(Boolean);
   const beats = tmpl.beats
     .map((b) => `${b.timing}s ${b.title}: ${b.direction}`)
     .join("; ");
   const parts = [
     tmpl.klingPrompt,
     `template=${tmpl.nameJa}`,
-    `hook_style=${tmpl.hookStyle}`,
+    `visual_hook=${tmpl.hookStyle}`,
     `cta_style=${tmpl.ctaStyle}`,
     `beats=${beats}`,
     input.productName ? `product=${input.productName}` : "",
     input.durationSec ? `duration=${input.durationSec}s` : "",
+    confirmed.length
+      ? `confirmed_features_only=${confirmed.slice(0, 6).join(", ")}`
+      : "confirmed_features_only=none",
+    excluded.length
+      ? `do_not_claim=${excluded.slice(0, 8).join(", ")}`
+      : "",
+    "No fabricated specs, ratings, testimonials, or personal experience claims.",
     input.basePrompt?.trim() || "",
   ].filter(Boolean);
   return parts.join(". ");

@@ -1,5 +1,27 @@
 export { analyzeProduct, analyzeProductHeuristic, buildApiProductName, buildApiTarget, normalizeProductAnalysis, extractProductFeatures } from "./engine";
 export {
+  applyFactualGate,
+  getClaimBucketsFromAnalysis,
+  sanitizeIdeaText,
+} from "./factual-gate";
+export {
+  buildClaimBuckets,
+  expandExcludedClaims,
+  extractConfirmedFeatures,
+  extractExcludedFeatures,
+  hasUnconfirmedProductAssertion,
+} from "./claim-guard";
+export {
+  buildConfirmedPromptBlock,
+  buildFallbackScenarioFromConfirmed,
+  validateKlingPromptClaims,
+  validateNarrationScript,
+  validateOptimizeClaims,
+  validateSalesScenarioClaims,
+  validateVideoClaimText,
+  validateVideoClaims,
+  validateVideoPlanClaims,
+} from "./validate-video-claims";export {
   applyPerformanceToSalesScore,
   computePerformanceBonus,
   getPerformanceByProductId,

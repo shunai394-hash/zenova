@@ -60,6 +60,11 @@ export type CreateSalesVideoInput = {
    * @see VideoPlan in @/lib/video-pipeline
    */
   videoPlan?: import("@/lib/video-pipeline").VideoPlan | null;
+  /**
+   * 確定済み ProductAnalysis（任意）。
+   * ある場合は analyzeProduct を再実行せず、これを商品事実の正本として使う。
+   */
+  productAnalysis?: import("@/lib/product-analysis").ProductAnalysis | null;
 };
 
 export type CreateSalesVideoSteps = {

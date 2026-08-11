@@ -133,6 +133,19 @@ export type ProductAnalysis = {
    * groq = Groq LLM / fallback = ヒューリスティック
    */
   analysisMode?: "groq" | "fallback";
+  /**
+   * 入力から直接確認できる事実（Source of Truth）
+   * 旧履歴には無い → 読み込み時に空配列へ
+   */
+  confirmed?: string[];
+  /** マーケティング上の推定（スペック・効果として扱わない） */
+  inferred?: string[];
+  /** 入力から確認できない項目（勝手に埋めない） */
+  unknown?: string[];
+  /** 否定された機能・スペック */
+  excluded?: string[];
+  /** excluded と同義の互換エイリアス */
+  notSupported?: string[];
 };
 
 export type AnalyzeProductResponse = {

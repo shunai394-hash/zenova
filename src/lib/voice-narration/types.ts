@@ -11,6 +11,10 @@ export type NarrationSceneInput = {
   voice_id?: string;
   /** false のとき音声生成をスキップ（台本のみ可） */
   generate_audio?: boolean;
+  /** 事実ゲート用 */
+  confirmed?: string[];
+  excluded?: string[];
+  productAnalysis?: import("@/lib/product-analysis").ProductAnalysis | null;
 };
 
 export type NarrationResult = {

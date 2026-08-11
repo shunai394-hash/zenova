@@ -3,8 +3,21 @@ import path from "path";
 import { randomUUID } from "crypto";
 import {
   analyzeProduct,
+  normalizeProductAnalysis,
   saveProductAnalysis,
+  type ProductAnalysis,
 } from "@/lib/product-analysis";
+import {
+  getClaimBucketsFromAnalysis,
+} from "@/lib/product-analysis/factual-gate";
+import {
+  validateKlingPromptClaims,
+  validateNarrationScript,
+  validateOptimizeClaims,
+  validateSalesScenarioClaims,
+  validateVideoClaimText,
+  validateVideoPlanClaims,
+} from "@/lib/product-analysis/validate-video-claims";
 import {
   generateSalesScenario,
   optimizeSalesScenario,
@@ -157,16 +170,22 @@ export async function runCreateSalesVideo(
   let watermarkApplied = false;
   let narrationScript = "";
 
-  // 1) 商品分析
-  const analysis = await analyzeProduct({
-    product_name: productName,
-    description,
-    target,
-    platform,
-    image_name: "sales-video.jpg",
-    source: "manual",
-  });
-  steps.analysis = true;
+  // 1) 商品分析（確定済み ProductAnalysis があれば再生成しない = 事実ドリフト防止）
+  let analysis: ProductAnalysis;
+  if (input.productAnalysis && input.productAnalysis.productName) {
+    analysis = normalizeProductAnalysis(input.productAnalysis);
+    steps.analysis = true;
+  } else {
+    analysis = await analyzeProduct({
+      product_name: productName,
+      description,
+      target,
+      platform,
+      image_name: "sales-video.jpg",
+      source: "manual",
+    });
+    steps.analysis = true;
+  }
 
   try {
     const savedProduct = await saveProductAnalysis({
@@ -201,9 +220,22 @@ export async function runCreateSalesVideo(
     }
   }
 
-  // 2) 販売シナリオ（選択中 videoPlan がある場合は再解釈せずシーンを優先）
-  const planTimeline = input.videoPlan?.timeline ?? [];
-  const scenario = await generateSalesScenario({
+  // 2) 販売シナリオ（confirmed 正本 + 事後ゲート）
+  const claimBuckets = getClaimBucketsFromAnalysis(analysis);
+  const claimCtx = {
+    productName,
+    target,
+    analysis,
+    buckets: claimBuckets,
+  };
+
+  // 入力 VideoPlan も最終ゲート前に一度検査（後工程への汚染防止）
+  let gatedVideoPlan = input.videoPlan
+    ? validateVideoPlanClaims(input.videoPlan, claimCtx)
+    : null;
+
+  const planTimeline = gatedVideoPlan?.timeline ?? [];
+  let scenario = await generateSalesScenario({
     product_name: productName,
     description,
     target,
@@ -212,15 +244,21 @@ export async function runCreateSalesVideo(
     analysis: {
       summary: analysis.summary,
       salesAngle: analysis.salesAngle,
-      sellingPoints: analysis.sellingPoints,
+      sellingPoints: claimBuckets.confirmed.length
+        ? claimBuckets.confirmed
+        : analysis.sellingPoints,
       painPoints: analysis.painPoints,
       targetInsight: analysis.targetInsight,
       cta: analysis.cta,
       recommendedVideoStructure: analysis.recommendedVideoStructure,
+      confirmed: claimBuckets.confirmed,
+      excluded: claimBuckets.excluded,
+      productAnalysis: analysis,
     },
   });
+  scenario = validateSalesScenarioClaims(scenario, claimCtx);
 
-  // 3) 最適化（ユーザー編集 / 選択企画の hook・CTA・シーンを優先）
+  // 3) 最適化（表現のみ。事実追加禁止 + ゲート）
   const planHook =
     planTimeline.find((t) => /フック|Hook|問題|Before/i.test(t.scene))?.text ||
     planTimeline[0]?.text ||
@@ -230,25 +268,112 @@ export async function runCreateSalesVideo(
   );
   const planCta =
     planTimeline.find((t) => /CTA|誘導/i.test(t.scene))?.text ||
-    input.videoPlan?.cta ||
+    gatedVideoPlan?.cta ||
     "";
 
-  const optimized = await optimizeSalesScenario({
+  const priorForOptimize = {
+    hook: validateVideoClaimText(
+      userHook || planHook || scenario.hook_0_2sec,
+      claimCtx
+    ) || scenario.hook_0_2sec,
+    scene_1: validateVideoClaimText(
+      planScenes[0]?.text || scenario.scene_1,
+      claimCtx
+    ) || scenario.scene_1,
+    scene_2: validateVideoClaimText(
+      planScenes[1]?.text || scenario.scene_2,
+      claimCtx
+    ) || scenario.scene_2,
+    scene_3: validateVideoClaimText(
+      planScenes[2]?.text || scenario.scene_3,
+      claimCtx
+    ) || scenario.scene_3,
+    cta: validateVideoClaimText(
+      userCta || planCta || scenario.cta,
+      claimCtx
+    ) || scenario.cta,
+  };
+
+  let optimized = await optimizeSalesScenario({
     product_name: productName,
     description,
     target_customer: scenario.target_customer || target,
     selling_angle: scenario.selling_angle,
-    hook: userHook || planHook || scenario.hook_0_2sec,
-    scene_1: planScenes[0]?.text || scenario.scene_1,
-    scene_2: planScenes[1]?.text || scenario.scene_2,
-    scene_3: planScenes[2]?.text || scenario.scene_3,
-    cta: userCta || planCta || scenario.cta,
+    hook: priorForOptimize.hook,
+    scene_1: priorForOptimize.scene_1,
+    scene_2: priorForOptimize.scene_2,
+    scene_3: priorForOptimize.scene_3,
+    cta: priorForOptimize.cta,
+    confirmed: claimBuckets.confirmed,
+    excluded: claimBuckets.excluded,
+    productAnalysis: analysis,
   });
+  optimized = validateOptimizeClaims(optimized, claimCtx, priorForOptimize);
   steps.scenario = true;
 
-  sellingAngle = scenario.selling_angle;
-  hook = userHook || planHook || optimized.optimized_hook || scenario.hook_0_2sec;
-  const finalCta = userCta || planCta || optimized.optimized_cta || scenario.cta;
+  sellingAngle =
+    validateVideoClaimText(scenario.selling_angle, claimCtx) ||
+    scenario.selling_angle;
+  hook =
+    validateVideoClaimText(
+      userHook || planHook || optimized.optimized_hook || scenario.hook_0_2sec,
+      claimCtx
+    ) || optimized.optimized_hook;
+  let finalCta =
+    validateVideoClaimText(
+      userCta || planCta || optimized.optimized_cta || scenario.cta,
+      claimCtx
+    ) || optimized.optimized_cta;
+
+  // FINAL factual gate: 完成 VideoPlan 全体を1回検査してから Kling へ
+  gatedVideoPlan = validateVideoPlanClaims(
+    {
+      title: gatedVideoPlan?.title || productName,
+      style: gatedVideoPlan?.style || videoStyleId || "ugc",
+      duration: gatedVideoPlan?.duration || durationSec,
+      ideaId: gatedVideoPlan?.ideaId,
+      goal: gatedVideoPlan?.goal,
+      cta: finalCta,
+      timeline: [
+        { scene: "Hook", second: "0-2", text: hook },
+        {
+          scene: "Scene1",
+          second: "2-6",
+          text: optimized.optimized_scene_1,
+        },
+        {
+          scene: "Scene2",
+          second: "6-10",
+          text: optimized.optimized_scene_2,
+        },
+        {
+          scene: "Scene3",
+          second: "10-13",
+          text: optimized.optimized_scene_3,
+        },
+        { scene: "CTA", second: "13-15", text: finalCta },
+      ],
+    },
+    claimCtx
+  );
+  hook =
+    gatedVideoPlan.timeline.find((t) => /Hook|フック/i.test(t.scene))?.text ||
+    hook;
+  optimized = {
+    ...optimized,
+    optimized_hook: hook,
+    optimized_scene_1:
+      gatedVideoPlan.timeline.find((t) => /Scene1/i.test(t.scene))?.text ||
+      optimized.optimized_scene_1,
+    optimized_scene_2:
+      gatedVideoPlan.timeline.find((t) => /Scene2/i.test(t.scene))?.text ||
+      optimized.optimized_scene_2,
+    optimized_scene_3:
+      gatedVideoPlan.timeline.find((t) => /Scene3/i.test(t.scene))?.text ||
+      optimized.optimized_scene_3,
+    optimized_cta: gatedVideoPlan.cta || finalCta,
+  };
+  finalCta = optimized.optimized_cta;
 
   try {
     if (!productId) {
@@ -278,14 +403,17 @@ export async function runCreateSalesVideo(
   }
 
   // 4) Kling（または mock）動画生成
-  // スタイル別テンプレートをプロンプトへ反映
+  // style → confirmed 付きプロンプト → Kling専用 claim gate → プロバイダ
   const baseKling = optimized.optimized_kling_prompt || scenario.kling_prompt;
-  const klingPrompt = buildStyleAwareKlingPrompt({
+  const styledKlingPrompt = buildStyleAwareKlingPrompt({
     videoStyle: videoStyleId || "ugc",
     basePrompt: baseKling,
     productName,
     durationSec,
+    confirmed: claimBuckets.confirmed,
+    excluded: claimBuckets.excluded,
   });
+  const klingPrompt = validateKlingPromptClaims(styledKlingPrompt, claimCtx);
   const motionHint =
     (typeof input.motion === "string" && input.motion.trim()) ||
     hook;
@@ -296,8 +424,7 @@ export async function runCreateSalesVideo(
     durationSec,
     provider: null,
     promptOverride: klingPrompt,
-  });
-  provider = videoResult.provider;
+  });  provider = videoResult.provider;
 
   const videosDir = path.join(process.cwd(), "public", "generated", "videos");
   await mkdir(videosDir, { recursive: true });
@@ -321,11 +448,16 @@ export async function runCreateSalesVideo(
       optimized_scene_2: optimized.optimized_scene_2,
       optimized_scene_3: optimized.optimized_scene_3,
       optimized_cta: finalCta,
-      script_override: userScript || undefined,
+      script_override: userScript
+        ? validateNarrationScript(userScript, claimCtx)
+        : undefined,
       voice_id: voiceId,
       generate_audio: true,
+      confirmed: claimBuckets.confirmed,
+      excluded: claimBuckets.excluded,
+      productAnalysis: analysis,
     });
-    narrationScript = narration.script;
+    narrationScript = validateNarrationScript(narration.script, claimCtx);
     audioUrl = narration.audio_url;
     if (narration.audio_url) {
       steps.narration = true;
@@ -354,15 +486,18 @@ export async function runCreateSalesVideo(
       const captions = await generateVideoCaptions({
         narration_script:
           narrationScript ||
-          [hook, optimized.optimized_scene_1, finalCta]
-            .filter(Boolean)
-            .join("。"),
+          validateNarrationScript(
+            [hook, optimized.optimized_scene_1, finalCta]
+              .filter(Boolean)
+              .join("。"),
+            claimCtx
+          ),
         duration: durationSec,
         scenes: [
           optimized.optimized_scene_1,
           optimized.optimized_scene_2,
           optimized.optimized_scene_3,
-        ],
+        ].map((s) => validateVideoClaimText(s, claimCtx) || s),
       });
       subtitleFile = captions.subtitle_file;
       steps.captions = true;

@@ -5,6 +5,7 @@ import type {
   ProductInput,
   VideoPlan,
 } from "@/lib/video-pipeline";
+import type { ProductAnalysis } from "@/lib/product-analysis";
 import {
   VIDEO_ENGINE_PREPARING_MESSAGE,
   VIDEO_LIMIT_ERROR,
@@ -121,6 +122,9 @@ export async function POST(req: NextRequest) {
       body.analysisResult
     );
     const videoPlan = asOptionalObject<VideoPlan>(body.videoPlan);
+    const productAnalysis = asOptionalObject<ProductAnalysis>(
+      body.productAnalysis
+    );
 
     // productData / analysisResult / videoPlan がある場合は欠落フィールドを補完
     const productName =
@@ -222,6 +226,7 @@ export async function POST(req: NextRequest) {
       productData,
       analysisResult,
       videoPlan,
+      productAnalysis,
     });
 
     // 成功かつ generated_videos 保存時のみカウント（失敗はカウントしない）

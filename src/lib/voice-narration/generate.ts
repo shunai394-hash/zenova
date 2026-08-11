@@ -7,6 +7,7 @@ import {
 } from "./elevenlabs";
 import { generateNarrationScript } from "./script";
 import type { NarrationResult, NarrationSceneInput } from "./types";
+import { validateNarrationScript } from "@/lib/product-analysis/validate-video-claims";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -63,8 +64,21 @@ export function parseNarrationInputFromBody(
 export async function generateSalesNarration(
   input: NarrationSceneInput
 ): Promise<NarrationResult> {
+  const claimCtx = {
+    productName: asString(input.product_name) || "商品",
+    analysis: input.productAnalysis || null,
+    buckets: {
+      confirmed: input.confirmed || [],
+      inferred: [] as string[],
+      unknown: [] as string[],
+      excluded: input.excluded || [],
+      notSupported: input.excluded || [],
+    },
+  };
   const override = input.script_override?.trim();
-  const script = override || (await generateNarrationScript(input));
+  const script = override
+    ? validateNarrationScript(override, claimCtx)
+    : await generateNarrationScript(input);
 
   if (input.generate_audio === false) {
     return {

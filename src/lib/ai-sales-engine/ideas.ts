@@ -22,9 +22,11 @@ export type GenerateSalesIdeasInput = {
 function featureList(analysis: ProductAnalysis | null): string[] {
   if (!analysis) return [];
   return (
-    analysis.productFeatures?.length
-      ? analysis.productFeatures
-      : analysis.sellingPoints || []
+    analysis.confirmed?.length
+      ? analysis.confirmed
+      : analysis.productFeatures?.length
+        ? analysis.productFeatures
+        : analysis.sellingPoints || []
   ).slice(0, 4);
 }
 

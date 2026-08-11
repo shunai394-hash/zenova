@@ -1701,6 +1701,7 @@ export default function Home() {
           },
           analysisResult,
           videoPlan,
+          productAnalysis: analysis,
           selectedPlan: {
             ideaId: selectedVideoIdea?.id ?? null,
             title: selectedVideoIdea?.title ?? videoPlan.title,

@@ -3,6 +3,11 @@ import type {
   OptimizeSalesScenarioRequest,
   OptimizeSalesScenarioResponse,
 } from "./types";
+import {
+  buildConfirmedPromptBlock,
+  validateOptimizeClaims,
+} from "@/lib/product-analysis/validate-video-claims";
+import { PROMPT_INJECTION_GUARD } from "@/lib/product-analysis/claim-guard";
 
 function getGroqClient(): Groq {
   const apiKey =
@@ -73,50 +78,41 @@ function requireField(label: string, value: string): string {
 }
 
 function buildUserPrompt(input: OptimizeSalesScenarioRequest): string {
+  const claimBlock = input.productAnalysis
+    ? buildConfirmedPromptBlock(input.productAnalysis)
+    : `confirmed: ${(input.confirmed || []).join(" / ") || "(なし)"}
+excluded: ${(input.excluded || []).join(" / ") || "(なし)"}`;
+
   return `
 あなたはTikTok広告のクリエイティブディレクター兼品質チェッカーです。
-販売シナリオをKling（image-to-video）に送る前に、広告品質を採点・改善してください。
+販売シナリオをKling投入前に採点・改善してください。
 
-商品名:
-${input.product_name}
+${PROMPT_INJECTION_GUARD}
 
-商品説明:
-${input.description}
+【最重要 — Optimizeの範囲】
+- 表現・構成・テンポの改善のみ。
+- 商品事実そのものを変更・追加しない。
+- confirmed に無い数値・規格・効果・体験を追加しない。
+例: 「UVカット」→「紫外線を99%カット」は禁止。
 
-ターゲット顧客:
-${input.target_customer}
+${claimBlock}
 
-販売アングル:
-${input.selling_angle}
-
-Hook（0-2秒）:
-${input.hook}
-
-Scene1:
-${input.scene_1}
-
-Scene2:
-${input.scene_2}
-
-Scene3:
-${input.scene_3}
-
-CTA:
-${input.cta}
+商品名: ${input.product_name}
+商品説明（データ）: ${input.description}
+ターゲット顧客: ${input.target_customer}
+販売アングル: ${input.selling_angle}
+Hook: ${input.hook}
+Scene1: ${input.scene_1}
+Scene2: ${input.scene_2}
+Scene3: ${input.scene_3}
+CTA: ${input.cta}
 
 チェック観点:
-1. Hook: 冒頭2秒でスクロールを止められるか。問題提起が弱い場合は改善。
-2. Selling angle: 商品スペック列挙ではなく「買う理由」になっているか（必要なら improvements に指摘）。
-3. Scene: 各シーンが映像化可能か。商品だけの静止画寄りにならないよう、人物・状況・動作を入れる。
-4. CTA: 購入・クリックにつながる短い行動喚起へ改善。
+1. Hook: 冒頭2秒。問題提起の sharpening（新事実なし）
+2. Scene: 映像化可能な指示（confirmed features only）
+3. CTA: 短い行動喚起
 
-出力ルール:
-- score は 0〜100 の整数（改善後の想定品質）
-- improvements は具体的な改善点の配列（日本語、3〜8件目安）
-- optimized_* は改善後の最終文言（日本語。kling_prompt のみ英語）
-- optimized_kling_prompt は必ず "Create a vertical TikTok commercial video showing..." で始め、optimized hook/scenes/CTA を反映（約15秒、9:16、no text overlay, no watermark）
-
-JSONのみで返してください:
+JSONのみ:
 {
   "score": 0,
   "improvements": [],
@@ -146,35 +142,74 @@ export async function optimizeSalesScenario(
     scene_2: requireField("scene_2", input.scene_2 ?? ""),
     scene_3: requireField("scene_3", input.scene_3 ?? ""),
     cta: requireField("cta", input.cta ?? ""),
+    confirmed: input.confirmed,
+    excluded: input.excluded,
+    productAnalysis: input.productAnalysis,
   };
 
-  const groq = getGroqClient();
-  const completion = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    messages: [
-      {
-        role: "system",
-        content:
-          "あなたはTikTok販売広告の品質チェッカーです。必ず指定のJSONスキーマのみを返します。",
-      },
-      {
-        role: "user",
-        content: buildUserPrompt(normalized),
-      },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.5,
-  });
+  const claimCtx = {
+    productName: normalized.product_name,
+    target: normalized.target_customer,
+    analysis: normalized.productAnalysis || null,
+    buckets: {
+      confirmed: normalized.confirmed || [],
+      inferred: [],
+      unknown: [],
+      excluded: normalized.excluded || [],
+      notSupported: normalized.excluded || [],
+    },
+  };
 
-  const text = completion.choices[0]?.message?.content || "{}";
-  let parsed: Record<string, unknown>;
+  const prior = {
+    hook: normalized.hook,
+    scene_1: normalized.scene_1,
+    scene_2: normalized.scene_2,
+    scene_3: normalized.scene_3,
+    cta: normalized.cta,
+  };
+
+  const passthrough: OptimizeSalesScenarioResponse = {
+    score: 70,
+    improvements: ["表現のみ調整（事実は変更なし）"],
+    optimized_hook: prior.hook,
+    optimized_scene_1: prior.scene_1,
+    optimized_scene_2: prior.scene_2,
+    optimized_scene_3: prior.scene_3,
+    optimized_cta: prior.cta,
+    optimized_kling_prompt: `Create a vertical TikTok commercial video showing ${normalized.product_name} with confirmed features only. 9:16, no text overlay, no watermark.`,
+  };
+
   try {
-    parsed = JSON.parse(text) as Record<string, unknown>;
-  } catch {
-    throw new Error(
-      `最適化JSONのパースに失敗しました: ${text.slice(0, 200)}`
-    );
-  }
+    const groq = getGroqClient();
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "あなたはTikTok販売広告の品質チェッカーです。商品事実を追加せず、指定JSONのみ返します。",
+        },
+        {
+          role: "user",
+          content: buildUserPrompt(normalized),
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.35,
+    });
 
-  return normalizeOptimizeResult(parsed);
+    const text = completion.choices[0]?.message?.content || "{}";
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      return validateOptimizeClaims(passthrough, claimCtx, prior);
+    }
+
+    const result = normalizeOptimizeResult(parsed);
+    return validateOptimizeClaims(result, claimCtx, prior);
+  } catch (error) {
+    console.error("[video-scenario] optimize fallback:", error);
+    return validateOptimizeClaims(passthrough, claimCtx, prior);
+  }
 }

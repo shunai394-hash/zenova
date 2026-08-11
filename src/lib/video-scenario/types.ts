@@ -29,6 +29,11 @@ export type GenerateSalesScenarioRequest = {
     targetInsight?: string;
     cta?: string;
     recommendedVideoStructure?: string[];
+    /** 商品事実の正本 */
+    confirmed?: string[];
+    excluded?: string[];
+    /** フル分析オブジェクト（任意） */
+    productAnalysis?: import("@/lib/product-analysis").ProductAnalysis | null;
   } | null;
 };
 
@@ -49,6 +54,10 @@ export type OptimizeSalesScenarioRequest = {
   scene_2: string;
   scene_3: string;
   cta: string;
+  /** 事実ゲート用（任意） */
+  confirmed?: string[];
+  excluded?: string[];
+  productAnalysis?: import("@/lib/product-analysis").ProductAnalysis | null;
 };
 
 export type OptimizeSalesScenarioResponse = {

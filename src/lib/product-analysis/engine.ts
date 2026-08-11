@@ -8,6 +8,12 @@ import type {
   SalesScoreBreakdown,
   TikTokProductSnapshot,
 } from "./types";
+import {
+  buildSourceBlob,
+  extractConfirmedFeatures,
+  extractExcludedFeatures,
+} from "./claim-guard";
+import { applyFactualGate } from "./factual-gate";
 
 function uniqueStrings(items: string[], limit: number): string[] {
   const seen = new Set<string>();
@@ -53,48 +59,20 @@ function labelFromGrade(grade: SalesScore["grade"]): string {
   }
 }
 
-/** 商品名・説明から特徴トークンを分解（存在しない性能は追加しない） */
+/** 商品名・説明から特徴トークンを分解（否定文脈を尊重・存在しない性能は追加しない） */
 export function extractProductFeatures(
   productName: string,
   description: string
 ): string[] {
-  const blob = `${productName} ${description}`;
-  const patterns: Array<{ re: RegExp; label: string }> = [
-    { re: /ひんやり|涼感|冷却|クール/i, label: "ひんやり涼感" },
-    { re: /UVカット|紫外線|UV対策|日焼け対策/i, label: "UVカット・日焼け対策" },
-    { re: /薄手|薄い|軽量/i, label: "薄手" },
-    { re: /ゆったり|ゆるめ|ワイド/i, label: "ゆったり設計" },
-    { re: /指穴|指あき|フィンガー/i, label: "指穴付き" },
-    { re: /夏用|夏向け|サマー/i, label: "夏向け" },
-    { re: /アームカバー|腕カバー|腕用/i, label: "腕カバー" },
-    { re: /レディース|女性用/i, label: "レディース向け" },
-    { re: /防水|撥水/i, label: "防水・撥水" },
-    { re: /充電|バッテリー|ワイヤレス|無線/i, label: "充電・ワイヤレス対応" },
-    { re: /時短|簡単|ワンタッチ/i, label: "時短・簡単操作" },
-    { re: /コンパクト|携帯|持ち運び/i, label: "携帯しやすい" },
-    { re: /コスパ|お得|安い/i, label: "コスパ訴求" },
-    { re: /公式|保証/i, label: "公式・保証あり" },
-  ];
+  const blob = buildSourceBlob({ productName, description });
+  return extractConfirmedFeatures(blob);
+}
 
-  const fromPatterns = patterns
-    .filter((p) => p.re.test(blob))
-    .map((p) => p.label);
-
-  // スペース／句読点区切りの短いトークン（商品名特有語）
-  const tokens = productName
-    .split(/[\s　/／|｜,、・]+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2 && t.length <= 10)
-    .filter((t) => !/^(レディース|メンズ|男女|兼用|夏用|冬用)$/.test(t))
-    // パターンで既に拾った語の重複・商品名ほぼそのままは除外
-    .filter(
-      (t) =>
-        !fromPatterns.some(
-          (p) => p.includes(t) || t.includes(p.replace(/・.*/, ""))
-        )
-    );
-
-  return uniqueStrings([...fromPatterns, ...tokens], 10);
+export function extractNotSupportedFeatures(
+  productName: string,
+  description: string
+): string[] {
+  return extractExcludedFeatures(buildSourceBlob({ productName, description }));
 }
 
 export function inferCategory(
@@ -205,35 +183,19 @@ function buildSellingPoints(input: {
   target: string;
 }): string[] {
   const { features, target } = input;
-  const points = features.slice(0, 6).map((f) => {
-    if (/涼感|ひんやり/.test(f)) return "ひんやり涼感をうたった夏向け設計";
-    if (/UV|日焼け/.test(f)) return "UVカット・日焼け対策を売りにした腕まわりケア";
-    if (/薄手/.test(f)) return "薄手で暑苦しさを抑えやすい";
-    if (/ゆったり/.test(f)) return "ゆったり設計で着けやすさを意識";
-    if (/指穴/.test(f)) return "指穴付きでズレにくさを訴求しやすい";
-    if (/腕カバー|アーム/.test(f)) return "腕の日差し対策に特化した形状";
-    return f;
-  });
-
+  // confirmed 特徴をそのまま強みにする（未根拠の言い換え・追加禁止）
+  const points = features.slice(0, 6);
   if (points.length === 0) {
-    points.push(`${target}の場面に寄せた商品特徴の提示`);
+    points.push(`${target}向けに、入力された商品情報をそのまま伝える`);
   }
   return uniqueStrings(points, 6);
 }
 
 function buildBenefits(features: string[], pains: string[]): string[] {
-  const benefits: string[] = [];
-  if (features.some((f) => /涼感|ひんやり|薄手/.test(f))) {
-    benefits.push("暑い季節でも腕まわり対策を取り入れやすい（商品説明ベース）");
-  }
-  if (features.some((f) => /UV|日焼け/.test(f))) {
-    benefits.push("腕の日差し対策を短尺で伝えやすい");
-  }
-  if (features.some((f) => /指穴|ゆったり/.test(f))) {
-    benefits.push("着け方・フィット感をビジュアルで示しやすい");
-  }
+  // 効果断定はせず、特徴の提示しやすさに留める
+  const benefits = features.slice(0, 3).map((f) => `${f}を動画で示しやすい`);
   if (benefits.length === 0 && pains[0]) {
-    benefits.push(`${pains[0]}への対処を商品特徴で示す`);
+    benefits.push("入力情報の範囲で悩みと特徴を対応づけて示す");
   }
   return uniqueStrings(benefits, 4);
 }
@@ -461,6 +423,32 @@ export function normalizeProductAnalysis(
     hasUserReview: raw.hasUserReview ?? false,
     analysisVersion: raw.analysisVersion || raw.version || "1.0",
     analysisMode: raw.analysisMode === "groq" ? "groq" : raw.analysisMode === "fallback" ? "fallback" : raw.analysisMode,
+    // 旧履歴互換: 新フィールドが無くてもクラッシュさせず、空で安全側に倒す（推測で埋めない）
+    confirmed: Array.isArray(raw.confirmed)
+      ? raw.confirmed
+      : Array.isArray(raw.factualClaims)
+        ? raw.factualClaims
+        : Array.isArray(raw.productFeatures)
+          ? raw.productFeatures
+          : Array.isArray(raw.sellingPoints)
+            ? raw.sellingPoints
+            : features,
+    inferred: Array.isArray(raw.inferred)
+      ? raw.inferred
+      : Array.isArray(raw.inferredClaims)
+        ? raw.inferredClaims
+        : [],
+    unknown: Array.isArray(raw.unknown) ? raw.unknown : [],
+    excluded: Array.isArray(raw.excluded)
+      ? raw.excluded
+      : Array.isArray(raw.notSupported)
+        ? raw.notSupported
+        : [],
+    notSupported: Array.isArray(raw.notSupported)
+      ? raw.notSupported
+      : Array.isArray(raw.excluded)
+        ? raw.excluded
+        : [],
     salesScore: normalizeSalesScore(raw.salesScore),
   };
 }
@@ -722,7 +710,13 @@ export async function analyzeProductHeuristic(
     analysisMode: "fallback",
   };
 
-  return normalizeProductAnalysis(analysis);
+  return applyFactualGate(normalizeProductAnalysis(analysis), {
+    productName,
+    description,
+    reviewText,
+    target,
+    platform,
+  });
 }
 
 /**
@@ -767,12 +761,21 @@ export async function analyzeProduct(
       source,
     });
     if (groqResult) {
-      return {
-        ...groqResult,
-        analysisMode: "groq",
-        target,
-        platform,
-      };
+      return applyFactualGate(
+        {
+          ...groqResult,
+          analysisMode: "groq",
+          target,
+          platform,
+        },
+        {
+          productName,
+          description,
+          reviewText,
+          target,
+          platform,
+        }
+      );
     }
   } catch (error) {
     console.warn("[product-analysis] Groq path error, using fallback:", error);

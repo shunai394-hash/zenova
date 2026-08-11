@@ -3,6 +3,12 @@ import type {
   GenerateSalesScenarioRequest,
   SalesVideoScenario,
 } from "./types";
+import {
+  buildConfirmedPromptBlock,
+  buildFallbackScenarioFromConfirmed,
+  validateSalesScenarioClaims,
+} from "@/lib/product-analysis/validate-video-claims";
+import { PROMPT_INJECTION_GUARD, wrapUserDataForPrompt } from "@/lib/product-analysis/claim-guard";
 
 const SCENARIO_KEYS = [
   "target_customer",
@@ -58,48 +64,47 @@ export function normalizeSalesScenario(
 function buildUserPrompt(input: GenerateSalesScenarioRequest): string {
   const platform = (input.platform || "TikTok").trim() || "TikTok";
   const analysis = input.analysis;
+  const confirmed =
+    analysis?.confirmed?.length
+      ? analysis.confirmed
+      : analysis?.sellingPoints || [];
 
-  const analysisBlock = analysis
-    ? `
-【商品分析結果】
-要約: ${analysis.summary ?? ""}
-販売アングル: ${analysis.salesAngle ?? ""}
-強み: ${(analysis.sellingPoints ?? []).join(" / ")}
-悩み: ${(analysis.painPoints ?? []).join(" / ")}
-ターゲット洞察: ${analysis.targetInsight ?? ""}
-推奨CTA: ${analysis.cta ?? ""}
-推奨構成: ${(analysis.recommendedVideoStructure ?? []).join(" → ")}
-`
-    : "";
+  const claimBlock = analysis?.productAnalysis
+    ? buildConfirmedPromptBlock(analysis.productAnalysis)
+    : `confirmed（商品事実の唯一の正本）: ${confirmed.join(" / ") || "(なし)"}
+excluded: ${(analysis?.excluded || []).join(" / ") || "(なし)"}
+unknown: 埋めない
+inferred: 商品スペックとして使わない`;
 
   return `
 あなたはTikTokアフィリエイト／物販の動画ディレクターです。
-「商品が動くだけ」ではなく、視聴者が欲しくなる販売用ショート動画のシナリオを作ってください。
+販売用ショート動画のシナリオを作ってください。
 
-商品名:
-${input.product_name}
+${PROMPT_INJECTION_GUARD}
 
-商品説明:
-${input.description}
+【商品事実ルール — 最重要】
+- 商品について記述できる事実は confirmed のみ。
+- unknown / excluded は使わない・肯定しない。
+- inferred をスペック・効果・性能として書かない。
+- 数値（%・UPF・g 等）、成分、効果断定、使用体験、レビューの追加禁止。
+- 表現を変えても confirmed に無い情報は追加しない。
+例: confirmed「UVカット」→ OK「UVカット」。NG「UV99%」「UPF50+」「通気性が高い」。
 
-ターゲット:
-${input.target}
+${claimBlock}
 
-プラットフォーム:
-${platform}
-
-商品画像:
-${input.image_name?.trim() || "（画像あり・商品ビジュアルを活かす）"}
-${analysisBlock}
+${wrapUserDataForPrompt("product_name", input.product_name)}
+${wrapUserDataForPrompt("description_data_only", input.description)}
+${wrapUserDataForPrompt("target", input.target)}
+プラットフォーム: ${platform}
+商品画像: ${input.image_name?.trim() || "（あり）"}
 
 要件:
-- 0〜2秒でスクロールを止めるフック
-- 悩み → 解決 → 商品証明 → CTA の流れ
-- scene_1〜3 は映像で撮れる具体的な指示（誰が何をしているか）
-- kling_prompt は英語のみ。必ず "Create a vertical TikTok commercial video showing..." で始め、hook/scenes/CTA を映像指示としてつなぐ（約15秒、9:16、no text overlay, no watermark）
-- 日本語フィールドは自然な話し言葉、短く鋭く（hook は0-2秒で刺さる一言）
+- 0〜2秒フック
+- 悩み → 解決 → 商品証明 → CTA（証明は confirmed のみ）
+- scene_1〜3 は映像指示（confirmed 外の機能を書かない）
+- kling_prompt は英語のみ。"Create a vertical TikTok commercial video showing..." で始め、confirmed features only（約15秒、9:16、no text overlay, no watermark）
 
-JSONのみで返してください（他の文字は不要）:
+JSONのみ:
 {
   "target_customer": "",
   "selling_angle": "",
@@ -124,37 +129,65 @@ export async function generateSalesScenario(
   if (!description) throw new Error("description は必須です");
   if (!target) throw new Error("target は必須です");
 
-  const groq = getGroqClient();
+  const claimCtx = {
+    productName,
+    target,
+    analysis: input.analysis?.productAnalysis || null,
+    buckets: {
+      confirmed:
+        input.analysis?.confirmed ||
+        input.analysis?.sellingPoints ||
+        [],
+      inferred: [],
+      unknown: [],
+      excluded: input.analysis?.excluded || [],
+      notSupported: input.analysis?.excluded || [],
+    },
+  };
 
-  const completion = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    messages: [
-      {
-        role: "system",
-        content:
-          "あなたはTikTok販売動画のシナリオライターです。必ず指定のJSONスキーマのみを返します。",
-      },
-      {
-        role: "user",
-        content: buildUserPrompt({
-          ...input,
-          product_name: productName,
-          description,
-          target,
-        }),
-      },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.7,
+  const fallback = buildFallbackScenarioFromConfirmed({
+    productName,
+    target,
+    confirmed: claimCtx.buckets.confirmed,
+    cta: input.analysis?.cta,
   });
 
-  const text = completion.choices[0]?.message?.content || "{}";
-  let parsed: Record<string, unknown>;
   try {
-    parsed = JSON.parse(text) as Record<string, unknown>;
-  } catch {
-    throw new Error(`シナリオJSONのパースに失敗しました: ${text.slice(0, 200)}`);
-  }
+    const groq = getGroqClient();
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "あなたはTikTok販売動画のシナリオライターです。confirmed以外の商品事実を作らず、指定JSONのみ返します。",
+        },
+        {
+          role: "user",
+          content: buildUserPrompt({
+            ...input,
+            product_name: productName,
+            description,
+            target,
+          }),
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.4,
+    });
 
-  return normalizeSalesScenario(parsed);
+    const text = completion.choices[0]?.message?.content || "{}";
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      return validateSalesScenarioClaims(fallback, claimCtx);
+    }
+
+    const normalized = normalizeSalesScenario(parsed);
+    return validateSalesScenarioClaims(normalized, claimCtx);
+  } catch (error) {
+    console.error("[video-scenario] generate fallback:", error);
+    return validateSalesScenarioClaims(fallback, claimCtx);
+  }
 }
