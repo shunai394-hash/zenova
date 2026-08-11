@@ -1602,10 +1602,11 @@ export default function Home() {
         return;
       }
 
-      const plan = String(usageData?.plan ?? "free").toLowerCase();
       const remaining = Number(usageData?.remaining ?? 0);
-
-      if (plan === "free" || remaining <= 0) {
+      // サーバー /api/usage の remaining を正とする。
+      // Free でも video_test_allowance 付きなら remaining>0（例: テスト枠）。
+      // plan==="free" だけで拒否するとテスト枠が /pricing 循環になる。
+      if (!(remaining > 0)) {
         router.push("/pricing");
         return;
       }
