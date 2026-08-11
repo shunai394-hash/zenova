@@ -1,13 +1,13 @@
-import Stripe from "stripe";
+﻿import Stripe from "stripe";
 import { isBillingPlanId, type BillingPlanId } from "@/lib/billing/plans";
 
 /**
- * Stripe 接続ヘルパー。
+ * Stripe 謗･邯壹・繝ｫ繝代・縲・
  *
- * 必要 env:
+ * 蠢・ｦ・env:
  * - STRIPE_SECRET_KEY
- * - STRIPE_WEBHOOK_SECRET（webhook 署名検証・必須）
- * - NEXT_PUBLIC_APP_URL（Checkout 戻り先）
+ * - STRIPE_WEBHOOK_SECRET・・ebhook 鄂ｲ蜷肴､懆ｨｼ繝ｻ蠢・茨ｼ・
+ * - NEXT_PUBLIC_APP_URL・・heckout 謌ｻ繧雁・・・
  * - STRIPE_PRICE_STARTER
  * - STRIPE_PRICE_PRO
  */
@@ -21,7 +21,7 @@ export function isStripeConfigured(): boolean {
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key) {
-    throw new Error("STRIPE_SECRET_KEY が未設定です");
+throw new Error("STRIPE_SECRET_KEY is not configured");
   }
   if (!stripeClient) {
     stripeClient = new Stripe(key);
@@ -32,7 +32,7 @@ export function getStripe(): Stripe {
 export function getStripeWebhookSecret(): string {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (!secret) {
-    throw new Error("STRIPE_WEBHOOK_SECRET が未設定です");
+throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
   }
   return secret;
 }
@@ -40,12 +40,19 @@ export function getStripeWebhookSecret(): string {
 export function getAppBaseUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
+
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (productionUrl) {
+    return `https://${productionUrl.replace(/\/$/, "")}`;
+  }
+
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
+
   return "http://localhost:3000";
 }
 
-/** 環境変数の固定 Price ID */
+/** 迺ｰ蠅・､画焚縺ｮ蝗ｺ螳・Price ID */
 export function getStripePriceIdForPlan(planId: string): string | null {
   const map: Record<string, string | undefined> = {
     starter: process.env.STRIPE_PRICE_STARTER,
@@ -57,7 +64,7 @@ export function getStripePriceIdForPlan(planId: string): string | null {
   return id || null;
 }
 
-/** Price ID → plan_id */
+/** Price ID 竊・plan_id */
 export function planIdFromStripePriceId(
   priceId: string | null | undefined
 ): BillingPlanId | null {
@@ -95,3 +102,5 @@ export function resolvePlanIdFromSubscription(
   const priceId = subscription.items?.data?.[0]?.price?.id;
   return planIdFromStripePriceId(priceId);
 }
+
+

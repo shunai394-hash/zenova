@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth/session";
 import {
   getPlanById,
@@ -14,20 +14,14 @@ import {
 
 export const runtime = "nodejs";
 
-/**
- * POST /api/stripe/checkout
- * body: { plan_id }
- * → { url } Stripe Checkout Session（ログインユーザー必須）
- *
- * Stripe 未設定時: { demo: true, activate_url } を返す（デモ有効化へ誘導）
- */
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuthUser();
+
     if (!user) {
       return NextResponse.json(
         {
-          error: "ログインが必要です",
+          error: "Login required",
           login_url: "/login",
         },
         { status: 401 }
@@ -35,57 +29,72 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
+
     const planId = String(body.plan_id ?? body.plan ?? "")
       .trim()
       .toLowerCase();
+
     if (!planId) {
-      return NextResponse.json({ error: "plan_id が必要です" }, { status: 400 });
-    }
-    if (planId === "free") {
       return NextResponse.json(
-        { error: "Free プランは決済不要です" },
+        { error: "plan_id is required" },
         { status: 400 }
       );
     }
+
+    if (planId === "free") {
+      return NextResponse.json(
+        { error: "Free plan does not require checkout" },
+        { status: 400 }
+      );
+    }
+
     if (planId !== "starter" && planId !== "pro") {
       return NextResponse.json(
-        { error: "対応プランは starter / pro のみです" },
+        { error: "Supported plans are starter and pro" },
         { status: 400 }
       );
     }
 
     const plan = await getPlanById(planId);
+
     if (!plan) {
       return NextResponse.json(
-        { error: `プラン「${planId}」が見つかりません` },
+        { error: `Plan "${planId}" was not found` },
         { status: 404 }
       );
     }
 
     const baseUrl = getAppBaseUrl();
 
-    if (!isStripeConfigured()) {
+    const allowDemoBilling =
+      process.env.ALLOW_DEMO_BILLING === "1";
+
+    if (allowDemoBilling || !isStripeConfigured()) {
       return NextResponse.json({
         demo: true,
         message:
-          "STRIPE_SECRET_KEY 未設定のためデモモードです。デモでプランを有効化できます。",
-        activate_url: `${baseUrl}/api/billing/activate-demo?plan=${encodeURIComponent(planId)}`,
+          "Demo mode is enabled. Stripe checkout will not be used.",
+        activate_url:
+          `${baseUrl}/api/billing/activate-demo?plan=${encodeURIComponent(planId)}`,
         plan_id: planId,
         user_id: user.id,
       });
     }
 
     const priceId = getStripePriceIdForPlan(planId);
+
     if (!priceId) {
       return NextResponse.json(
         {
-          error: `STRIPE_PRICE_${planId.toUpperCase()} が未設定です`,
+          error:
+            `STRIPE_PRICE_${planId.toUpperCase()} is not configured`,
         },
         { status: 500 }
       );
     }
 
     const stripe = getStripe();
+
     let customerId = await getStripeCustomerIdForUser(user.id);
 
     if (!customerId) {
@@ -95,15 +104,19 @@ export async function POST(req: NextRequest) {
           supabase_user_id: user.id,
         },
       });
+
       customerId = customer.id;
+
       await saveStripeCustomerId(user.id, customerId);
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      success_url: `${baseUrl}/checkout?success=1&plan=${encodeURIComponent(planId)}`,
-      cancel_url: `${baseUrl}/checkout?canceled=1&plan=${encodeURIComponent(planId)}`,
+      success_url:
+        `${baseUrl}/checkout?success=1&plan=${encodeURIComponent(planId)}`,
+      cancel_url:
+        `${baseUrl}/checkout?canceled=1&plan=${encodeURIComponent(planId)}`,
       client_reference_id: user.id,
       metadata: {
         plan_id: planId,
@@ -120,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     if (!session.url) {
       return NextResponse.json(
-        { error: "Checkout URL を作成できませんでした" },
+        { error: "Checkout URL could not be created" },
         { status: 500 }
       );
     }
@@ -134,8 +147,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[stripe/checkout]", error);
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      {
+        error:
+          error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
