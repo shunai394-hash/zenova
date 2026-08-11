@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PlanRecord } from "@/lib/usage";
+import { SiteHeader } from "@/components/site-header";
 
 const PLAN_ORDER = ["free", "starter", "pro"] as const;
 
@@ -36,6 +37,16 @@ const PLAN_BLURBS: Record<PlanId, string> = {
   pro: "量産・複数商品向け",
 };
 
+type UsageView = {
+  plan: string;
+  remaining: number;
+  used: number;
+  video_limit: number;
+  email: string | null;
+  video_test_allowance: boolean;
+  authenticated: boolean;
+};
+
 function formatPrice(price: number): string {
   if (price <= 0) return "¥0";
   return `¥${price.toLocaleString("ja-JP")}`;
@@ -64,15 +75,22 @@ export default function PricingPage() {
   const [plans, setPlans] = useState<PlanRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState<string | null>(null);
+  const [usage, setUsage] = useState<UsageView | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/plans");
-        const data = await res.json();
+        const [plansRes, usageRes] = await Promise.all([
+          fetch("/api/plans"),
+          fetch("/api/usage", { credentials: "same-origin" }),
+        ]);
+        const data = await plansRes.json();
+        const usageData = await usageRes.json().catch(() => null);
+
         if (cancelled) return;
+
         const list = Array.isArray(data?.plans)
           ? sortPlans(
               (data.plans as PlanRecord[]).filter((p) => isPlanId(p.id))
@@ -85,6 +103,23 @@ export default function PricingPage() {
           setWarning("プラン情報を取得できませんでした");
         } else {
           setWarning(null);
+        }
+
+        if (usageData && typeof usageData === "object") {
+          setUsage({
+            plan: String(usageData.plan ?? "free").toLowerCase(),
+            remaining: Number(usageData.remaining ?? 0),
+            used: Number(usageData.used ?? 0),
+            video_limit: Number(usageData.video_limit ?? 0),
+            email:
+              typeof usageData.email === "string" && usageData.email.trim()
+                ? usageData.email.trim()
+                : null,
+            video_test_allowance: usageData.video_test_allowance === true,
+            authenticated: usageData.authenticated === true,
+          });
+        } else {
+          setUsage(null);
         }
       } catch (err) {
         if (cancelled) return;
@@ -99,9 +134,15 @@ export default function PricingPage() {
     };
   }, []);
 
+  const showTestAllowance =
+    Boolean(usage?.authenticated) &&
+    usage?.video_test_allowance === true &&
+    (usage?.plan || "free") === "free";
+
   return (
-    <main className="min-h-screen bg-black px-4 py-10 text-white sm:px-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen bg-black text-white">
+      <SiteHeader />
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-8">
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-900 pb-8">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
@@ -120,6 +161,34 @@ export default function PricingPage() {
             ← Analyze
           </Link>
         </header>
+
+        {/* サーバー /api/usage の video_test_allowance のみ表示（一般向けカードには出さない） */}
+        {showTestAllowance && usage && (
+          <div className="mt-6 rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-4 py-4 text-sm text-emerald-100">
+            <p className="font-medium text-emerald-50">テスト枠（個人アカウント）</p>
+            <p className="mt-1 text-emerald-100/90">
+              ログイン中: {usage.email ?? "—"}
+            </p>
+            <p className="mt-2 text-emerald-100/90">
+              Free プランでも本日{" "}
+              <span className="font-semibold text-white">
+                {usage.video_limit}本まで
+              </span>
+              動画生成可能です（サーバー権限・残り {Math.max(0, usage.remaining)}{" "}
+              本 / 使用 {usage.used} 本）。
+            </p>
+            <p className="mt-2 text-xs text-emerald-200/70">
+              この表示は許可されたテストアカウントにのみ出ます。一般の Free
+              ユーザー向けプラン内容は下のカードどおり「動画生成不可」です。
+            </p>
+            <Link
+              href="/analyze"
+              className="mt-3 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-gray-200"
+            >
+              Analyze で動画生成を試す
+            </Link>
+          </div>
+        )}
 
         {warning && (
           <p className="mt-6 text-sm text-amber-300/90">
