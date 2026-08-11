@@ -29,6 +29,7 @@ import {
   buildPlanVariants,
   type PlanVariantId,
 } from "@/lib/analyze/plan-variants";
+import { formatTimelineLines } from "@/lib/analyze/scene-timing";
 import { buildAnalysisNarrative } from "@/lib/analyze/analysis-narrative";
 import {
   buildPreviewHref,
@@ -262,7 +263,11 @@ function SalesScorePanel({ analysis }: { analysis: ProductAnalysis }) {
             {salesScore.scoreNote || "AI推定・参考スコア（実測販売データなし）"}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            source: {analysis.source}
+            {analysis.analysisMode === "groq"
+              ? "AI分析（Groq）"
+              : analysis.analysisMode === "fallback"
+                ? "フォールバック分析"
+                : `source: ${analysis.source}`}
             {analysis.tiktok ? "" : " · TikTok実績未接続"}
           </p>
         </div>
@@ -340,6 +345,10 @@ export default function Home() {
   const [selectedVideoIdea, setSelectedVideoIdea] = useState<VideoIdea | null>(
     null
   );
+  const [serverVideoIdeas, setServerVideoIdeas] = useState<VideoIdea[] | null>(
+    null
+  );
+  const [ideasMode, setIdeasMode] = useState<"groq" | "fallback" | null>(null);
   const [videoSettings, setVideoSettings] = useState<VideoSettings>(
     DEFAULT_VIDEO_SETTINGS
   );
@@ -634,6 +643,20 @@ export default function Home() {
 
   const videoIdeas = useMemo(() => {
     if (!analysis) return [];
+    const duration = videoSettings.duration_sec;
+
+    if (serverVideoIdeas && serverVideoIdeas.length > 0) {
+      return serverVideoIdeas.map((idea) => ({
+        ...idea,
+        targetAudience:
+          target.trim() || idea.targetAudience || analysis.target || "",
+        timeline: formatTimelineLines(
+          idea.timeline.map((t) => ({ scene: t.scene, text: t.text })),
+          duration
+        ),
+      }));
+    }
+
     const analysisResult = buildAnalysisResult({
       analysis,
       formTarget: target,
@@ -649,18 +672,25 @@ export default function Home() {
         sellingPoints: analysis.productFeatures?.length
           ? analysis.productFeatures
           : analysis.sellingPoints,
-        targetAudience: target.trim() || analysis.target || analysisResult.targetAudience,
+        targetAudience:
+          target.trim() || analysis.target || analysisResult.targetAudience,
         description: description.trim() || analysis.summary,
         analysis,
         analysisResult,
       },
       {
-        duration: videoSettings.duration_sec,
+        duration,
       }
     );
-    // planBrief / video_style は依存しない（選択で再生成ループを防ぐ）
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analysis, productName, description, target, videoSettings.duration_sec]);
+  }, [
+    analysis,
+    productName,
+    description,
+    target,
+    videoSettings.duration_sec,
+    serverVideoIdeas,
+  ]);
 
   // 分析完了後、未選択なら先頭案を自動選択
   useEffect(() => {
@@ -753,6 +783,8 @@ export default function Home() {
     setPostPrep(emptyPostPrepSet());
     setPlanVariant("ugc");
     setSelectedVideoIdea(null);
+    setServerVideoIdeas(null);
+    setIdeasMode(null);
     setRecommendedSettings(null);
     setVideoSettings({
       ...DEFAULT_VIDEO_SETTINGS,
@@ -1204,11 +1236,15 @@ export default function Home() {
           // 将来: TikTok商品IDを渡す
           tiktok_product_id: null,
           source: productUrl.trim() ? "product_url" : "manual",
+          duration_sec: videoSettings.duration_sec,
         }),
       });
 
       const data = (await res.json()) as AnalyzeProductResponse & {
         error?: string;
+        video_ideas?: VideoIdea[];
+        ideas_mode?: "groq" | "fallback";
+        analysis_mode?: "groq" | "fallback";
       };
 
       if (!res.ok) {
@@ -1221,7 +1257,21 @@ export default function Home() {
         throw new Error("分析結果が返りませんでした");
       }
 
-      applyAnalysisResult(data.analysis);
+      if (Array.isArray(data.video_ideas) && data.video_ideas.length > 0) {
+        setServerVideoIdeas(data.video_ideas);
+        setIdeasMode(data.ideas_mode ?? "fallback");
+      } else {
+        setServerVideoIdeas(null);
+        setIdeasMode(data.ideas_mode ?? null);
+      }
+
+      applyAnalysisResult({
+        ...data.analysis,
+        analysisMode:
+          data.analysis.analysisMode ||
+          data.analysis_mode ||
+          data.analysis.analysisMode,
+      });
       setSelectedProductId(data.product_id ?? null);
 
       if (data.product_id) {
@@ -1959,11 +2009,21 @@ export default function Home() {
           <section id="analysis-result" className="mt-6 scroll-mt-24 space-y-4">
             {/* STEP 2: 動画企画 */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-bold text-black">
                   2
                 </span>
                 <h2 className="text-lg font-semibold">動画企画</h2>
+                <span className="rounded-full border border-zinc-700 px-2.5 py-0.5 text-[11px] text-gray-400">
+                  {analysis.analysisMode === "groq"
+                    ? "AI分析"
+                    : "フォールバック分析"}
+                </span>
+                {ideasMode && (
+                  <span className="rounded-full border border-zinc-700 px-2.5 py-0.5 text-[11px] text-gray-400">
+                    {ideasMode === "groq" ? "AI企画" : "フォールバック企画"}
+                  </span>
+                )}
                 {selectedProductId && (
                   <span className="ml-auto text-xs text-gray-500">
                     履歴 ID: {selectedProductId.slice(0, 8)}…

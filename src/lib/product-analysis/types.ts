@@ -128,6 +128,11 @@ export type ProductAnalysis = {
   /** 実体験レビュー入力の有無 */
   hasUserReview?: boolean;
   analysisVersion?: string;
+  /**
+   * 分析生成元。
+   * groq = Groq LLM / fallback = ヒューリスティック
+   */
+  analysisMode?: "groq" | "fallback";
 };
 
 export type AnalyzeProductResponse = {

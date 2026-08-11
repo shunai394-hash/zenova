@@ -6,7 +6,6 @@ import type { ProductAnalysis } from "@/lib/product-analysis";
 import { normalizeProductAnalysis } from "@/lib/product-analysis/engine";
 import type { SalesBrief, SalesGoal, SalesVideoIdea } from "./types";
 import { analyzeSalesProduct } from "./analysis";
-import { resolveAiSalesProviderId } from "./provider";
 import { formatTimelineLines } from "@/lib/analyze/scene-timing";
 
 export type GenerateSalesIdeasInput = {
@@ -29,7 +28,7 @@ function featureList(analysis: ProductAnalysis | null): string[] {
   ).slice(0, 4);
 }
 
-function generateSalesVideoIdeasMock(
+export function generateSalesVideoIdeasMock(
   input: GenerateSalesIdeasInput
 ): SalesVideoIdea[] {
   const duration = Math.min(60, Math.max(15, input.duration ?? 30));
@@ -183,14 +182,15 @@ function generateSalesVideoIdeasMock(
   return [idea1, idea2, idea3];
 }
 
+/** 同期版（クライアント安全・ヒューリスティック）。Server では generateSalesVideoIdeasAsync を優先 */
 export function generateSalesVideoIdeas(
   input: GenerateSalesIdeasInput
 ): SalesVideoIdea[] {
-  const provider = resolveAiSalesProviderId();
-  if (provider === "openai") {
-    console.info(
-      "[ai-sales-engine] AI_PROVIDER=openai だが未接続のため mock を使用"
-    );
-  }
   return generateSalesVideoIdeasMock(input);
 }
+
+export {
+  generateSalesVideoIdeasAsync,
+  generateSalesVideoIdeasWithGroq,
+} from "./groq-ideas";
+

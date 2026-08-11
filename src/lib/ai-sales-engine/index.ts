@@ -37,6 +37,9 @@ export {
 
 export {
   generateSalesVideoIdeas,
+  generateSalesVideoIdeasMock,
+  generateSalesVideoIdeasAsync,
+  generateSalesVideoIdeasWithGroq,
   type GenerateSalesIdeasInput,
 } from "./ideas";
 

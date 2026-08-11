@@ -460,6 +460,7 @@ export function normalizeProductAnalysis(
       buildPersonaFromTarget(target || "購入検討者", pains[0] || ""),
     hasUserReview: raw.hasUserReview ?? false,
     analysisVersion: raw.analysisVersion || raw.version || "1.0",
+    analysisMode: raw.analysisMode === "groq" ? "groq" : raw.analysisMode === "fallback" ? "fallback" : raw.analysisMode,
     salesScore: normalizeSalesScore(raw.salesScore),
   };
 }
@@ -506,7 +507,10 @@ function normalizeSalesScore(
   };
 }
 
-export async function analyzeProduct(
+/**
+ * ヒューリスティック商品分析（Groq 失敗時のフォールバック）
+ */
+export async function analyzeProductHeuristic(
   request: AnalyzeProductRequest
 ): Promise<ProductAnalysis> {
   const productName = String(request.product_name ?? "").trim();
@@ -715,9 +719,66 @@ export async function analyzeProduct(
     uncertainty,
     buyerPersonaDetail: persona,
     hasUserReview,
+    analysisMode: "fallback",
   };
 
   return normalizeProductAnalysis(analysis);
+}
+
+/**
+ * 商品分析の入口。
+ * Groq 成功 → LLM分析 / 失敗・未設定 → ヒューリスティック
+ */
+export async function analyzeProduct(
+  request: AnalyzeProductRequest
+): Promise<ProductAnalysis> {
+  const productName = String(request.product_name ?? "").trim();
+  const description =
+    String(request.description ?? "").trim() || productName;
+  const target = String(request.target ?? "").trim();
+  const platform = String(request.platform ?? "").trim();
+  const productUrl = String(request.product_url ?? "").trim();
+  const imageName = request.image_name?.trim() || null;
+  const reviewText = request.review_text?.trim() || "";
+  const hasUserReview = reviewText.length >= 20;
+
+  if (!productName) throw new Error("product_name は必須です");
+  if (!target) throw new Error("target は必須です");
+  if (!platform) throw new Error("platform は必須です");
+
+  const tiktokLookupKey =
+    request.tiktok_product_id?.trim() || productUrl || null;
+  const tiktok = await fetchTikTokProductSnapshot(tiktokLookupKey);
+  const source = resolveSource(request, tiktok);
+
+  try {
+    const { analyzeProductWithGroq } = await import("./groq-analyze");
+    const groqResult = await analyzeProductWithGroq({
+      request,
+      productName,
+      description,
+      target,
+      platform,
+      productUrl,
+      imageName,
+      reviewText,
+      hasUserReview,
+      tiktok,
+      source,
+    });
+    if (groqResult) {
+      return {
+        ...groqResult,
+        analysisMode: "groq",
+        target,
+        platform,
+      };
+    }
+  } catch (error) {
+    console.warn("[product-analysis] Groq path error, using fallback:", error);
+  }
+
+  return analyzeProductHeuristic(request);
 }
 
 /** 既存 generate-* API へ渡すための文字列化（契約は変更しない） */

@@ -1,4 +1,4 @@
-export { analyzeProduct, buildApiProductName, buildApiTarget, normalizeProductAnalysis, extractProductFeatures } from "./engine";
+export { analyzeProduct, analyzeProductHeuristic, buildApiProductName, buildApiTarget, normalizeProductAnalysis, extractProductFeatures } from "./engine";
 export {
   applyPerformanceToSalesScore,
   computePerformanceBonus,
