@@ -5,7 +5,7 @@ import {
   type PlanVariantId,
 } from "@/lib/analyze/plan-variants";
 
-/** Sprint 3: AI別案タブ（比較 / UGC / ランキング） */
+/** 形式別企画タブ（UGC / レビュー / BA / 広告 / 比較 / ランキング） */
 export function PlanVariantTabs({
   active,
   onChange,
@@ -18,9 +18,9 @@ export function PlanVariantTabs({
   return (
     <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
       <div>
-        <h3 className="text-base font-semibold text-white">AI別案</h3>
+        <h3 className="text-base font-semibold text-white">形式別企画</h3>
         <p className="mt-1 text-xs text-gray-500">
-          比較・UGC・ランキングの企画を切り替えて試せます（動画スタイルも連動）
+          形式を切り替えるとシーン構成も変わります（選択中の企画が動画生成へ引き継がれます）
         </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">

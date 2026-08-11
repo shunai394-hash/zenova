@@ -1,4 +1,5 @@
 import type { AiPlanBrief } from "@/lib/analyze/plan-brief";
+import { allocateSceneSeconds } from "@/lib/analyze/scene-timing";
 import type {
   AnalysisResult,
   VideoIdea,
@@ -37,12 +38,16 @@ export function buildVideoPlan(input: {
     timeline,
     ideaId: input.ideaId ?? null,
     goal: input.goal ?? "purchase",
-    cta: input.cta?.trim() || input.brief?.cta?.trim() || input.analysis?.cta || "詳細を見る",
+    cta:
+      input.cta?.trim() ||
+      input.brief?.cta?.trim() ||
+      input.analysis?.cta ||
+      "詳細を見る",
   };
 }
 
 /**
- * VideoIdea 選択 → VideoPlan 生成
+ * VideoIdea 選択 → VideoPlan 生成（選択企画を再解釈しない）
  */
 export function buildVideoPlanFromIdea(input: {
   idea: VideoIdea;
@@ -119,53 +124,41 @@ function rescaleTimeline(
 ): VideoPlanTimelineItem[] {
   const n = timeline.length;
   if (n === 0) return [];
-  // 標準: 0-3 Hook / 3-10 説明 / 10-20 メリット / 20-30 CTA（尺に比例）
-  if (n === 4 && duration >= 20) {
-    const marks = [
-      0,
-      Math.round(duration * 0.1),
-      Math.round(duration * 0.33),
-      Math.round(duration * 0.67),
-      duration,
-    ];
-    return timeline.map((item, i) => ({
-      ...item,
-      second: `${marks[i]}-${marks[i + 1]}`,
-    }));
-  }
-  const slice = duration / n;
-  return timeline.map((item, i) => {
-    const start = Math.floor(i * slice);
-    const end = i === n - 1 ? duration : Math.floor((i + 1) * slice);
-    return { ...item, second: `${start}-${end}` };
-  });
+  const lastEnd = inferDurationFromTimeline(timeline);
+  if (lastEnd === duration) return timeline;
+
+  const slots = allocateSceneSeconds(duration, n);
+  return timeline.map((item, i) => ({
+    ...item,
+    second: slots[i]?.second ?? item.second,
+  }));
 }
 
 function defaultIdeaTimeline(
   idea: VideoIdea,
   duration: number
 ): VideoPlanTimelineItem[] {
-  const hookEnd = Math.min(3, Math.floor(duration * 0.1));
-  const descEnd = Math.max(hookEnd + 1, Math.floor(duration * 0.33));
-  const meritEnd = Math.max(descEnd + 1, Math.floor(duration * 0.67));
-  return [
-    { second: `0-${hookEnd}`, scene: "Hook", text: idea.hook },
-    {
-      second: `${hookEnd}-${descEnd}`,
-      scene: "商品説明",
-      text: idea.concept,
-    },
-    {
-      second: `${descEnd}-${meritEnd}`,
-      scene: "メリット",
-      text: idea.reason.slice(0, 40),
-    },
-    {
-      second: `${meritEnd}-${duration}`,
-      scene: "CTA",
-      text: idea.cta,
-    },
-  ];
+  return formatDefaultScenes(
+    [
+      { scene: "Hook", text: idea.hook },
+      { scene: "商品説明", text: idea.concept },
+      { scene: "メリット", text: idea.reason.slice(0, 40) },
+      { scene: "CTA", text: idea.cta },
+    ],
+    duration
+  );
+}
+
+function formatDefaultScenes(
+  scenes: { scene: string; text: string }[],
+  duration: number
+): VideoPlanTimelineItem[] {
+  const slots = allocateSceneSeconds(duration, scenes.length);
+  return scenes.map((s, i) => ({
+    second: slots[i]?.second ?? "0-0",
+    scene: s.scene,
+    text: s.text,
+  }));
 }
 
 function defaultTimeline(
@@ -173,31 +166,22 @@ function defaultTimeline(
   brief?: AiPlanBrief | null,
   analysis?: AnalysisResult | null
 ): VideoPlanTimelineItem[] {
-  const hook = brief?.firstThreeSeconds || analysis?.hook || "知らないと損";
+  const hook =
+    brief?.firstThreeSeconds || analysis?.hook || "冒頭で特徴を見せる";
   const mid =
     analysis?.sellingPoints?.[0] ||
     brief?.reason?.slice(0, 40) ||
     "特徴説明";
   const cta = brief?.cta || analysis?.cta || "プロフィールからチェック";
 
-  if (duration <= 15) {
-    return [
-      { second: "0-3", scene: "問題提起", text: hook.slice(0, 40) },
-      { second: "3-10", scene: "商品紹介", text: mid.slice(0, 40) },
-      { second: "10-15", scene: "CTA", text: cta.slice(0, 40) },
-    ];
-  }
-
-  const midEnd = Math.max(12, Math.floor(duration * 0.7));
-  return [
-    { second: "0-3", scene: "問題提起", text: hook.slice(0, 40) },
-    { second: `3-${midEnd}`, scene: "商品紹介", text: mid.slice(0, 40) },
-    {
-      second: `${midEnd}-${duration}`,
-      scene: "CTA",
-      text: cta.slice(0, 40),
-    },
-  ];
+  return formatDefaultScenes(
+    [
+      { scene: "問題提起", text: hook.slice(0, 40) },
+      { scene: "商品紹介", text: mid.slice(0, 40) },
+      { scene: "CTA", text: cta.slice(0, 40) },
+    ],
+    duration
+  );
 }
 
 function buildTimelineFromStructure(
@@ -207,32 +191,45 @@ function buildTimelineFromStructure(
   brief?: AiPlanBrief | null,
   analysis?: AnalysisResult | null
 ): VideoPlanTimelineItem[] | null {
-  const lines =
-    (briefStructure?.trim()
-      ? briefStructure.split("\n").map((l) => l.trim()).filter(Boolean)
-      : null) ||
-    analysisStructure?.filter(Boolean) ||
-    null;
+  const timedLines = briefStructure?.trim()
+    ? briefStructure
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+    : null;
 
+  if (timedLines && timedLines.some((l) => /\d+\s*[-〜~–]\s*\d+/.test(l))) {
+    return timedLines.map((line) => {
+      const m = line.match(/(\d+)\s*[-〜~–]\s*(\d+)/);
+      const text = line
+        .replace(/^\d+\s*[-〜~–]\s*\d+\s*秒?[:：]?\s*/, "")
+        .trim();
+      const parts = text.split(/[—–\-：:]/).map((s) => s.trim()).filter(Boolean);
+      return {
+        second: m ? `${m[1]}-${m[2]}` : "0-0",
+        scene: parts[0] || "シーン",
+        text: (parts.slice(1).join(" ") || text).slice(0, 60),
+      };
+    });
+  }
+
+  const lines = timedLines || analysisStructure?.filter(Boolean) || null;
   if (!lines || lines.length === 0) return null;
 
-  const n = lines.length;
-  const slice = duration / n;
+  const slots = allocateSceneSeconds(duration, lines.length);
   return lines.map((line, i) => {
-    const start = Math.floor(i * slice);
-    const end = i === n - 1 ? duration : Math.floor((i + 1) * slice);
     const parsed = parseSceneLine(line);
     return {
-      second: `${start}-${end}`,
+      second: slots[i]?.second ?? `${i}`,
       scene: parsed.scene,
-      text:
+      text: (
         parsed.text ||
         (i === 0
           ? brief?.firstThreeSeconds || analysis?.hook || line
-          : i === n - 1
+          : i === lines.length - 1
             ? brief?.cta || analysis?.cta || line
-            : line
-        ).slice(0, 60),
+            : line)
+      ).slice(0, 60),
     };
   });
 }

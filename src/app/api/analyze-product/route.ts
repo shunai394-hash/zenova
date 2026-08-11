@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     try {
       const saved = await saveProductAnalysis({
         product_name: body.product_name,
-        description: body.description,
+        description: body.description ?? "",
         target: body.target,
         platform: body.platform,
         product_url: body.product_url ?? null,

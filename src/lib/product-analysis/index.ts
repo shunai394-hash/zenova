@@ -1,4 +1,4 @@
-export { analyzeProduct, buildApiProductName, buildApiTarget } from "./engine";
+export { analyzeProduct, buildApiProductName, buildApiTarget, normalizeProductAnalysis, extractProductFeatures } from "./engine";
 export {
   applyPerformanceToSalesScore,
   computePerformanceBonus,
@@ -40,6 +40,7 @@ export type {
 export type {
   AnalyzeProductRequest,
   AnalyzeProductResponse,
+  BuyerPersonaDetail,
   ProductAnalysis,
   ProductDataSource,
   SalesScore,

@@ -201,7 +201,8 @@ export async function runCreateSalesVideo(
     }
   }
 
-  // 2) 販売シナリオ
+  // 2) 販売シナリオ（選択中 videoPlan がある場合は再解釈せずシーンを優先）
+  const planTimeline = input.videoPlan?.timeline ?? [];
   const scenario = await generateSalesScenario({
     product_name: productName,
     description,
@@ -219,23 +220,35 @@ export async function runCreateSalesVideo(
     },
   });
 
-  // 3) 最適化（ユーザー編集の hook / CTA があれば優先して渡す）
+  // 3) 最適化（ユーザー編集 / 選択企画の hook・CTA・シーンを優先）
+  const planHook =
+    planTimeline.find((t) => /フック|Hook|問題|Before/i.test(t.scene))?.text ||
+    planTimeline[0]?.text ||
+    "";
+  const planScenes = planTimeline.filter(
+    (t) => !/フック|Hook|CTA|誘導/i.test(t.scene)
+  );
+  const planCta =
+    planTimeline.find((t) => /CTA|誘導/i.test(t.scene))?.text ||
+    input.videoPlan?.cta ||
+    "";
+
   const optimized = await optimizeSalesScenario({
     product_name: productName,
     description,
     target_customer: scenario.target_customer || target,
     selling_angle: scenario.selling_angle,
-    hook: userHook || scenario.hook_0_2sec,
-    scene_1: scenario.scene_1,
-    scene_2: scenario.scene_2,
-    scene_3: scenario.scene_3,
-    cta: userCta || scenario.cta,
+    hook: userHook || planHook || scenario.hook_0_2sec,
+    scene_1: planScenes[0]?.text || scenario.scene_1,
+    scene_2: planScenes[1]?.text || scenario.scene_2,
+    scene_3: planScenes[2]?.text || scenario.scene_3,
+    cta: userCta || planCta || scenario.cta,
   });
   steps.scenario = true;
 
   sellingAngle = scenario.selling_angle;
-  hook = userHook || optimized.optimized_hook || scenario.hook_0_2sec;
-  const finalCta = userCta || optimized.optimized_cta || scenario.cta;
+  hook = userHook || planHook || optimized.optimized_hook || scenario.hook_0_2sec;
+  const finalCta = userCta || planCta || optimized.optimized_cta || scenario.cta;
 
   try {
     if (!productId) {

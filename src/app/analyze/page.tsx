@@ -82,6 +82,7 @@ import {
   buildApiProductName,
   buildApiTarget,
   inferProductCategory,
+  normalizeProductAnalysis,
   type AnalyzeProductResponse,
   type CategoryStat,
   type ProductAnalysis,
@@ -257,8 +258,12 @@ function SalesScorePanel({ analysis }: { analysis: ProductAnalysis }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h3 className="text-sm font-medium text-gray-300">販売スコア</h3>
+          <p className="mt-1 text-xs text-amber-200/80">
+            {salesScore.scoreNote || "AI推定・参考スコア（実測販売データなし）"}
+          </p>
           <p className="mt-1 text-xs text-gray-500">
-            JSON分析結果ベース · source: {analysis.source}
+            source: {analysis.source}
+            {analysis.tiktok ? "" : " · TikTok実績未接続"}
           </p>
         </div>
         <div className="text-right">
@@ -270,6 +275,9 @@ function SalesScorePanel({ analysis }: { analysis: ProductAnalysis }) {
           </p>
           <p className="mt-1 text-sm text-gray-300">
             Grade {salesScore.grade} · {salesScore.label}
+          </p>
+          <p className="mt-1 text-[11px] text-gray-500">
+            {salesScore.scoreKind === "measured" ? "実測反映あり" : "AI推定"}
           </p>
           {(bonus > 0 || salesScore.baseTotal != null) && (
             <p className="mt-1 text-xs text-gray-500">
@@ -527,7 +535,6 @@ export default function Home() {
 
   const canAnalyze =
     productName.trim().length > 0 &&
-    description.trim().length > 0 &&
     target.trim().length > 0 &&
     platform.trim().length > 0 &&
     !busy;
@@ -542,7 +549,6 @@ export default function Home() {
   const canCreateSalesVideo =
     Boolean(analysis) &&
     productName.trim().length > 0 &&
-    description.trim().length > 0 &&
     target.trim().length > 0 &&
     platform.trim().length > 0 &&
     Boolean(productImage || productImagePreview || imageBlob || imageUrl) &&
@@ -595,8 +601,12 @@ export default function Home() {
       formTarget: target,
       platform,
     });
-    return buildPlanVariants({ base, analysis });
-  }, [analysis, target, platform]);
+    return buildPlanVariants({
+      base,
+      analysis,
+      durationSec: videoSettings.duration_sec,
+    });
+  }, [analysis, target, platform, videoSettings.duration_sec]);
 
   const analysisInsight = useMemo(() => {
     if (!analysis) return null;
@@ -636,15 +646,16 @@ export default function Home() {
           description.trim() || analysis.summary,
           analysis
         ),
-        sellingPoints: analysis.sellingPoints,
-        targetAudience: analysisResult.targetAudience,
+        sellingPoints: analysis.productFeatures?.length
+          ? analysis.productFeatures
+          : analysis.sellingPoints,
+        targetAudience: target.trim() || analysis.target || analysisResult.targetAudience,
         description: description.trim() || analysis.summary,
         analysis,
         analysisResult,
       },
       {
-        duration:
-          videoSettings.duration_sec >= 30 ? videoSettings.duration_sec : 30,
+        duration: videoSettings.duration_sec,
       }
     );
     // planBrief / video_style は依存しない（選択で再生成ループを防ぐ）
@@ -677,22 +688,41 @@ export default function Home() {
       ...prev,
       video_style: style,
     }));
-    setPlanBrief((prev) => ({
-      ...prev,
-      target: idea.targetAudience || prev.target,
+    const base =
+      analysis != null
+        ? buildAiPlanBrief({
+            analysis,
+            formTarget: target,
+            platform,
+          })
+        : planBrief;
+    const nextBrief: AiPlanBrief = {
+      ...base,
+      target: idea.targetAudience || target || base.target,
+      painPoints: idea.problem || base.painPoints,
       firstThreeSeconds: idea.hook,
       cta: idea.cta,
       reason: idea.reason,
       structure: idea.timeline
         .map((t) => `${t.second}秒: ${t.scene} — ${t.text}`)
         .join("\n"),
-    }));
-    setCreativeDraft((prev) => ({
-      ...prev,
-      target: idea.targetAudience || prev.target,
-      hook: idea.hook,
-      cta: idea.cta,
-    }));
+    };
+    setPlanBrief(nextBrief);
+    const creative = planBriefToCreativePayload(nextBrief);
+    setCreativeDraft({
+      target: creative.target,
+      hook: creative.hook,
+      script: creative.script,
+      cta: creative.cta,
+      hashtags: creative.hashtags || nextBrief.hashtags,
+    });
+    setPostPrep(
+      buildPostPrepSet({
+        brief: nextBrief,
+        analysis,
+        productName: productName.trim() || analysis?.productName,
+      })
+    );
   };
 
   const syncFromPlanBrief = (next: AiPlanBrief) => {
@@ -843,16 +873,17 @@ export default function Home() {
     next: ProductAnalysis,
     options?: { keepCreative?: boolean }
   ) => {
-    setAnalysis(next);
+    const normalized = normalizeProductAnalysis(next);
+    setAnalysis(normalized);
     if (!options?.keepCreative) {
       const draft = buildCreativeDraft({
-        analysis: next,
+        analysis: normalized,
         formTarget: target,
         platform,
       });
       setCreativeDraft(draft);
       const brief = buildAiPlanBrief({
-        analysis: next,
+        analysis: normalized,
         formTarget: target,
         platform,
       });
@@ -860,13 +891,13 @@ export default function Home() {
       setPostPrep(
         buildPostPrepSet({
           brief,
-          analysis: next,
-          productName: productName.trim() || next.productName,
+          analysis: normalized,
+          productName: productName.trim() || normalized.productName,
         })
       );
       setPlanVariant("ugc");
       const recommended = recommendVideoSettings({
-        analysis: next,
+        analysis: normalized,
         platform,
       });
       setRecommendedSettings(recommended);
@@ -1190,41 +1221,7 @@ export default function Home() {
         throw new Error("分析結果が返りませんでした");
       }
 
-      setAnalysis(data.analysis);
-      setCreativeDraft(
-        buildCreativeDraft({
-          analysis: data.analysis,
-          formTarget: target,
-          platform,
-        })
-      );
-      const brief = buildAiPlanBrief({
-        analysis: data.analysis,
-        formTarget: target,
-        platform,
-      });
-      setPlanBrief(brief);
-      setPostPrep(
-        buildPostPrepSet({
-          brief,
-          analysis: data.analysis,
-          productName: productName.trim() || data.analysis.productName,
-        })
-      );
-      setPlanVariant("ugc");
-      const recommended = recommendVideoSettings({
-        analysis: data.analysis,
-        platform,
-      });
-      setRecommendedSettings(recommended);
-      setVideoSettings({
-        video_style:
-          preferredTemplateRef.current ?? recommended.video_style,
-        duration_sec: recommended.duration_sec,
-        speaker: recommended.speaker,
-        captions_enabled: recommended.captions_enabled,
-        bgm: recommended.bgm,
-      });
+      applyAnalysisResult(data.analysis);
       setSelectedProductId(data.product_id ?? null);
 
       if (data.product_id) {
@@ -1534,13 +1531,12 @@ export default function Home() {
     setSalesVideoError(null);
     setEnginePrepMessage(null);
     setError(null);
+    setSalesVideoLoading(true);
 
-    // 課金ゲート: 未ログインのみ /login。Free / 上限超過 → /pricing。有料枠内はエンジン接続準備中
     try {
       const usageRes = await fetch("/api/usage", { credentials: "same-origin" });
       const usageData = await usageRes.json();
 
-      // ネットワーク/API 障害時はログイン画面へ送らない
       if (!usageRes.ok && usageData?.authenticated !== false) {
         throw new Error(
           typeof usageData?.error === "string"
@@ -1549,7 +1545,6 @@ export default function Home() {
         );
       }
 
-      // 明示的に未ログインのときだけ誘導
       if (usageData?.authenticated === false) {
         router.push(
           `/login?next=${encodeURIComponent("/analyze#generate-video")}`
@@ -1565,9 +1560,139 @@ export default function Home() {
         return;
       }
 
-      setEnginePrepMessage(
-        "動画生成機能の準備が完了しました。現在動画生成エンジンを接続中です。"
-      );
+      // 選択中の企画を videoPlan として一貫して渡す（再解釈しない）
+      const effectiveBrief = planBrief;
+      const analysisResult = buildAnalysisResult({
+        analysis,
+        brief: effectiveBrief,
+        recommendedVideoType: videoSettings.video_style,
+        formTarget: target,
+      });
+      const videoPlan = selectedVideoIdea
+        ? buildVideoPlanFromIdea({
+            idea: selectedVideoIdea,
+            duration: videoSettings.duration_sec,
+            productName: productName.trim() || analysis.productName,
+          })
+        : buildVideoPlan({
+            title: productName.trim() || analysis.productName,
+            style: videoSettings.video_style,
+            duration: videoSettings.duration_sec,
+            brief: effectiveBrief,
+            analysis: analysisResult,
+            ideaId: null,
+            cta: effectiveBrief.cta || analysis.cta,
+          });
+
+      // 企画書の秒数構成がある場合は videoPlan.timeline を優先同期
+      if (effectiveBrief.structure.trim()) {
+        const fromBrief = buildVideoPlan({
+          title: videoPlan.title,
+          style: videoPlan.style,
+          duration: videoSettings.duration_sec,
+          brief: effectiveBrief,
+          analysis: analysisResult,
+          ideaId: videoPlan.ideaId,
+          goal: videoPlan.goal,
+          cta: videoPlan.cta,
+        });
+        videoPlan.timeline = fromBrief.timeline;
+        videoPlan.duration = fromBrief.duration;
+        videoPlan.style = videoSettings.video_style || fromBrief.style;
+      }
+
+      let sourceBlob: Blob | null = null;
+      if (productImage) sourceBlob = productImage;
+      else if (imageBlob) sourceBlob = imageBlob;
+      else if (productImagePreview || imageUrl) {
+        const src = productImagePreview || imageUrl;
+        if (src) {
+          const fetched = await fetch(src);
+          sourceBlob = await fetched.blob();
+        }
+      }
+      if (!sourceBlob) {
+        throw new Error("動画生成用の商品画像がありません");
+      }
+      const imageBase64 = await blobToBase64(sourceBlob);
+
+      const creative = planBriefToCreativePayload(effectiveBrief);
+      const res = await fetch("/api/create-sales-video", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_name: productName.trim() || analysis.productName,
+          description:
+            description.trim() || analysis.summary || analysis.productName,
+          target: target.trim() || analysis.target || "",
+          platform,
+          image: imageBase64,
+          duration_sec: videoSettings.duration_sec,
+          style: videoSettings.video_style,
+          video_style: videoSettings.video_style,
+          motion: selectedMotion,
+          product_id: selectedProductId || undefined,
+          source_url: productUrl.trim() || undefined,
+          hook: creative.hook || selectedVideoIdea?.hook || analysisResult.hook,
+          cta: creative.cta || selectedVideoIdea?.cta || analysisResult.cta,
+          script: creative.script || effectiveBrief.structure,
+          hashtags: creative.hashtags || postPrep.hashtags || effectiveBrief.hashtags,
+          speaker: videoSettings.speaker,
+          captions_enabled: videoSettings.captions_enabled,
+          bgm: videoSettings.bgm,
+          productData: {
+            id: selectedProductId || undefined,
+            name: productName.trim() || analysis.productName,
+            description:
+              description.trim() || analysis.summary || analysis.productName,
+            target: target.trim() || analysis.target || "",
+            url: productUrl.trim() || undefined,
+          },
+          analysisResult,
+          videoPlan,
+          selectedPlan: {
+            ideaId: selectedVideoIdea?.id ?? null,
+            title: selectedVideoIdea?.title ?? videoPlan.title,
+            hook: creative.hook,
+            target: effectiveBrief.target,
+            problem:
+              selectedVideoIdea?.problem || effectiveBrief.painPoints,
+            solution: selectedVideoIdea?.solution || analysis.salesAngle,
+            sellingPoints: analysis.productFeatures || analysis.sellingPoints,
+            scenes: videoPlan.timeline,
+            cta: videoPlan.cta,
+            style: videoPlan.style,
+            duration: videoPlan.duration,
+            speaker: videoSettings.speaker,
+            captions: videoSettings.captions_enabled,
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.engine_preparing || data?.message) {
+        setEnginePrepMessage(
+          typeof data.message === "string"
+            ? data.message
+            : "動画生成機能の準備が完了しました。現在動画生成エンジンを接続中です。"
+        );
+        setUsageRefreshToken((n) => n + 1);
+        return;
+      }
+
+      if (!res.ok || data?.success === false) {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : "販売動画の生成に失敗しました"
+        );
+      }
+
+      if (typeof data.video_url === "string" && data.video_url) {
+        setSalesVideoUrl(data.video_url);
+      }
       setUsageRefreshToken((n) => n + 1);
     } catch (gateErr) {
       setSalesVideoError(
@@ -1575,6 +1700,8 @@ export default function Home() {
           ? gateErr.message
           : "利用状況の確認に失敗しました"
       );
+    } finally {
+      setSalesVideoLoading(false);
     }
   };
 
@@ -1706,7 +1833,7 @@ export default function Home() {
               className="mb-2 block text-sm text-gray-400"
               htmlFor="description"
             >
-              商品説明
+              商品説明（任意・未入力でも商品名から分析）
             </label>
             <textarea
               id="description"
@@ -2015,6 +2142,13 @@ export default function Home() {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
+                    {analysis.productFeatures &&
+                      analysis.productFeatures.length > 0 && (
+                        <AnalysisList
+                          title="商品特徴（分解）"
+                          items={analysis.productFeatures}
+                        />
+                      )}
                     <AnalysisList
                       title="売れるポイント"
                       items={analysis.sellingPoints}
@@ -2028,11 +2162,24 @@ export default function Home() {
                       title="競合との差別化ポイント"
                       items={analysis.differentiation}
                     />
+                    {analysis.recommendedHooks &&
+                      analysis.recommendedHooks.length > 0 && (
+                        <AnalysisList
+                          title="推奨フック"
+                          items={analysis.recommendedHooks}
+                        />
+                      )}
                     <AnalysisList
                       title="推奨動画構成"
                       items={analysis.recommendedVideoStructure}
                     />
                     <AnalysisList title="CTA案" items={analysis.ctaIdeas} />
+                    {analysis.uncertainty && analysis.uncertainty.length > 0 && (
+                      <AnalysisList
+                        title="不確実な点（断定しない）"
+                        items={analysis.uncertainty}
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-2 text-sm text-gray-400">

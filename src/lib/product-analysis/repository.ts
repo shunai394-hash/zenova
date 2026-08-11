@@ -295,6 +295,7 @@ export function isProductAnalysis(
   return (
     typeof obj.productName === "string" &&
     typeof obj.summary === "string" &&
-    obj.salesScore !== undefined
+    obj.salesScore !== undefined &&
+    typeof obj.salesScore === "object"
   );
 }

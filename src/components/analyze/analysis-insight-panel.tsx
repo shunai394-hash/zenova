@@ -43,7 +43,7 @@ export function AnalysisInsightPanel({
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
           <p className="text-xs text-gray-500">商品評価スコア</p>
-          <p className="mt-2 text-sm text-gray-400">売れる可能性</p>
+          <p className="mt-2 text-sm text-gray-400">売れる可能性（AI推定）</p>
           <p className="mt-1 text-3xl font-bold tracking-tight text-white">
             {insight.sellScore}
             <span className="ml-1 text-base font-medium text-gray-500">
@@ -53,10 +53,13 @@ export function AnalysisInsightPanel({
           <p className="mt-1 text-xs text-emerald-400/90">
             {insight.sellScoreLabel}
           </p>
+          <p className="mt-2 text-[11px] text-amber-200/70">
+            実測販売データがない場合は参考スコアです
+          </p>
         </div>
 
         <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
-          <p className="text-xs text-gray-500">ターゲット</p>
+          <p className="text-xs text-gray-500">ターゲット（入力優先）</p>
           <p className="mt-3 text-sm leading-relaxed text-white">
             {insight.target}
           </p>
@@ -65,16 +68,18 @@ export function AnalysisInsightPanel({
 
       {/* AI販売スコア */}
       <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-950/15 p-4">
-        <h4 className="text-sm font-semibold text-amber-100">AI販売スコア</h4>
+        <h4 className="text-sm font-semibold text-amber-100">
+          AI販売スコア（参考）
+        </h4>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="text-xs text-gray-500">販売動画適性</p>
+            <p className="text-xs text-gray-500">販売動画適性（推定）</p>
             <p className="mt-1 text-lg">
               <Stars count={videoScore.suitabilityStars} />
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">動画化おすすめ度</p>
+            <p className="text-xs text-gray-500">動画化おすすめ度（推定）</p>
             <p className="mt-1 text-2xl font-bold text-white">
               {videoScore.videoReadyScore}
               <span className="ml-1 text-sm font-medium text-gray-500">点</span>

@@ -24,7 +24,7 @@ export type SnsPostKit = {
 function slugTag(value: string): string {
   return value
     .replace(/[^\w\u3040-\u30ff\u30a0-\u30ff\u4e00-\u9fff]+/g, "")
-    .slice(0, 18);
+    .slice(0, 14);
 }
 
 function productLabel(payload: VideoPreviewPayload): string {
@@ -37,28 +37,28 @@ function productLabel(payload: VideoPreviewPayload): string {
 
 /**
  * 生成動画メタから、各SNS向け投稿文を組み立てる。
- * （クライアント即時生成・後からLLM差し替え可）
+ * 選択企画の hook / cta / angle を優先し、汎用煽り・偽レビューを避ける。
  */
 export function buildSnsPostKit(payload: VideoPreviewPayload): SnsPostKit {
   const product = productLabel(payload);
   const hook =
     payload.hook?.trim() ||
-    `これ、知らないと損するかも — ${product}`;
+    `${product}の特徴を短尺でまとめました`;
   const cta =
     payload.cta?.trim() ||
     "気になった人はプロフィールのリンクからチェック";
   const angle = payload.sellingAngle?.trim() || "";
-  const style = payload.style?.trim() || "レビュー";
+  const style = payload.style?.trim() || "商品紹介";
   const desc =
     payload.productDescription?.trim() ||
     angle ||
-    `${product}の魅力を短尺でまとめました。`;
+    `${product}のポイントを整理しました。`;
   const tagBase = slugTag(product) || "product";
 
   const caption = [
     hook,
     "",
-    desc.length > 80 ? `${desc.slice(0, 80)}…` : desc,
+    desc.length > 100 ? `${desc.slice(0, 100)}…` : desc,
     "",
     cta,
     "",
@@ -67,64 +67,48 @@ export function buildSnsPostKit(payload: VideoPreviewPayload): SnsPostKit {
 
   const tiktokHashtags = [
     "#TikTok",
-    "#おすすめ",
     `#${tagBase}`,
-    style.includes("UGC") || style.includes("レビュー")
-      ? "#本音レビュー"
-      : `#${slugTag(style) || "ショート"}`,
-    "#アフィリエイト",
+    /通勤/.test(desc + hook) ? "#通勤" : "#おすすめ",
+    style.includes("比較") ? "#選び方" : "#商品紹介",
     "#PR",
   ].join(" ");
 
   const tiktokCaption = [
     hook,
     "",
-    `${product}、${style}でまとめました。`,
+    `${product} — ${style}でポイント整理。`,
     angle ? `${angle}` : "",
     "",
     cta,
-    "保存してあとで見返してね ↑",
+    "保存してあとで見返してね",
   ]
     .filter((line, i, arr) => line !== "" || arr[i - 1] !== "")
     .join("\n")
     .trim();
 
-  const youtubeTitle = [
-    hook.length <= 50 ? hook : `${product}｜${style}で本音レビュー`,
-  ]
-    .join("")
+  const youtubeTitle = (
+    hook.length <= 50 ? hook : `${product}｜${style}`
+  )
     .replace(/\n/g, " ")
     .slice(0, 70);
 
   const youtubeDescription = [
     `${product}のShortsです。`,
+    angle || desc.slice(0, 120),
     "",
-    desc,
-    "",
-    `スタイル: ${style}`,
     cta,
     "",
-    "#Shorts #レビュー #おすすめ",
+    "#Shorts #PR",
   ].join("\n");
 
-  const reelsHashtags = [
+  const igHashtags = [
     "#Reels",
-    "#おすすめ",
     `#${tagBase}`,
+    "#商品紹介",
     "#PR",
-    "#アフィリエイト",
   ].join(" ");
 
-  const reelsDescription = [
-    hook,
-    "",
-    `${product} — ${style}`,
-    desc.length > 100 ? `${desc.slice(0, 100)}…` : desc,
-    "",
-    cta,
-    "",
-    reelsHashtags,
-  ].join("\n");
+  const igDescription = [hook, "", desc.slice(0, 120), "", cta].join("\n");
 
   return {
     caption,
@@ -138,9 +122,9 @@ export function buildSnsPostKit(payload: VideoPreviewPayload): SnsPostKit {
       description: youtubeDescription,
     },
     instagramReels: {
-      description: reelsDescription,
-      hashtags: reelsHashtags,
-      fullPost: reelsDescription,
+      description: igDescription,
+      hashtags: igHashtags,
+      fullPost: `${igDescription}\n\n${igHashtags}`,
     },
   };
 }

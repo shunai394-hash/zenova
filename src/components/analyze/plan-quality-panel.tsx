@@ -18,7 +18,7 @@ export function PlanQualityPanel({
         <div>
           <h3 className="text-base font-semibold text-white">AI品質スコア</h3>
           <p className="mt-1 text-xs text-gray-500">
-            企画書の完成度を採点。ワンクリックで改善できます
+            企画書の完成度（AI推定・参考値）。ワンクリックで改善できます
           </p>
         </div>
         <div className="text-right">
@@ -26,7 +26,9 @@ export function PlanQualityPanel({
             {quality.score}
             <span className="ml-1 text-base font-medium text-gray-500">/100</span>
           </p>
-          <p className="mt-1 text-sm text-emerald-400">Grade {quality.grade}</p>
+          <p className="mt-1 text-sm text-emerald-400">
+            Grade {quality.grade} · 参考
+          </p>
         </div>
       </div>
 

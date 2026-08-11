@@ -1,6 +1,7 @@
 /**
  * 商品分析の正規JSONスキーマ。
  * UI・API・将来のTikTok商品データ接続で共有する。
+ * version "1.0" 履歴も読み込めるよう、新フィールドはすべて optional。
  */
 
 export type ProductDataSource =
@@ -44,11 +45,20 @@ export type SalesScore = {
   baseBreakdown?: SalesScoreBreakdown;
   /** 実績による加点（0〜25） */
   performanceBonus?: number;
+  /**
+   * スコアの性質。
+   * estimated = 商品情報ベースのAI推定（実測販売データなし）
+   * measured = TikTok等の実績を含む
+   */
+  scoreKind?: "estimated" | "measured";
+  /** UI向け短い注記（例: AI推定・参考スコア） */
+  scoreNote?: string;
 };
 
 export type AnalyzeProductRequest = {
   product_name: string;
-  description: string;
+  /** 空可。未入力時はエンジン側で商品名を説明代わりに使う */
+  description?: string;
   target: string;
   platform: string;
   product_url?: string | null;
@@ -56,10 +66,20 @@ export type AnalyzeProductRequest = {
   /** 将来: TikTok商品IDを渡して外部データをマージ */
   tiktok_product_id?: string | null;
   source?: ProductDataSource;
+  /** 実体験・レビュー本文がある場合のみ（任意） */
+  review_text?: string | null;
+};
+
+export type BuyerPersonaDetail = {
+  name: string;
+  age: string;
+  occupation: string;
+  lifestyle: string;
+  pain: string;
 };
 
 export type ProductAnalysis = {
-  version: "1.0";
+  version: "1.0" | "1.1";
   analyzedAt: string;
   source: ProductDataSource;
   productName: string;
@@ -81,6 +101,33 @@ export type ProductAnalysis = {
   salesScore: SalesScore;
   /** TikTok接続時に埋まる。未接続時は null */
   tiktok: TikTokProductSnapshot | null;
+
+  // --- v1.1 拡張（optional = 旧履歴互換） ---
+  /** 入力ターゲット原文 */
+  target?: string;
+  platform?: string;
+  category?: string;
+  /** 商品説明から分解した特徴（事実寄り） */
+  productFeatures?: string[];
+  /** 顧客ベネフィット（推定含む） */
+  customerBenefits?: string[];
+  /** 想定される購買障壁 */
+  objections?: string[];
+  /** 推奨販売角度 */
+  recommendedAngles?: string[];
+  /** 推奨フック案 */
+  recommendedHooks?: string[];
+  /** 説明文に明示された事実 */
+  factualClaims?: string[];
+  /** AIが文脈から推測した内容 */
+  inferredClaims?: string[];
+  /** 不確実・断定できない点 */
+  uncertainty?: string[];
+  /** 構造化ペルソナ（入力ターゲット優先） */
+  buyerPersonaDetail?: BuyerPersonaDetail;
+  /** 実体験レビュー入力の有無 */
+  hasUserReview?: boolean;
+  analysisVersion?: string;
 };
 
 export type AnalyzeProductResponse = {

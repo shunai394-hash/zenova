@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { isProductAnalysis } from "@/lib/product-analysis";
+import { isProductAnalysis, normalizeProductAnalysis } from "@/lib/product-analysis";
 import type { ProductAnalysis } from "@/lib/product-analysis";
 
 export type AnalyzeLoadProduct = {
@@ -43,7 +43,7 @@ function mapRow(row: Record<string, unknown>): AnalyzeLoadProduct {
   let analysis: ProductAnalysis | null = null;
   const raw = row.analysis;
   if (raw && typeof raw === "object" && isProductAnalysis(raw)) {
-    analysis = raw;
+    analysis = normalizeProductAnalysis(raw);
   }
 
   return {

@@ -1,10 +1,11 @@
 import type { ProductAnalysis } from "@/lib/product-analysis";
+import { normalizeProductAnalysis } from "@/lib/product-analysis/engine";
 import type { AiPlanBrief } from "@/lib/analyze/plan-brief";
 import type { AnalysisResult } from "./types";
 
 /**
  * ProductAnalysis + 企画書から AnalysisResult を構築。
- * ダミーでもこの型を通すことで、後から AI API 差し替えが容易。
+ * 選択中の brief がある場合はそちらを優先（下流で再解釈しない）。
  */
 export function buildAnalysisResult(input: {
   analysis: ProductAnalysis;
@@ -12,23 +13,26 @@ export function buildAnalysisResult(input: {
   recommendedVideoType?: string | null;
   formTarget?: string;
 }): AnalysisResult {
-  const { analysis, brief } = input;
+  const analysis = normalizeProductAnalysis(input.analysis);
+  const { brief } = input;
   const score = analysis.salesScore?.total ?? 70;
 
   const targetAudience =
     brief?.target?.trim() ||
-    analysis.targetInsight?.trim() ||
     input.formTarget?.trim() ||
-    analysis.buyerPersona?.trim() ||
-    "20〜40代女性";
+    analysis.target?.trim() ||
+    analysis.targetInsight?.trim() ||
+    "購入検討者";
 
-  const painPoints = splitList(
-    brief?.painPoints,
-    analysis.painPoints
-  );
+  const painPoints = splitList(brief?.painPoints, analysis.painPoints);
 
-  const sellingPoints =
-    analysis.sellingPoints?.filter(Boolean).slice(0, 6) ?? [];
+  const sellingPoints = (
+    analysis.productFeatures?.length
+      ? analysis.productFeatures
+      : analysis.sellingPoints || []
+  )
+    .filter(Boolean)
+    .slice(0, 6);
 
   const recommendedVideoType =
     input.recommendedVideoType?.trim() ||
@@ -37,8 +41,8 @@ export function buildAnalysisResult(input: {
 
   const hook =
     brief?.firstThreeSeconds?.trim() ||
-    analysis.recommendedVideoStructure?.[0] ||
-    "知らないと損するかも";
+    analysis.recommendedHooks?.[0] ||
+    (painPoints[0] ? `${painPoints[0].replace(/。$/, "")}？` : "冒頭で特徴を見せる");
 
   const cta =
     brief?.cta?.trim() ||
@@ -50,22 +54,20 @@ export function buildAnalysisResult(input: {
     parseStructureLines(brief?.structure) ||
     analysis.recommendedVideoStructure?.filter(Boolean) ||
     [
-      "0-3秒: 問題提起で止める",
-      "3-10秒: 商品の特徴を見せる",
-      "10-15秒: CTAで行動を促す",
+      "フック: 悩みを提示",
+      "商品紹介",
+      "特徴",
+      "使用イメージ",
+      "CTA",
     ];
 
   return {
     score,
     targetAudience,
     painPoints:
-      painPoints.length > 0
-        ? painPoints
-        : ["効果が分からない", "どれを選べばいいか迷う"],
+      painPoints.length > 0 ? painPoints : [`${targetAudience}の不便を具体化`],
     sellingPoints:
-      sellingPoints.length > 0
-        ? sellingPoints
-        : ["使いやすい", "コスパが良い", "見た目で伝わる"],
+      sellingPoints.length > 0 ? sellingPoints : ["商品特徴の提示"],
     recommendedVideoType,
     hook,
     cta,
@@ -78,17 +80,20 @@ export function createDummyAnalysisResult(
   overrides?: Partial<AnalysisResult>
 ): AnalysisResult {
   return {
-    score: 85,
-    targetAudience: "20〜40代女性",
-    painPoints: ["効果が分からない", "続けられるか不安"],
-    sellingPoints: ["使用前後比較ができる", "悩み解決型に向いている"],
-    recommendedVideoType: "before_after",
-    hook: "知らないと損。これ、最初の3秒だけ見て",
-    cta: "気になった人はプロフィールのリンクからチェック",
+    score: 75,
+    targetAudience: "通勤する20代会社員",
+    painPoints: ["夏の通勤で腕の日差しが気になる"],
+    sellingPoints: ["ひんやり涼感", "UVカット", "薄手"],
+    recommendedVideoType: "ugc",
+    hook: "夏の通勤、腕の日差し対策してる？",
+    cta: "プロフィールのリンクからチェック",
     videoStructure: [
-      "0-3秒: 問題提起",
-      "3-10秒: Before After",
-      "10-15秒: CTA",
+      "フック",
+      "悩み",
+      "商品紹介",
+      "特徴",
+      "使用イメージ",
+      "CTA",
     ],
     ...overrides,
   };
@@ -121,9 +126,9 @@ function parseStructureLines(
 
 function inferVideoType(analysis: ProductAnalysis): string {
   const angle = analysis.salesAngle || "";
-  if (/比較|どっち|vs/i.test(angle)) return "compare";
+  if (/比較|どっち|vs|選択/i.test(angle)) return "compare";
   if (/Before|After|変化|ビフォー/i.test(angle)) return "before_after";
-  if (/ランキング|TOP/i.test(angle)) return "ranking";
+  if (/ランキング|TOP|ポイント/i.test(angle)) return "ranking";
   if (/広告|ブランド/i.test(angle)) return "ad";
   return "ugc";
 }
