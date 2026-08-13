@@ -13,3 +13,5 @@ export type {
 export { MockVideoProvider } from "./mock";
 export { KlingVideoProvider } from "./kling";
 export { LumaVideoProvider } from "./luma";
+export { WanGPVideoProvider } from "./wangp";
+

@@ -1,4 +1,4 @@
-export type VideoProviderId = "mock" | "kling" | "luma";
+export type VideoProviderId = "mock" | "kling" | "luma" | "wangp";
 
 export type GenerateVideoInput = {
   /** raw base64 or data-url base64 */
@@ -25,3 +25,4 @@ export interface VideoGenerationProvider {
   readonly id: VideoProviderId;
   generate(input: GenerateVideoInput): Promise<GenerateVideoResult>;
 }
+

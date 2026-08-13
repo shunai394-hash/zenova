@@ -181,12 +181,20 @@ export default function PricingPage() {
               この表示は許可されたテストアカウントにのみ出ます。一般の Free
               ユーザー向けプラン内容は下のカードどおり「動画生成不可」です。
             </p>
-            <Link
-              href="/analyze"
-              className="mt-3 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-gray-200"
-            >
-              Analyze で動画生成を試す
-            </Link>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/analyze"
+                className="inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-gray-200"
+              >
+                Analyze で動画生成を試す
+              </Link>
+              <Link
+                href="/video"
+                className="inline-flex rounded-lg border border-white/40 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
+              >
+                Video Workspace で試す
+              </Link>
+            </div>
           </div>
         )}
 

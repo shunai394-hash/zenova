@@ -4,8 +4,11 @@ export { resolvePublicMediaPath } from "./paths";
 export {
   burnSubtitlesIntoVideo,
   burnWatermarkIntoVideo,
+  fitVideoToVerticalDuration,
   getFfmpegPath,
   mergeVideoWithAudio,
+  probeDurationSec,
   runFfmpeg,
+  stillImageToVerticalVideo,
   toFfmpegSubtitleFilterPath,
 } from "./ffmpeg";

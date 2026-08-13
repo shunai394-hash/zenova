@@ -1,12 +1,78 @@
+import { createRequire } from "module";
 import { spawn } from "child_process";
-import { accessSync, constants } from "fs";
-import ffmpegPath from "ffmpeg-static";
+import { accessSync, constants, mkdirSync } from "fs";
+import path from "path";
 
-export function getFfmpegPath(): string {
-  if (!ffmpegPath) {
-    throw new Error("ffmpeg-static バイナリが見つかりません");
+function ensureParentDir(filePath: string): void {
+  mkdirSync(path.dirname(filePath), { recursive: true });
+}
+
+function fontsDirFilterSuffix(): string {
+  if (process.platform !== "win32") return "";
+  return `:fontsdir='${toFfmpegSubtitleFilterPath("C:/Windows/Fonts")}'`;
+}
+
+function ffmpegFileName(): string {
+  return process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
+}
+
+function isPlaceholderPath(bin: string): boolean {
+  return /(^|[\\/])ROOT[\\/]/i.test(bin);
+}
+
+function isExistingBinary(bin: string): boolean {
+  if (!bin || isPlaceholderPath(bin)) return false;
+  try {
+    accessSync(bin, constants.F_OK);
+    return true;
+  } catch {
+    return false;
   }
-  return ffmpegPath;
+}
+
+/**
+ * Next/Turbopack が ffmpeg-static の __dirname を \ROOT\... に置き換えるため、
+ * ESM import は使わず、実行時 require + 実ファイル確認で解決する。
+ * PATH は見ない。
+ */
+export function getFfmpegPath(): string {
+  const tried: string[] = [];
+  const fileName = ffmpegFileName();
+
+  try {
+    const req = createRequire(
+      path.join(process.cwd(), "package.json")
+    );
+    const fromPkg = req("ffmpeg-static") as string | null;
+    if (fromPkg) {
+      tried.push(fromPkg);
+      if (isExistingBinary(fromPkg)) return fromPkg;
+    }
+  } catch (error) {
+    tried.push(
+      `require("ffmpeg-static") failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  const local = path.join(
+    process.cwd(),
+    "node_modules",
+    "ffmpeg-static",
+    fileName
+  );
+  tried.push(local);
+  if (isExistingBinary(local)) return local;
+
+  throw new Error(
+    [
+      "FFmpeg バイナリが見つかりません (ENOENT)。PATH は使用していません。",
+      `探したパス:`,
+      ...tried.map((p) => `- ${p}`),
+      `node_modules/ffmpeg-static/${fileName} を確認してください。`,
+    ].join("\n")
+  );
 }
 
 export function runFfmpeg(args: string[]): Promise<void> {
@@ -238,7 +304,10 @@ export async function burnSubtitlesIntoVideo(input: {
 }): Promise<void> {
   const escaped = toFfmpegSubtitleFilterPath(input.subtitlePath);
   const isAss = input.subtitlePath.toLowerCase().endsWith(".ass");
-  const vf = isAss ? `ass='${escaped}'` : `subtitles='${escaped}'`;
+  const fonts = fontsDirFilterSuffix();
+  const vf = isAss
+    ? `ass='${escaped}'${fonts}`
+    : `subtitles='${escaped}'${fonts}`;
 
   const args = [
     "-y",
@@ -296,4 +365,113 @@ export async function burnSubtitlesIntoVideo(input: {
       input.outputPath,
     ]);
   }
+}
+
+/**
+ * ffmpeg -i の stderr から Duration を読む（ffprobe 不要）。
+ * 入力検査のみなので終了コード 1 は正常。
+ */
+export async function probeDurationSec(filePath: string): Promise<number | null> {
+  const bin = getFfmpegPath();
+
+  return new Promise((resolve) => {
+    const child = spawn(bin, ["-i", filePath], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stderr = "";
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", () => resolve(null));
+    child.on("close", () => {
+      const match = stderr.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
+      if (!match) {
+        resolve(null);
+        return;
+      }
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      const seconds = Number(match[3]);
+      const total = hours * 3600 + minutes * 60 + seconds;
+      resolve(Number.isFinite(total) && total > 0 ? total : null);
+    });
+  });
+}
+
+const VERTICAL_PAD_VF =
+  "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30,format=yuv420p";
+
+const VERTICAL_CROP_VF =
+  "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,format=yuv420p";
+
+/**
+ * 静止画を音声尺の 9:16 MP4 にする（ローカル ffmpeg。新規動画 API ではない）。
+ */
+export async function stillImageToVerticalVideo(input: {
+  imagePath: string;
+  durationSec: number;
+  outputPath: string;
+}): Promise<void> {
+  const duration = Math.max(1, Math.min(120, input.durationSec));
+  ensureParentDir(input.outputPath);
+  await runFfmpeg([
+    "-y",
+    "-loop",
+    "1",
+    "-i",
+    input.imagePath,
+    "-t",
+    duration.toFixed(3),
+    "-vf",
+    VERTICAL_CROP_VF,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "23",
+    "-an",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    input.outputPath,
+  ]);
+}
+
+/**
+ * 既存クリップを 9:16 に収め、指定尺までループ or カットする。
+ */
+export async function fitVideoToVerticalDuration(input: {
+  videoPath: string;
+  durationSec: number;
+  outputPath: string;
+}): Promise<void> {
+  const duration = Math.max(1, Math.min(120, input.durationSec));
+  ensureParentDir(input.outputPath);
+  await runFfmpeg([
+    "-y",
+    "-stream_loop",
+    "-1",
+    "-i",
+    input.videoPath,
+    "-t",
+    duration.toFixed(3),
+    "-vf",
+    VERTICAL_PAD_VF,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "23",
+    "-an",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    input.outputPath,
+  ]);
 }

@@ -105,6 +105,8 @@ export const AUDIENCE_CARDS = [
 
 export const NAV_LINKS = [
   { href: "/analyze", label: "動画を作る" },
+  { href: "/voice", label: "Voice" },
+  { href: "/video", label: "Video" },
   { href: "/history", label: "履歴" },
   { href: "/products", label: "商品を探す" },
   { href: "/pricing", label: "料金プラン" },
