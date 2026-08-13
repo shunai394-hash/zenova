@@ -73,26 +73,32 @@ export function VoiceWorkspace() {
     setLoadingProfiles(true);
     setListError(null);
     try {
-      const ok = await checkTtsHealth();
-      setHealthy(ok);
-      if (!ok) {
-        setProfiles([]);
-        setListError(
-          "TTS API に接続できません。Voicebox（例: http://127.0.0.1:17493）が起動しているか確認してください。"
-        );
-        return;
+      // health は表示用。失敗しても profiles は /api/tts から取得する
+      const listPromise = listVoiceProfiles();
+      const healthPromise = checkTtsHealth();
+
+      const list = await listPromise;
+      setProfiles(list);
+      if (list.length > 0) {
+        setSelectedProfileId((prev) => {
+          if (prev && list.some((p) => p.id === prev)) return prev;
+          if (list.some((p) => p.id === PREFERRED_PROFILE_ID)) {
+            return PREFERRED_PROFILE_ID;
+          }
+          return list[0]?.id ?? "";
+        });
       }
 
-      const list = await listVoiceProfiles();
-      setProfiles(list);
+      const ok = await healthPromise;
+      setHealthy(ok);
 
-      setSelectedProfileId((prev) => {
-        if (prev && list.some((p) => p.id === prev)) return prev;
-        if (list.some((p) => p.id === PREFERRED_PROFILE_ID)) {
-          return PREFERRED_PROFILE_ID;
-        }
-        return list[0]?.id ?? "";
-      });
+      if (list.length === 0) {
+        setListError(
+          ok
+            ? "Voice Profile がありません。下のフォームから作成してください。"
+            : "TTS API に接続できません。Voicebox（例: http://127.0.0.1:17493）が起動しているか確認してください。"
+        );
+      }
     } catch (err) {
       setHealthy(false);
       setProfiles([]);

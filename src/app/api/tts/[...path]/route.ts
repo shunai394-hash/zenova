@@ -5,19 +5,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const HOP_BY_HOP = new Set([
-  "connection",
-  "keep-alive",
-  "proxy-authenticate",
-  "proxy-authorization",
-  "te",
-  "trailers",
-  "transfer-encoding",
-  "upgrade",
-  "host",
-  "content-length",
-]);
-
 function buildTargetUrl(pathParts: string[], search: string): string {
   const base = getTtsApiBaseUrl();
   const suffix = pathParts.map((p) => encodeURIComponent(p)).join("/");
@@ -38,17 +25,20 @@ async function proxyRequest(
   const targetUrl = buildTargetUrl(pathParts, req.nextUrl.search);
   const headers = new Headers();
 
-  req.headers.forEach((value, key) => {
-    const lower = key.toLowerCase();
-    if (HOP_BY_HOP.has(lower)) return;
-    if (lower === "origin" || lower === "referer") return;
-    headers.set(key, value);
-  });
-
-  // JSON は UTF-8 明示（日本語テキストの文字化け防止）
-  const contentType = headers.get("content-type");
-  if (contentType?.includes("application/json") && !contentType.includes("charset")) {
-    headers.set("content-type", "application/json; charset=utf-8");
+  // Voicebox には必要なヘッダだけ渡す。
+  // ブラウザの Host / Cookie / Accept-Encoding を転送すると上流が失敗することがある。
+  const accept = req.headers.get("accept");
+  if (accept) headers.set("accept", accept);
+  const range = req.headers.get("range");
+  if (range) headers.set("range", range);
+  const contentType = req.headers.get("content-type");
+  if (contentType) {
+    headers.set(
+      "content-type",
+      contentType.includes("application/json") && !contentType.includes("charset")
+        ? "application/json; charset=utf-8"
+        : contentType
+    );
   }
 
   const init: RequestInit = {

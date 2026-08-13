@@ -97,19 +97,26 @@ export function VideoWorkspace() {
     setLoadingProfiles(true);
     setListError(null);
     try {
-      const ok = await checkTtsHealth();
-      setHealthy(ok);
-      if (!ok) {
-        setProfiles([]);
-        setListError(
-          "TTS API に接続できません。Voicebox（例: http://127.0.0.1:17493）が起動しているか確認してください。"
-        );
-        return;
+      // health は表示用。失敗しても profiles は取りにいく（/voice と同じ /api/tts を使用）
+      const listPromise = listVoiceProfiles();
+      const healthPromise = checkTtsHealth();
+
+      const list = await listPromise;
+      setProfiles(list);
+      if (list.length > 0) {
+        setSelectedProfileId((prev) => pickPreferredProfileId(list, prev));
       }
 
-      const list = await listVoiceProfiles();
-      setProfiles(list);
-      setSelectedProfileId((prev) => pickPreferredProfileId(list, prev));
+      const ok = await healthPromise;
+      setHealthy(ok);
+
+      if (list.length === 0) {
+        setListError(
+          ok
+            ? "Voice Profile がありません。/voice で Profile を作成してください。"
+            : "TTS API に接続できません。Voicebox（例: http://127.0.0.1:17493）が起動しているか確認してください。"
+        );
+      }
     } catch (err) {
       setHealthy(false);
       setProfiles([]);
@@ -415,7 +422,10 @@ export function VideoWorkspace() {
                 disabled={loadingProfiles || profiles.length === 0}
                 className={inputClassName}
               >
-                {profiles.length === 0 && (
+                {loadingProfiles && (
+                  <option value="">読み込み中…</option>
+                )}
+                {!loadingProfiles && profiles.length === 0 && (
                   <option value="">Profile がありません</option>
                 )}
                 {profiles.map((profile) => (

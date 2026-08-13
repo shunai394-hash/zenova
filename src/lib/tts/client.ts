@@ -41,11 +41,13 @@ async function ttsFetch(
   path: string,
   init?: RequestInit
 ): Promise<Response> {
+  // ブラウザは必ず同一オリジンの /api/tts を叩く（Voicebox へ直接接続しない）
   const url = `${TTS_PROXY_BASE}${path.startsWith("/") ? path : `/${path}`}`;
   try {
     return await fetch(url, {
       ...init,
       cache: "no-store",
+      credentials: "same-origin",
     });
   } catch {
     throw new Error(
@@ -54,13 +56,26 @@ async function ttsFetch(
   }
 }
 
+function asVoiceProfileList(data: unknown): VoiceProfile[] {
+  if (Array.isArray(data)) return data as VoiceProfile[];
+  if (data && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    for (const key of ["profiles", "data", "items", "results"]) {
+      if (Array.isArray(obj[key])) return obj[key] as VoiceProfile[];
+    }
+  }
+  return [];
+}
+
 export async function listVoiceProfiles(): Promise<VoiceProfile[]> {
-  const res = await ttsFetch("/profiles");
+  const res = await ttsFetch("/profiles", {
+    headers: { Accept: "application/json" },
+  });
   if (!res.ok) {
     throw new Error(`Profile一覧の取得に失敗: ${await readErrorMessage(res)}`);
   }
   const data = (await res.json()) as unknown;
-  return Array.isArray(data) ? (data as VoiceProfile[]) : [];
+  return asVoiceProfileList(data);
 }
 
 export async function createVoiceProfile(
@@ -198,10 +213,24 @@ export function getGenerationAudioUrl(generationId: string): string {
 }
 
 export async function checkTtsHealth(): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await ttsFetch("/health");
-    return res.ok;
+    const res = await ttsFetch("/health", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) return false;
+    const data = (await res.json().catch(() => null)) as {
+      status?: string;
+    } | null;
+    if (data && typeof data.status === "string") {
+      return data.status.toLowerCase() === "healthy";
+    }
+    return true;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
