@@ -475,3 +475,91 @@ export async function fitVideoToVerticalDuration(input: {
     input.outputPath,
   ]);
 }
+
+/**
+ * 動画 + ナレーション + BGM を合成する。
+ * ナレーションを優先し、BGMは小さめの音量でループして動画尺に合わせる。
+ */
+export async function mergeVideoWithNarrationAndBgm(input: {
+  videoPath: string;
+  narrationPath?: string | null;
+  bgmPath?: string | null;
+  outputPath: string;
+  bgmVolume?: number;
+}): Promise<void> {
+  const narrationPath = input.narrationPath || null;
+  const bgmPath = input.bgmPath || null;
+  const bgmVolume = Math.max(0.01, Math.min(1, input.bgmVolume ?? 0.16));
+
+  if (!narrationPath && !bgmPath) {
+    throw new Error("narrationPath または bgmPath が必要です");
+  }
+
+  const args = [
+    "-y",
+    "-i",
+    input.videoPath,
+  ];
+
+  if (narrationPath) {
+    args.push("-i", narrationPath);
+  }
+
+  if (bgmPath) {
+    args.push("-stream_loop", "-1", "-i", bgmPath);
+  }
+
+  const narrationIndex = narrationPath ? 1 : -1;
+  const bgmIndex = bgmPath ? (narrationPath ? 2 : 1) : -1;
+
+  const filters: string[] = [];
+  const mixInputs: string[] = [];
+
+  if (narrationPath) {
+    filters.push(
+      `[${narrationIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[narration]`
+    );
+    mixInputs.push("[narration]");
+  }
+
+  if (bgmPath) {
+    filters.push(
+      `[${bgmIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=${bgmVolume},aloop=loop=-1:size=2e+09[bgm]`
+    );
+    mixInputs.push("[bgm]");
+  }
+
+  if (mixInputs.length === 1) {
+    filters.push(`${mixInputs[0]}apad[aout]`);
+  } else {
+    filters.push(
+      `${mixInputs.join("")}amix=inputs=${mixInputs.length}:duration=first:dropout_transition=2:normalize=0[aout]`
+    );
+  }
+
+  args.push(
+    "-filter_complex",
+    filters.join(";"),
+    "-map",
+    "0:v:0",
+    "-map",
+    "[aout]",
+    "-c:v",
+    "copy",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-shortest",
+    "-movflags",
+    "+faststart",
+    input.outputPath
+  );
+
+  console.log(
+    `[video-composer] mix narration=${narrationPath ?? "none"} ` +
+      `bgm=${bgmPath ?? "none"} volume=${bgmVolume} out=${input.outputPath}`
+  );
+
+  await runFfmpeg(args);
+}
