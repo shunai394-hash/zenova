@@ -8,6 +8,7 @@ export const maxDuration = 300;
 const HF_BASE = "https://api.higgsfield.ai";
 const DEFAULT_MODEL = "alibaba/wan-3.0-prime/image-to-video";
 const SUPPORTED_MODELS = new Set([
+  "bytedance/seedance-2.5/text-to-video",
   "alibaba/wan-3.0-prime/image-to-video",
   "kling-video/v3.0/pro/image-to-video",
   "kling-video/v3.0-turbo/image-to-video",
@@ -108,8 +109,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "model が不正です" }, { status: 400 });
     }
 
-    if (!(image instanceof File) || !image.type.startsWith("image/")) {
-      return NextResponse.json({ error: "画像を1枚アップロードしてください" }, { status: 400 });
+    if (model !== "bytedance/seedance-2.5/text-to-video" && (!(image instanceof File) || !image.type.startsWith("image/"))) {
+      return NextResponse.json({ error: "このモデルでは画像を1枚アップロードしてください" }, { status: 400 });
     }
     if (!prompt) {
       return NextResponse.json({ error: "動画の内容を自然文で入力してください" }, { status: 400 });
@@ -118,19 +119,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "aspect_ratio が不正です" }, { status: 400 });
     }
 
-    const imageUrl = await uploadImage(image);
-    const baseInput = {
-      image_url: imageUrl,
-      prompt: prompt.slice(0, 5000),
-      duration,
-    };
-    const input = model === "alibaba/wan-3.0-prime/image-to-video"
-      ? { ...baseInput, aspect_ratio: aspectRatio, generate_audio: sound, resolution: "1080p", enable_thinking: false }
+    const imageUrl = image instanceof File ? await uploadImage(image) : null;
+    const baseInput = { prompt: prompt.slice(0, 5000), duration };
+    const input = model === "bytedance/seedance-2.5/text-to-video"
+      ? { ...baseInput, resolution: "720p", aspect_ratio: aspectRatio, output_format: "mp4", generate_audio: sound }
+      : model === "alibaba/wan-3.0-prime/image-to-video"
+      ? { ...baseInput, image_url: imageUrl, aspect_ratio: aspectRatio, generate_audio: sound, resolution: "1080p", enable_thinking: false }
       : model === "minimax/h3/image-to-video"
-        ? { ...baseInput, aspect_ratio: aspectRatio, resolution: "2K", aigc_watermark: false }
+        ? { ...baseInput, image_url: imageUrl, aspect_ratio: aspectRatio, resolution: "2K", aigc_watermark: false }
         : model === "kling-video/v3.0/pro/image-to-video"
-          ? { ...baseInput, sound: sound ? "on" : "off", multi_shots: false }
-          : { ...baseInput, resolution: "720p" };
+          ? { ...baseInput, image_url: imageUrl, sound: sound ? "on" : "off", multi_shots: false }
+          : { ...baseInput, image_url: imageUrl, resolution: "720p" };
 
     const submit = await hfFetch(`/${model}`, {
       method: "POST",
