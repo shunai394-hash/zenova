@@ -129,7 +129,8 @@ export function AiVideoWorkspace() {
               </select>
             </label>
           </div>
-          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから映像を構成。画像を加える場合は入力素材として使われます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>\n          <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
+          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから映像を構成。画像を加える場合は入力素材として使われます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>
+          <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
             <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
             AI音声・サウンドを生成
           </label>
