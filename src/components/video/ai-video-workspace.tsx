@@ -33,6 +33,7 @@ const PROMPT_PRESETS = [
   { label: "SNSリール", text: "SNS向けの短い縦動画。最初の1秒で目を引き、自然なカメラ移動とテンポのよい動き。最後は印象的なフレームで止まる。" },
   { label: "ブランド", text: "洗練されたブランドムービー。シネマティックな光、自然なカメラワーク、余白のある上質な演出。静かに余韻を残す。" },
 ];
+const REVIEW_POINTS = ["被写体をもっと自然に", "動きをもっと強く", "構図・余白を整える", "光・質感を上質に", "最後のフレームを強く"];
 const POLL_INTERVAL_MS = 4000;
 /** これを超えたら自動確認を止め、手動で再確認できる状態にする */
 const POLL_GIVE_UP_MS = 15 * 60 * 1000;
@@ -102,6 +103,8 @@ export function AiVideoWorkspace() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [reviewPoints, setReviewPoints] = useState<string[]>([]);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [pending, setPending] = useState<PendingJob | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -274,6 +277,15 @@ export function AiVideoWorkspace() {
     setError("");
   }
 
+  function applyReviewToNextPrompt() {
+    const feedback = [...reviewPoints, reviewNotes.trim()].filter(Boolean).join("。");
+    if (!feedback) return;
+    const suffix = `\n\n前回の生成を見直した改善点：${feedback}。これらを優先して、より自然で完成度の高い映像にする。`;
+    setPrompt((current) => current.trim() ? `${current.trim()}${suffix}` : feedback);
+    setReviewNotes("");
+    setReviewPoints([]);
+  }
+
   const elapsed = pending && busy ? formatElapsed(now - pending.started_at) : null;
   const stepIndex = PHASE_STEPS.indexOf(phase);
   const buttonLabel = busy ? `${PHASE_LABEL[phase]}…${elapsed ? ` ${elapsed}` : ""}` : "Create video";
@@ -425,6 +437,34 @@ export function AiVideoWorkspace() {
             </div>
           )}
         </section>
+        {result && (
+          <section className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-cyan-200/70">04 / REVIEW</p>
+                <h3 className="mt-1 text-sm font-semibold text-zinc-200">完成したら、ここで1回だけ見直す</h3>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.16em] text-zinc-600">AI loop ready</span>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-zinc-500">気になった点を選ぶだけ。次の生成指示に反映して、1本ずつ精度を上げます。</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {REVIEW_POINTS.map((point) => {
+                const selected = reviewPoints.includes(point);
+                return (
+                  <button key={point} type="button" onClick={() => setReviewPoints((current) => selected ? current.filter((item) => item !== point) : [...current, point])}
+                    className={`rounded-full border px-3 py-1.5 text-[11px] transition ${selected ? "border-cyan-300/60 bg-cyan-300/10 text-cyan-100" : "border-white/10 bg-black/20 text-zinc-400 hover:border-white/25 hover:text-zinc-200"}`}>
+                    {selected ? "✓ " : ""}{point}
+                  </button>
+                );
+              })}
+            </div>
+            <textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} rows={2} placeholder="自由メモ：例「商品名を最後まで見せたい」「最初の1秒をもっと強く」" className="mt-3 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/30" />
+            <button type="button" onClick={applyReviewToNextPrompt} disabled={!reviewPoints.length && !reviewNotes.trim()}
+              className="mt-3 w-full rounded-xl bg-cyan-100 px-4 py-3 text-sm font-semibold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-35">
+              次の生成に改善点を反映
+            </button>
+          </section>
+        )}
       </aside>
     </div>
   );
