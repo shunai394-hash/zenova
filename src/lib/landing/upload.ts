@@ -7,7 +7,7 @@ const ALLOWED_TYPES = new Set([
   "image/webp",
 ]);
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export type ImageUploadResult =
   | { ok: true; publicUrl: string }
@@ -24,7 +24,7 @@ export async function uploadProductImage(
     return { ok: false, error: "jpg / png / webp のみアップロードできます" };
   }
   if (file.size > MAX_BYTES) {
-    return { ok: false, error: "画像は5MB以下にしてください" };
+    return { ok: false, error: "画像は10MB以下にしてください" };
   }
 
   const ext =
