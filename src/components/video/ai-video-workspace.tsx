@@ -32,6 +32,9 @@ export function AiVideoWorkspace() {
   const [result, setResult] = useState<Result | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
+  const isKling = model.startsWith("kling-video/");
+  const supportsAspectRatio = !isKling;
+  const supportsSound = model !== "minimax/h3/image-to-video" && model !== "kling-video/v3.0-turbo/image-to-video";
 
   useEffect(() => {
     if (!image) { setPreview(null); return; }
@@ -116,7 +119,7 @@ export function AiVideoWorkspace() {
               </select>
             </label>
             <label className="text-sm text-zinc-400">画面比率
-              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
+              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} disabled={!supportsAspectRatio} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40">
                 <option value="9:16">9:16 縦</option><option value="16:9">16:9 横</option><option value="1:1">1:1 正方形</option>
               </select>
             </label>
@@ -129,10 +132,10 @@ export function AiVideoWorkspace() {
               </select>
             </label>
           </div>
-          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから映像を構成。画像を加える場合は入力素材として使われます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>
+          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから生成。画像を追加すると参照画像として構図に反映します。" : isKling ? "Kling · 出力比率は入力画像に合わせて生成されます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>
           <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
-            <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
-            AI音声・サウンドを生成
+            <input type="checkbox" checked={sound} disabled={!supportsSound} onChange={(e) => setSound(e.target.checked)} className="disabled:cursor-not-allowed disabled:opacity-40" />
+            AI音声・サウンドを生成 {!supportsSound && <span className="text-xs text-zinc-600">（このモデルでは非対応）</span>}
           </label>
         </section>
 
