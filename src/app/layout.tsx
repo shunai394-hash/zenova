@@ -13,14 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZENOVA - 商品を貼るだけでTikTok動画をAIが作る",
+  title: "ZENOVA — AI Video Studio",
   description:
-    "商品URLか画像を貼るだけで、売れるTikTok動画をAIが自動生成。アフィリエイター・TikTok Shopセラー・個人店舗向けの日本語AI動画ツール。",
+    "画像でも、言葉でも。Higgsfieldの生成モデルで、アイデアをそのまま映像へ。",
   openGraph: {
-    title: "ZENOVA - 商品を貼るだけでTikTok動画をAIが作る",
+    title: "ZENOVA — AI Video Studio",
     description:
-      "商品URLか画像を貼るだけで、バズりやすいTikTok動画をAIが自動生成。",
-    // ogImage: "/og-image.png", // アセット追加後に有効化
+      "画像でも、言葉でも。アイデアをそのまま映像へ。",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZENOVA — AI Video Studio",
+    description:
+      "画像でも、言葉でも。アイデアをそのまま映像へ。",
   },
 };
 
