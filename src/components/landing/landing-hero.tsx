@@ -45,7 +45,7 @@ export function LandingHero() {
       if (!result.ok) {
         if (result.notReady) {
           // product-images バケット未整備時の代替
-          window.alert("画像アップロード機能は近日公開");
+          setError("画像アップロードの準備が完了していません。URL入力をご利用ください。");
           setLoading(false);
           return;
         }
@@ -153,7 +153,7 @@ export function LandingHero() {
             {CTA_UPLOAD_IMAGE}
           </button>
           <p className="mt-2 text-left text-xs text-gray-600">
-            jpg / png / webp ・ 5MBまで
+            jpg / png / webp ・ 10MBまで
           </p>
 
           <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ">
