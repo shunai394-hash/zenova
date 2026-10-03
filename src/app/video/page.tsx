@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { AiVideoWorkspace } from "@/components/video/ai-video-workspace";
+import { CreateModeBar } from "@/components/video/create-mode-bar";
 
 export default function VideoPage() {
   return (
@@ -64,6 +65,7 @@ export default function VideoPage() {
             </div>
             <div aria-hidden="true" className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:left-11 sm:right-11" />
           </header>
+          <CreateModeBar />
           <div className="mb-5 grid gap-4 px-1 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-600">Creative workspace</p>
