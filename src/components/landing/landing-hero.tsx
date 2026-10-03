@@ -29,7 +29,7 @@ export function LandingHero() {
         setError(result.notReady ? "画像アップロードの準備中です。現在は商品URLから始められます。" : result.error);
         setLoading(false); return;
       }
-      router.push(`/analyze?image=${encodeURIComponent(result.publicUrl)}&purpose=${encodeURIComponent(purpose)}`);
+      router.push(`/analyze?image=${encodeURIComponent(result.publicUrl)}&purpose=sell`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err)); setLoading(false);
     }
