@@ -90,14 +90,14 @@ export function LandingHero() {
               }}
               placeholder={HERO_URL_PLACEHOLDER}
               disabled={loading}
-              className="w-full flex-1 rounded-xl bg-black px-4 py-3.5 text-base text-white outline-none ring-1 ring-zinc-700 placeholder:text-gray-500 focus:ring-zinc-400 disabled:opacity-50"
+              className="min-h-12 w-full flex-1 rounded-xl bg-black px-4 py-3.5 text-base text-white outline-none ring-1 ring-zinc-700 placeholder:text-gray-500 focus:ring-zinc-400 disabled:opacity-50"
               aria-label="商品URL"
             />
             <button
               type="button"
               onClick={submitUrl}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
             >
               {loading ? (
                 <>
@@ -148,7 +148,7 @@ export function LandingHero() {
             type="button"
             disabled={loading}
             onClick={() => fileRef.current?.click()}
-            className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 hover:bg-zinc-800 disabled:opacity-50"
+            className="min-h-12 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-50"
           >
             {CTA_UPLOAD_IMAGE}
           </button>
