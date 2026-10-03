@@ -1812,6 +1812,23 @@ export default function Home() {
           </div>
         </header>
 
+        <section className="mb-6 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.025] p-5 sm:p-6">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Customer outcome</p>
+          <h2 className="mt-2 text-xl font-semibold">この動画で、何を解決したい？</h2>
+          <p className="mt-1 text-sm text-zinc-400">設定から始めず、困りごとから始めます。</p>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([
+              ["sell","商品を売る"],["social","SNSで目を止める"],["launch","新商品を伝える"],["brand","ブランドを見せる"]
+            ] as const).map(([id,label]) => (
+              <button key={id} type="button" onClick={() => setCustomerGoal(id)} className={`rounded-xl border px-3 py-3 text-left text-sm transition ${customerGoal===id ? "border-cyan-300/40 bg-cyan-300/[0.07] text-white" : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600"}`}>{label}</button>
+            ))}
+          </div>
+          <div className="mt-4">
+            <label htmlFor="customer-success" className="text-xs text-zinc-400">成功したと言える状態（任意）</label>
+            <input id="customer-success" value={customerSuccess} onChange={(e)=>setCustomerSuccess(e.target.value)} placeholder="例：商品特徴が3秒以内に伝わり、最後に商品ページへ誘導したい" className="mt-2 w-full rounded-xl border border-zinc-800 bg-black px-4 py-3 text-sm text-white outline-none focus:border-zinc-500" />
+          </div>
+        </section>
+
         {/* STEP 1: URL */}
         <section
           id="analyze-form"
