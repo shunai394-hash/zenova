@@ -35,11 +35,16 @@ export default function VideoPage() {
                   <br />
                   <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">into motion.</span>
                 </h1>
-                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
-                  画像でも、言葉でも。アイデアを映像へ。
+                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">
+                  伝えたいことを、数分で「見せられる映像」へ。
                   <br className="hidden sm:block" />
-                  Higgsfieldの生成モデルで、まだ存在しないシーンを形にする。
+                  商品・SNS・広告・ブランドストーリーまで、画像か言葉から始められます。
                 </p>
+                <div className="mt-7 flex flex-wrap gap-2 text-[11px] text-zinc-300">
+                  {["最短3ステップ", "画像なしでもOK", "9:16 / 16:9 / 1:1", "生成後も再確認"].map((item) => (
+                    <span key={item} className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">{item}</span>
+                  ))}
+                </div>
               </div>
               <div className="relative hidden min-h-36 flex-col justify-end border-l border-white/10 pl-5 lg:flex">
                 <span className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Your next scene</span>
@@ -53,15 +58,27 @@ export default function VideoPage() {
             </div>
             <div aria-hidden="true" className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:left-11 sm:right-11" />
           </header>
-          <div className="mb-5 flex items-center justify-between gap-4 px-1">
+          <div className="mb-5 grid gap-4 px-1 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-600">Creative workspace</p>
-              <p className="mt-1 text-sm text-zinc-400">Build your next visual, one decision at a time.</p>
+              <p className="mt-1 text-sm text-zinc-400">アイデア → 生成 → 確認。迷わず1本を完成させます。</p>
             </div>
             <div className="hidden items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-zinc-600 sm:flex">
               <span className="rounded-full border border-white/10 px-3 py-1.5">Prompt-first</span>
               <span className="rounded-full border border-white/10 px-3 py-1.5">AI motion</span>
             </div>
+          </div>
+          <div className="mb-6 grid gap-3 sm:grid-cols-3">
+            {[
+              ["01", "Describe", "何を見せたいか、普通の文章で。"],
+              ["02", "Generate", "AIが動き・カメラ・演出を組み立てます。"],
+              ["03", "Review", "完成映像を見て、次の1本へ改善。"],
+            ].map(([n, title, body]) => (
+              <div key={n} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+                <div className="flex items-center gap-2"><span className="text-[10px] tracking-[0.2em] text-cyan-300">{n}</span><span className="text-xs font-medium text-zinc-200">{title}</span></div>
+                <p className="mt-1 text-[11px] leading-5 text-zinc-500">{body}</p>
+              </div>
+            ))}
           </div>
           <AiVideoWorkspace />
           <footer className="mt-10 flex flex-col gap-2 border-t border-white/[0.07] px-1 py-5 text-[10px] uppercase tracking-[0.16em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
