@@ -26,7 +26,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="shrink-0 text-sm font-semibold tracking-[0.18em] text-white"
+          className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white"
         >
           {BRAND_NAME}
         </Link>
@@ -36,7 +36,7 @@ export function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className="transition hover:text-white"
+              className="rounded px-2 py-2 transition hover:text-white"
             >
               {link.label}
             </Link>
@@ -49,7 +49,7 @@ export function SiteHeader() {
 
         <button
           type="button"
-          className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-gray-300 md:hidden"
+          className="min-h-11 rounded-lg border border-zinc-700 px-3 text-xs text-gray-300 transition hover:border-zinc-500 md:hidden"
           aria-expanded={open}
           aria-label="メニュー"
           onClick={() => setOpen((v) => !v)}
