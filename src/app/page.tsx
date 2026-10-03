@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { LandingAudienceCards } from "@/components/landing/landing-audience";
 import { LandingBottomCta } from "@/components/landing/landing-bottom-cta";
@@ -31,7 +31,13 @@ export default async function Home({
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main id="main-content" className="min-h-screen bg-black text-white">
+      <a
+        href="#hero"
+        className="sr-only z-[100] rounded-md bg-white px-4 py-3 text-sm font-semibold text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
+        メインコンテンツへ移動
+      </a>
       <SiteHeader />
       <LandingHero />
       <LandingSteps />
