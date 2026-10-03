@@ -28,6 +28,11 @@ const PENDING_KEY = "zenova:pending-video-job";
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PROMPT_LENGTH = 5000;
+const PROMPT_PRESETS = [
+  { label: "商品CM", text: "高級感のある商品CM。ゆっくりカメラが商品へ寄り、柔らかな光が輪郭を際立たせる。最後は商品を中央に美しく見せる。" },
+  { label: "SNSリール", text: "SNS向けの短い縦動画。最初の1秒で目を引き、自然なカメラ移動とテンポのよい動き。最後は印象的なフレームで止まる。" },
+  { label: "ブランド", text: "洗練されたブランドムービー。シネマティックな光、自然なカメラワーク、余白のある上質な演出。静かに余韻を残す。" },
+];
 const POLL_INTERVAL_MS = 4000;
 /** これを超えたら自動確認を止め、手動で再確認できる状態にする */
 const POLL_GIVE_UP_MS = 15 * 60 * 1000;
@@ -293,7 +298,15 @@ export function AiVideoWorkspace() {
         <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight"><label htmlFor="zenova-video-prompt">Describe the motion</label></h2>
-          <p className="mt-1 text-sm text-zinc-400">普通の文章で指示してください。CMに限定せず、SNS動画・紹介動画・映像作品などに使えます。</p>
+          <p className="mt-1 text-sm text-zinc-400">普通の文章でOK。迷ったら下のプリセットを選んで、そこから書き換えられます。</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {PROMPT_PRESETS.map((preset) => (
+              <button key={preset.label} type="button" disabled={busy} onClick={() => setPrompt(preset.text)}
+                className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[11px] text-zinc-300 transition hover:border-cyan-300/40 hover:text-white disabled:opacity-40">
+                {preset.label}
+              </button>
+            ))}
+          </div>
           <textarea
             id="zenova-video-prompt"
             value={prompt}
@@ -330,7 +343,10 @@ export function AiVideoWorkspace() {
               </select>
             </label>
           </div>
-          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから生成。画像を追加すると参照画像として構図に反映します。" : isKling ? "Kling · 出力比率は入力画像に合わせて生成されます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>
+          <div className="mt-4 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.025] px-4 py-3 text-xs leading-5 text-zinc-400">
+            <span className="text-cyan-200">Tip:</span> 「被写体 + 動き + カメラ + 光 + 最後の見せ場」を入れると、意図を伝えやすくなります。
+          </div>
+          <div className="mt-3 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから生成。画像を追加すると参照画像として構図に反映します。" : isKling ? "Kling · 出力比率は入力画像に合わせて生成されます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>
           <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
             <input type="checkbox" checked={sound} disabled={busy || !supportsSound} onChange={(e) => setSound(e.target.checked)} className="disabled:cursor-not-allowed disabled:opacity-40" />
             AI音声・サウンドを生成 {!supportsSound && <span className="text-xs text-zinc-600">（このモデルでは非対応）</span>}
@@ -353,6 +369,14 @@ export function AiVideoWorkspace() {
             <button type="button" onClick={discardPending} className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-zinc-400 hover:text-white">破棄する</button>
           </div>
         )}
+
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">Creative quality loop</span>
+            <span className="text-[10px] text-cyan-300">AI → Review → Improve</span>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-zinc-500">まず1本を作り、完成映像を見て次のプロンプトを改善。ZENOVAは「生成したら終わり」ではなく、次の1本までを制作体験にします。</p>
+        </div>
 
         <button
           type="button"
