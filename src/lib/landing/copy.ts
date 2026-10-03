@@ -3,9 +3,9 @@
  */
 export const BRAND_NAME = "ZENOVA";
 
-export const HERO_COPY_MAIN = "アイデアから、\\n使える映像を。";
+export const HERO_COPY_MAIN = "アイデアから、\n使える映像を。";
 
-export const HERO_COPY_SUB = "画像・動画・音声・プロンプトから、AIで映像をつくる。\\nVideoから始めて、Story・Character・Avatarへ広げられます。";
+export const HERO_COPY_SUB = "画像・動画・音声・プロンプトから、AIで映像をつくる。\nVideoから始めて、Story・Character・Avatarへ広げられます。";
 
 export const CTA_CREATE_VIDEO = "→ Create Studioを開く";
 export const VIDEO_CREATE_CTA = "動画を作る";
