@@ -9,9 +9,9 @@
  */
 export const BRAND_NAME = "ZENOVA";
 
-export const HERO_COPY_MAIN = "動画を作るのではなく、\\n「使える1本」まで。";
+export const HERO_COPY_MAIN = "動画を作るのではなく、\n「使える1本」まで。";
 
-export const HERO_COPY_SUB = "商品・SNS・広告・ブランド。目的を先に決めて、AIが生成。\\n完成後も映像を見直し、改善点を次の生成へ反映します。";
+export const HERO_COPY_SUB = "商品・SNS・広告・ブランド。目的を先に決めて、AIが生成。\n完成後も映像を見直し、改善点を次の生成へ反映します。";
 
 export const CTA_CREATE_VIDEO = "→ 動画を作る";
 
@@ -30,7 +30,7 @@ export const HERO_INPUT_SUPPORT = [
 
 export const HERO_USE_CASES = "商品を売る・SNSで目を止めてもらう・新商品を伝える・ブランドを見せる。目的から動画を組み立てます。";
 
-export const STEPS_SECTION_TITLE = "3ステップで完成";
+export const STEPS_SECTION_TITLE = "生成して終わりにしない";
 
 export const STEPS = [
   { step: "01 · PURPOSE", title: "まず、目的を決める", body: "売る・目立たせる・伝える。何のための動画かを先に決めるから、操作に迷いにくい。" },
