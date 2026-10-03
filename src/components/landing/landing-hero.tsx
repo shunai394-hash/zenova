@@ -155,6 +155,26 @@ export function LandingHero() {
           <p className="mt-2 text-left text-xs text-gray-600">
             jpg / png / webp ・ 5MBまで
           </p>
+
+          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ">
+            {[
+              ["01", "INPUT", "商品"],
+              ["02", "STORY", "フック・台本"],
+              ["03", "MOTION", "映像"],
+            ].map(([step, label, detail], index) => (
+              <div
+                key={label}
+                className="relative rounded-xl border border-zinc-800 bg-black/50 px-2 py-3 text-center"
+              >
+                <p className="font-mono text-[10px] tracking-[0.18em] text-zinc-600">{step}</p>
+                <p className="mt-1 text-[11px] font-semibold tracking-[0.14em] text-zinc-300">{label}</p>
+                <p className="mt-1 text-[10px] text-zinc-600">{detail}</p>
+                {index < 2 ? (
+                  <span aria-hidden className="absolute -right-2 top-1/2 z-10 text-zinc-700">→</span>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
