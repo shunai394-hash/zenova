@@ -433,6 +433,17 @@ export default function Home() {
   const [urlHint, setUrlHint] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [saveHint, setSaveHint] = useState<string | null>(null);
+  const [customerGoal, setCustomerGoal] = useState<"sell" | "social" | "launch" | "brand">("sell");
+  const [customerSuccess, setCustomerSuccess] = useState("");
+  const [qualityChecks, setQualityChecks] = useState<string[]>([]);
+
+  const QUALITY_CHECKS = [
+    "最初の1秒で何の動画かわかる",
+    "商品・主役が見やすい",
+    "動きが不自然ではない",
+    "ブランドの雰囲気と合っている",
+    "最後に次の行動がわかる",
+  ] as const;
   const productQueryHandled = useRef(false);
   /** TOPギャラリー等から ?template= で渡されたスタイル（分析おすすめより優先） */
   const preferredTemplateRef = useRef<VideoStyleId | null>(null);
@@ -541,6 +552,8 @@ export default function Home() {
       if (productImagePreview) URL.revokeObjectURL(productImagePreview);
     };
   }, [imageUrl, productImagePreview]);
+
+  const goalLabel = customerGoal === "sell" ? "商品を売る" : customerGoal === "social" ? "SNSで目を止める" : customerGoal === "launch" ? "新商品を伝える" : "ブランドを見せる";
 
   const canAnalyze =
     productName.trim().length > 0 &&
