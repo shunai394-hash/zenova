@@ -294,6 +294,23 @@ export async function insertUsageLog(input: {
   return data as UsageLogRecord;
 }
 
+/** 同一の外部生成リクエストで既に動画使用数を記録済みか（ポーリング時の二重計上防止） */
+export async function hasVideoUsageForRequest(
+  userId: string,
+  requestId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("usage_logs")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("usage_type", "video")
+    .contains("metadata", { request_id: requestId })
+    .limit(1);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).length > 0;
+}
+
 export async function insertVideoCredit(input: {
   user_id: string;
   credits: number;
