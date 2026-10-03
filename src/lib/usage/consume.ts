@@ -1,7 +1,7 @@
 import { ensureActiveSubscription } from "./repository";
 import type { UsageSummary } from "./types";
 import { getUsageSummary } from "./check-limit";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   getVideoMonthlyLimit,
   startOfCurrentMonthJstIso,
@@ -47,7 +47,8 @@ export async function consumeVideoUsage(
     const testAccount =
       planId === "free" && isVideoTestAccount(options?.email);
 
-    const { data, error } = await supabase.rpc("consume_video_usage_atomic", {
+    const serverSupabase = await createSupabaseServerClient();
+    const { data, error } = await serverSupabase.rpc("consume_video_usage_atomic", {
       p_user_id: userId,
       p_request_id: requestId,
       p_plan_limit: videoLimit,
