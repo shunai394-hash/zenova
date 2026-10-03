@@ -15,6 +15,7 @@ export {
   getActiveSubscription,
   getPlanById,
   getStripeCustomerIdForUser,
+  hasVideoUsageForRequest,
   insertUsageLog,
   insertVideoCredit,
   listPlans,
