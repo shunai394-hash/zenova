@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth/session";
-import { checkVideoLimit, consumeVideoUsage, hasVideoUsageForRequest } from "@/lib/usage";
+import { checkVideoLimit, consumeVideoUsage } from "@/lib/usage";
 import {
   createTicket,
   describeHiggsfieldFailure,
@@ -272,22 +272,47 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const alreadyCounted = await hasVideoUsageForRequest(user.id, job.request_id);
-      if (!alreadyCounted) {
-        const consumed = await consumeVideoUsage(user.id, {
-          provider: "higgsfield",
-          product_name: "zenova-ai-video",
-          request_id: job.request_id,
-          model: job.model,
-        }, { email: user.email });
-        if (!consumed.ok) console.warn("[generate-higgsfield-video] usage consume failed", consumed.error);
-      }
-    } catch (error) {
-      // 使用数の記録失敗で完成済み動画を返せなくなるのを避ける
-      console.warn("[generate-higgsfield-video] usage dedupe check failed", error);
-    }
+      // 使用量の判定・冪等性・同時実行制御はDBの原子的RPCに一本化する。
+      // 失敗時は完成動画を捨てず、クライアントが再ポーリングして記録を再試行できる。
+      const consumed = await consumeVideoUsage(user.id, {
+        provider: "higgsfield",
+        product_name: "zenova-ai-video",
+        request_id: job.request_id,
+        model: job.model,
+      }, { email: user.email });
 
-    return NextResponse.json({ ...base, status: "completed", video_url: data.video.url });
+      if (!consumed.ok) {
+        console.warn("[generate-higgsfield-video] usage consume rejected", {
+          request_id: job.request_id,
+          error: consumed.error,
+        });
+        return NextResponse.json({
+          ...base,
+          status: "completed",
+          video_url: data.video.url,
+          usage_recorded: false,
+          retryable: true,
+          error: consumed.error || "動画の利用量を記録できませんでした。もう一度確認してください。",
+        }, { status: 503 });
+      }
+
+      return NextResponse.json({
+        ...base,
+        status: "completed",
+        video_url: data.video.url,
+        usage_recorded: true,
+      });
+    } catch (error) {
+      console.warn("[generate-higgsfield-video] usage consume failed", error);
+      return NextResponse.json({
+        ...base,
+        status: "completed",
+        video_url: data.video.url,
+        usage_recorded: false,
+        retryable: true,
+        error: "完成動画は生成されていますが、利用量の記録を完了できませんでした。もう一度確認してください。",
+      }, { status: 503 });
+    }
   } catch (error) {
     console.error("[generate-higgsfield-video] status failed", error);
     return NextResponse.json({
