@@ -15,6 +15,11 @@ const SUPPORTED_MODELS = new Set([
   "minimax/h3/image-to-video",
 ]);
 
+function modelDurationClamp(model: string, duration: number) {
+  if (model === "bytedance/seedance-2.5/text-to-video") return Math.min(30, Math.max(4, duration));
+  return Math.min(15, Math.max(3, duration));
+}
+
 function getApiKey() {
   const key = process.env.HIGGSFIELD_API_KEY?.trim() || process.env.HF_API_KEY?.trim();
   if (!key) throw new Error("HIGGSFIELD_API_KEY が設定されていません");
@@ -101,10 +106,11 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const image = form.get("image");
     const prompt = String(form.get("prompt") || "").trim();
-    const duration = Math.min(15, Math.max(3, Number(form.get("duration") || 5)));
+    const model = String(form.get("model") || DEFAULT_MODEL);
+    const requestedDuration = Number(form.get("duration") || 5);
+    const duration = modelDurationClamp(model, requestedDuration);
     const aspectRatio = String(form.get("aspect_ratio") || "9:16");
     const sound = String(form.get("sound") || "on") === "on";
-    const model = String(form.get("model") || DEFAULT_MODEL);
     if (!SUPPORTED_MODELS.has(model)) {
       return NextResponse.json({ error: "model が不正です" }, { status: 400 });
     }
@@ -121,7 +127,11 @@ export async function POST(req: NextRequest) {
 
     const imageUrl = image instanceof File ? await uploadImage(image) : null;
     const baseInput = { prompt: prompt.slice(0, 5000), duration };
-    const input = model === "bytedance/seedance-2.5/text-to-video"
+    const seedanceWithImage = model === "bytedance/seedance-2.5/text-to-video" && Boolean(imageUrl);
+    const endpointModel = seedanceWithImage ? "bytedance/seedance-2.5/reference-to-video" : model;
+    const input = model === "bytedance/seedance-2.5/text-to-video" && seedanceWithImage
+      ? { ...baseInput, image_urls: [imageUrl!], resolution: "720p", aspect_ratio: aspectRatio, output_format: "mp4", generate_audio: sound }
+      : model === "bytedance/seedance-2.5/text-to-video"
       ? { ...baseInput, resolution: "720p", aspect_ratio: aspectRatio, output_format: "mp4", generate_audio: sound }
       : model === "alibaba/wan-3.0-prime/image-to-video"
       ? { ...baseInput, image_url: imageUrl, aspect_ratio: aspectRatio, generate_audio: sound, resolution: "1080p", enable_thinking: false }
@@ -131,7 +141,7 @@ export async function POST(req: NextRequest) {
           ? { ...baseInput, image_url: imageUrl, sound: sound ? "on" : "off", multi_shots: false }
           : { ...baseInput, image_url: imageUrl, resolution: "720p" };
 
-    const submit = await hfFetch(`/${model}`, {
+    const submit = await hfFetch(`/${endpointModel}`, {
       method: "POST",
       body: JSON.stringify(input),
     });
@@ -155,7 +165,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       video_url: videoUrl,
       request_id: queued.request_id,
-      model,
+      model: endpointModel,
       duration_sec: duration,
       aspect_ratio: aspectRatio,
       sound,
