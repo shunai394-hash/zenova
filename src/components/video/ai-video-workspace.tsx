@@ -87,8 +87,8 @@ export function AiVideoWorkspace() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-5">
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
-          <h2 className="text-lg font-semibold">素材</h2>
-          <p className="mt-1 text-sm text-zinc-400">画像1枚からAIが動画を作ります。商品画像だけでなく、人物・風景・作品にも使えます。</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">01 / SOURCE</p>
+          <div className="mt-2 flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold tracking-tight">Start with an idea</h2><p className="mt-1 text-sm text-zinc-400">画像を置いても、言葉だけでも始められます。</p></div><span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">{isSeedance ? "Image optional" : "Image required"}</span></div>
           <label className="mt-5 flex min-h-32 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045]"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 画像なしでもOK" : "JPG / PNG / WebP"}</p></div><input className="sr-only" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} /></label>
           {preview && <img src={preview} alt="" className="mt-4 max-h-72 rounded-xl object-contain" />}
         </section>
