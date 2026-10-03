@@ -31,6 +31,7 @@ export function AiVideoWorkspace() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
+  const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
 
   useEffect(() => {
     if (!image) { setPreview(null); return; }
@@ -55,7 +56,7 @@ export function AiVideoWorkspace() {
   async function generate() {
     setError("");
     setResult(null);
-    if (!image && model !== "bytedance/seedance-2.5/text-to-video") return setError("このモデルでは画像を1枚選択してください。");
+    if (!image && !isSeedance) return setError("このモデルでは画像を1枚選択してください。");
     if (!prompt.trim()) return setError("どんな動画にしたいか入力してください。");
     if (usage && !usage.authenticated) return setError("ログインしてください。");
 
@@ -88,7 +89,7 @@ export function AiVideoWorkspace() {
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
           <h2 className="text-lg font-semibold">素材</h2>
           <p className="mt-1 text-sm text-zinc-400">画像1枚からAIが動画を作ります。商品画像だけでなく、人物・風景・作品にも使えます。</p>
-          <label className="mt-5 flex min-h-28 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045]"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{model === "bytedance/seedance-2.5/text-to-video" ? "Seedance 2.5なら画像なしでも生成できます" : "JPG / PNG / WebP"}</p></div><input className="sr-only" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} /></label>
+          <label className="mt-5 flex min-h-32 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045]"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 画像なしでもOK" : "JPG / PNG / WebP"}</p></div><input className="sr-only" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} /></label>
           {preview && <img src={preview} alt="" className="mt-4 max-h-72 rounded-xl object-contain" />}
         </section>
 
@@ -128,7 +129,7 @@ export function AiVideoWorkspace() {
               </select>
             </label>
           </div>
-          <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
+          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">{isSeedance ? "Seedance 2.5 · テキストから映像を構成。画像を加える場合は入力素材として使われます。" : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}</div>\n          <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
             <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />
             AI音声・サウンドを生成
           </label>
