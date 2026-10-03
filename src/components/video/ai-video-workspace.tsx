@@ -26,7 +26,7 @@ export function AiVideoWorkspace() {
   const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [sound, setSound] = useState(true);
-  const [model, setModel] = useState("kling-video/v3.0/pro/image-to-video");
+  const [model, setModel] = useState("alibaba/wan-3.0-prime/image-to-video");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -124,10 +124,10 @@ export function AiVideoWorkspace() {
             </label>
             <label className="text-sm text-zinc-400">モデル
               <select value={model} onChange={(e) => setModel(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
-                <option value="kling-video/v3.0/pro/image-to-video">Kling 3.0 Pro</option>
-                <option value="kling-video/v3.0-turbo/image-to-video">Kling 3.0 Turbo</option>
-                <option value="pixverse/v6/image-to-video">PixVerse V6</option>
-                <option value="bytedance/seedance-2.5/image-to-video">Seedance 2.5</option>
+                <option value="alibaba/wan-3.0-prime/image-to-video">Wan 3.0 Prime（比率・音声対応）</option>
+                <option value="kling-video/v3.0/pro/image-to-video">Kling 3.0 Pro（高品質）</option>
+                <option value="kling-video/v3.0-turbo/image-to-video">Kling 3.0 Turbo（高速）</option>
+                <option value="minimax/h3/image-to-video">MiniMax H3（比率対応）</option>
               </select>
             </label>
           </div>
