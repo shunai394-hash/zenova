@@ -18,16 +18,16 @@ export function CreateModeBar() {
           <Link
             key={mode.id}
             href={mode.href}
-            aria-current={mode.active ? "page" : undefined}
+            aria-current={mode.id === "video" ? "page" : undefined}
             className={[
               "min-w-[132px] rounded-xl px-3.5 py-3 text-left transition",
-              mode.active
+              mode.id === "video"
                 ? "bg-white text-black shadow-lg shadow-white/5"
                 : "text-zinc-400 hover:bg-white/[0.05] hover:text-white",
             ].join(" ")}
           >
             <span className="block text-sm font-medium">{mode.label}</span>
-            <span className={mode.active ? "mt-0.5 block text-[10px] text-zinc-600" : "mt-0.5 block text-[10px] text-zinc-600"}>
+            <span className="mt-0.5 block text-[10px] text-zinc-600">
               {mode.sub}
             </span>
           </Link>
