@@ -40,11 +40,11 @@ export default async function Home({
       </a>
       <SiteHeader />
       <LandingHero />
+      <LandingReasons />
       <LandingSteps />
       <LandingSampleVideos />
       <LandingAudienceCards />
       <LandingBottomCta />
-      <LandingReasons />
       <LandingFaq />
       <SiteFooter />
     </main>
