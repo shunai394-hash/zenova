@@ -6,7 +6,13 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const HF_BASE = "https://api.higgsfield.ai";
-const DEFAULT_MODEL = "kling-video/v3.0/pro/image-to-video";
+const DEFAULT_MODEL = "alibaba/wan-3.0-prime/image-to-video";
+const SUPPORTED_MODELS = new Set([
+  "alibaba/wan-3.0-prime/image-to-video",
+  "kling-video/v3.0/pro/image-to-video",
+  "kling-video/v3.0-turbo/image-to-video",
+  "minimax/h3/image-to-video",
+]);
 
 function getApiKey() {
   const key = process.env.HIGGSFIELD_API_KEY?.trim() || process.env.HF_API_KEY?.trim();
@@ -98,6 +104,9 @@ export async function POST(req: NextRequest) {
     const aspectRatio = String(form.get("aspect_ratio") || "9:16");
     const sound = String(form.get("sound") || "on") === "on";
     const model = String(form.get("model") || DEFAULT_MODEL);
+    if (!SUPPORTED_MODELS.has(model)) {
+      return NextResponse.json({ error: "model が不正です" }, { status: 400 });
+    }
 
     if (!(image instanceof File) || !image.type.startsWith("image/")) {
       return NextResponse.json({ error: "画像を1枚アップロードしてください" }, { status: 400 });
@@ -110,16 +119,22 @@ export async function POST(req: NextRequest) {
     }
 
     const imageUrl = await uploadImage(image);
+    const baseInput = {
+      image_url: imageUrl,
+      prompt: prompt.slice(0, 5000),
+      duration,
+    };
+    const input = model === "alibaba/wan-3.0-prime/image-to-video"
+      ? { ...baseInput, aspect_ratio: aspectRatio, generate_audio: sound, resolution: "1080p", enable_thinking: false }
+      : model === "minimax/h3/image-to-video"
+        ? { ...baseInput, aspect_ratio: aspectRatio, resolution: "2K", aigc_watermark: false }
+        : model === "kling-video/v3.0/pro/image-to-video"
+          ? { ...baseInput, sound: sound ? "on" : "off", multi_shots: false }
+          : { ...baseInput, resolution: "720p" };
+
     const submit = await hfFetch(`/${model}`, {
       method: "POST",
-      body: JSON.stringify({
-        image_url: imageUrl,
-        prompt: prompt.slice(0, 5000),
-        duration,
-        aspect_ratio: aspectRatio,
-        sound: sound ? "on" : "off",
-        multi_shots: false,
-      }),
+      body: JSON.stringify(input),
     });
 
     if (!submit.ok) {
