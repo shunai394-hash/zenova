@@ -9,16 +9,14 @@
  */
 export const BRAND_NAME = "ZENOVA";
 
-export const HERO_COPY_MAIN =
-  "商品を貼るだけで、バズりやすいTikTok動画をAIが作る";
+export const HERO_COPY_MAIN = "動画を作るのではなく、\\n「使える1本」まで。";
 
-export const HERO_COPY_SUB =
-  "商品URLか画像を貼るだけ。日本語特化のAIが台本・フック・動画まで一気に作ります。";
+export const HERO_COPY_SUB = "商品・SNS・広告・ブランド。目的を先に決めて、AIが生成。\\n完成後も映像を見直し、改善点を次の生成へ反映します。";
 
 export const CTA_CREATE_VIDEO = "→ 動画を作る";
 
 /** ヒーロー主CTA（差し替え用） */
-export const VIDEO_CREATE_CTA = "AI動画を作成する";
+export const VIDEO_CREATE_CTA = "この目的で動画を作る";
 
 export const CTA_UPLOAD_IMAGE = "画像をアップロード";
 export const HERO_URL_PLACEHOLDER = "商品URLを貼る";
@@ -30,27 +28,14 @@ export const HERO_INPUT_SUPPORT = [
   "商品説明",
 ] as const;
 
-export const HERO_USE_CASES =
-  "TikTokアフィリエイト、TikTok Shop、自社商品の動画制作に対応";
+export const HERO_USE_CASES = "商品を売る・SNSで目を止めてもらう・新商品を伝える・ブランドを見せる。目的から動画を組み立てます。";
 
 export const STEPS_SECTION_TITLE = "3ステップで完成";
 
 export const STEPS = [
-  {
-    step: "STEP1",
-    title: "商品を入力",
-    body: "URLか画像を貼るだけ",
-  },
-  {
-    step: "STEP2",
-    title: "AIが分析",
-    body: "台本・フックを自動生成",
-  },
-  {
-    step: "STEP3",
-    title: "動画完成",
-    body: "そのまま投稿できる動画",
-  },
+  { step: "01 · PURPOSE", title: "まず、目的を決める", body: "売る・目立たせる・伝える。何のための動画かを先に決めるから、操作に迷いにくい。" },
+  { step: "02 · CREATE", title: "AIが1本を組み立てる", body: "商品やアイデアから、構成・動き・カメラ・演出をまとめて生成する。" },
+  { step: "03 · IMPROVE", title: "見直して、次へ改善", body: "完成映像を見て改善点を選択。次の生成に反映し、ゼロからやり直さない。" },
 ] as const;
 
 export const SAMPLE_SECTION_TITLE = "こんな動画が作れます";
@@ -80,27 +65,12 @@ export const SAMPLE_VIDEOS = [
   },
 ] as const;
 
-export const AUDIENCE_SECTION_TITLE = "こんな人に使われています";
+export const AUDIENCE_SECTION_TITLE = "こんな「困りごと」から使える";
 
 export const AUDIENCE_CARDS = [
-  {
-    id: "affiliate",
-    icon: "📱",
-    title: "TikTokアフィリエイター",
-    body: "A8などで見つけた商品のURLを貼るだけで、台本も動画もAIが作ってくれる",
-  },
-  {
-    id: "shop",
-    icon: "🛍️",
-    title: "TikTok Shopセラー",
-    body: "商品画像をアップするだけで、バズりやすい動画構成を提案してくれる",
-  },
-  {
-    id: "store",
-    icon: "🏪",
-    title: "個人・店舗",
-    body: "自分の商品を動画にしたいけど、編集できない人でも使える",
-  },
+  { id: "time", icon: "01", title: "動画制作に時間をかけられない", body: "プロンプトや編集を一から覚えなくても、目的と素材から制作を始められる。" },
+  { id: "quality", icon: "02", title: "AI動画を作っても、微妙で終わる", body: "生成結果を見直し、「何を直すか」を明示。改善点を次の生成へつなげる。" },
+  { id: "purpose", icon: "03", title: "何を作ればいいか決められない", body: "商品CM・SNS・広告・ブランドなど、先に目的を選んでから制作できる。" },
 ] as const;
 
 export const NAV_LINKS = [
@@ -114,32 +84,15 @@ export const NAV_LINKS = [
 ] as const;
 
 /** 「Zenovaが選ばれる理由」セクション */
-export const REASONS_SECTION_TITLE = "Zenovaが選ばれる理由";
+export const REASONS_SECTION_TITLE = "ZENOVAで得られること";
 
 export const REASONS = [
-  {
-    id: "japanese",
-    icon: "🇯🇵",
-    title: "日本語特化",
-    body: "日本のTikTok・アフィリエイト市場向けに設計されたAI動画ツール",
-  },
-  {
-    id: "fast",
-    icon: "⚡",
-    title: "最短数分で動画完成",
-    body: "商品URLや画像を貼るだけで台本・分析・動画生成まで自動",
-  },
-  {
-    id: "multi-ai",
-    icon: "🤖",
-    title: "複数AIを最適に組み合わせ",
-    body: "分析・台本・動画生成を用途に応じたAIモデルで処理",
-  },
+  { id: "less-friction", icon: "01", title: "迷う時間を減らす", body: "目的 → 素材 → 生成という順番で進める。専門的な設定は必要なときだけ触れられる。" },
+  { id: "better-iterations", icon: "02", title: "失敗を次に活かせる", body: "生成結果の改善点を選び、次のプロンプトへ自動反映。試行錯誤を「やり直し」で終わらせない。" },
+  { id: "usable-output", icon: "03", title: "完成後の使い道まで考える", body: "商品・SNS・広告・ブランドという目的から、必要な見せ方を選べる。" },
 ] as const;
 
-/** フッター */
-export const FOOTER_TAGLINE =
-  "商品を貼るだけで、売れるTikTok動画をAIが作る";
+export const FOOTER_TAGLINE = "生成して終わりにしない。使える動画になるまで改善する。";
 
 export const FOOTER_LINKS = {
   main: [
