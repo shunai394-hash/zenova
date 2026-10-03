@@ -7,6 +7,8 @@ export const maxDuration = 300;
 
 const HF_BASE = "https://api.higgsfield.ai";
 const DEFAULT_MODEL = "alibaba/wan-3.0-prime/image-to-video";
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const SUPPORTED_MODELS = new Set([
   "bytedance/seedance-2.5/text-to-video",
   "alibaba/wan-3.0-prime/image-to-video",
@@ -107,7 +109,11 @@ export async function POST(req: NextRequest) {
     const image = form.get("image");
     const prompt = String(form.get("prompt") || "").trim();
     const model = String(form.get("model") || DEFAULT_MODEL);
-    const requestedDuration = Number(form.get("duration") || 5);
+    const rawDuration = form.get("duration");
+    const requestedDuration = rawDuration == null || rawDuration === "" ? 5 : Number(rawDuration);
+    if (!Number.isFinite(requestedDuration) || requestedDuration <= 0) {
+      return NextResponse.json({ error: "duration は正の数で指定してください" }, { status: 400 });
+    }
     const duration = modelDurationClamp(model, requestedDuration);
     const aspectRatio = String(form.get("aspect_ratio") || "9:16");
     const sound = String(form.get("sound") || "on") === "on";
@@ -115,18 +121,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "model が不正です" }, { status: 400 });
     }
 
-    if (model !== "bytedance/seedance-2.5/text-to-video" && (!(image instanceof File) || !image.type.startsWith("image/"))) {
-      return NextResponse.json({ error: "このモデルでは画像を1枚アップロードしてください" }, { status: 400 });
+    if (model !== "bytedance/seedance-2.5/text-to-video" && (!(image instanceof File) || !ALLOWED_IMAGE_TYPES.has(image.type))) {
+      return NextResponse.json({ error: "このモデルでは JPG・PNG・WebP の画像を1枚アップロードしてください" }, { status: 400 });
+    }
+    if (image instanceof File) {
+      if (!ALLOWED_IMAGE_TYPES.has(image.type)) {
+        return NextResponse.json({ error: "画像形式は JPG・PNG・WebP に対応しています" }, { status: 400 });
+      }
+      if (image.size <= 0 || image.size > MAX_IMAGE_BYTES) {
+        return NextResponse.json({ error: "画像サイズは 10MB 以下にしてください" }, { status: 413 });
+      }
     }
     if (!prompt) {
       return NextResponse.json({ error: "動画の内容を自然文で入力してください" }, { status: 400 });
+    }
+    if (prompt.length > 5000) {
+      return NextResponse.json({ error: "プロンプトは 5,000 文字以内で入力してください" }, { status: 400 });
     }
     if (!["9:16", "16:9", "1:1"].includes(aspectRatio)) {
       return NextResponse.json({ error: "aspect_ratio が不正です" }, { status: 400 });
     }
 
     const imageUrl = image instanceof File ? await uploadImage(image) : null;
-    const baseInput = { prompt: prompt.slice(0, 5000), duration };
+    const baseInput = { prompt, duration };
     const seedanceWithImage = model === "bytedance/seedance-2.5/text-to-video" && Boolean(imageUrl);
     const endpointModel = seedanceWithImage ? "bytedance/seedance-2.5/reference-to-video" : model;
     const input = model === "bytedance/seedance-2.5/text-to-video" && seedanceWithImage
