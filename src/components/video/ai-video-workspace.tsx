@@ -26,7 +26,7 @@ export function AiVideoWorkspace() {
   const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [sound, setSound] = useState(true);
-  const [model, setModel] = useState("alibaba/wan-3.0-prime/image-to-video");
+  const [model, setModel] = useState("bytedance/seedance-2.5/text-to-video");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -55,13 +55,13 @@ export function AiVideoWorkspace() {
   async function generate() {
     setError("");
     setResult(null);
-    if (!image) return setError("商品・人物・素材などの画像を1枚選択してください。");
+    if (!image && model !== "bytedance/seedance-2.5/text-to-video") return setError("このモデルでは画像を1枚選択してください。");
     if (!prompt.trim()) return setError("どんな動画にしたいか入力してください。");
     if (usage && !usage.authenticated) return setError("ログインしてください。");
 
     setStatus("画像をアップロードしています…");
     const form = new FormData();
-    form.set("image", image);
+    if (image) form.set("image", image);
     form.set("prompt", prompt.trim());
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
@@ -88,29 +88,26 @@ export function AiVideoWorkspace() {
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
           <h2 className="text-lg font-semibold">素材</h2>
           <p className="mt-1 text-sm text-zinc-400">画像1枚からAIが動画を作ります。商品画像だけでなく、人物・風景・作品にも使えます。</p>
-          <input
-            className="mt-4 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-white"
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-          />
+          <label className="mt-5 flex min-h-28 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045]"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{model === "bytedance/seedance-2.5/text-to-video" ? "Seedance 2.5なら画像なしでも生成できます" : "JPG / PNG / WebP"}</p></div><input className="sr-only" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} /></label>
           {preview && <img src={preview} alt="" className="mt-4 max-h-72 rounded-xl object-contain" />}
         </section>
 
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
-          <h2 className="text-lg font-semibold">何を作る？</h2>
+        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight">Describe the motion</h2>
           <p className="mt-1 text-sm text-zinc-400">普通の文章で指示してください。CMに限定せず、SNS動画・紹介動画・映像作品などに使えます。</p>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={7}
-            placeholder="例：この商品の高級感が伝わる短編動画。最初はゆっくり寄り、途中で商品を回り込むカメラ、最後は明るい背景で印象的に見せて。"
+            placeholder="例：Golden-hour cinematic reveal, slow dolly-in, subtle camera orbit, premium editorial lighting, natural motion, clean final frame."
             className="mt-4 w-full resize-y rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
           />
         </section>
 
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
-          <h2 className="text-lg font-semibold">オプション</h2>
+        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">03 / CONTROL</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight">Shape the result</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <label className="text-sm text-zinc-400">長さ
               <select value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
@@ -124,7 +121,7 @@ export function AiVideoWorkspace() {
             </label>
             <label className="text-sm text-zinc-400">モデル
               <select value={model} onChange={(e) => setModel(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
-                <option value="alibaba/wan-3.0-prime/image-to-video">Wan 3.0 Prime（比率・音声対応）</option>
+                <option value="bytedance/seedance-2.5/text-to-video">Seedance 2.5（Text to Video）</option><option value="alibaba/wan-3.0-prime/image-to-video">Wan 3.0 Prime（Image to Video）</option>
                 <option value="kling-video/v3.0/pro/image-to-video">Kling 3.0 Pro（高品質）</option>
                 <option value="kling-video/v3.0-turbo/image-to-video">Kling 3.0 Turbo（高速）</option>
                 <option value="minimax/h3/image-to-video">MiniMax H3（比率対応）</option>
@@ -138,7 +135,7 @@ export function AiVideoWorkspace() {
         </section>
 
         {usage?.authenticated && (
-          <p className="text-xs text-zinc-500">利用状況：残り {usage.remaining} 本 / 使用 {usage.used} 本</p>
+          <div className="flex items-center justify-between text-xs text-zinc-500"><span>利用状況：残り {usage.remaining} 本</span><span>{usage.plan}</span></div>
         )}
 
         {error && <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
@@ -147,15 +144,15 @@ export function AiVideoWorkspace() {
           type="button"
           onClick={() => void generate()}
           disabled={Boolean(status)}
-          className="w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black disabled:cursor-wait disabled:opacity-50"
+          className="group w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-50"
         >
-          {status || "AI動画を生成する"}
+          {status || "Create video"}
         </button>
       </div>
 
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-          <h2 className="text-sm font-semibold">完成動画</h2>
+        <section className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-4 shadow-2xl shadow-black/30 sm:p-5">
+          <div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">OUTPUT</p><h2 className="mt-1 text-base font-semibold">Your video</h2></div><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">Preview</span></div>
           <div className={`mx-auto mt-4 flex min-h-[360px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${aspectRatio === "9:16" ? "aspect-[9/16] max-w-[260px]" : "aspect-video w-full"}`}>
             {result ? <video src={result.video_url} controls playsInline className="h-full w-full object-contain" /> : <p className="px-5 text-center text-xs text-zinc-600">生成するとここに表示されます</p>}
           </div>
