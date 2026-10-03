@@ -210,7 +210,7 @@ revoke all on function public.consume_video_usage_atomic(uuid, text, integer, ti
   from public;
 
 grant execute on function public.consume_video_usage_atomic(uuid, text, integer, timestamptz, timestamptz, integer, boolean, jsonb)
-  to anon, authenticated, service_role;
+  to authenticated, service_role;
 
 comment on function public.consume_video_usage_atomic(uuid, text, integer, timestamptz, timestamptz, integer, boolean, jsonb)
   is 'Atomically records one completed video usage per user/request_id and prevents concurrent quota over-consumption.';
