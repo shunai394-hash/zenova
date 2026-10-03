@@ -30,16 +30,22 @@ export default function VideoPage() {
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">Imagine · Direct · Create</span>
                 </div>
-                <h1 className="mt-6 max-w-3xl text-[2.7rem] font-medium leading-[0.98] tracking-[-0.065em] sm:text-6xl lg:text-7xl">
-                  Turn a thought
+                <h1 className="mt-6 max-w-3xl text-[2.7rem] font-medium leading-[0.96] tracking-[-0.07em] sm:text-6xl lg:text-7xl">
+                  頭の中のアイデアを、
                   <br />
-                  <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">into motion.</span>
+                  <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">「伝わる映像」に。</span>
                 </h1>
-                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">
-                  伝えたいことを、数分で「見せられる映像」へ。
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">
+                  「動画を作りたい。でも、何から始めればいいかわからない。」
                   <br className="hidden sm:block" />
-                  商品・SNS・広告・ブランドストーリーまで、画像か言葉から始められます。
+                  ZENOVAは、商品・SNS・広告・ブランドの“見せたい”を、入力から完成まで迷わせずに進めます。
                 </p>
+                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-zinc-500">
+                  <span><span className="text-zinc-200">01</span> 伝える</span>
+                  <span><span className="text-zinc-200">02</span> 生成する</span>
+                  <span><span className="text-zinc-200">03</span> 見直す</span>
+                  <span><span className="text-zinc-200">04</span> 改善する</span>
+                </div>
                 <div className="mt-7 flex flex-wrap gap-2 text-[11px] text-zinc-300">
                   {["最短3ステップ", "画像なしでもOK", "9:16 / 16:9 / 1:1", "生成後も再確認"].map((item) => (
                     <span key={item} className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">{item}</span>
