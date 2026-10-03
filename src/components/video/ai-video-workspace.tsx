@@ -144,7 +144,7 @@ export function AiVideoWorkspace() {
         <button
           type="button"
           onClick={() => void generate()}
-          disabled={Boolean(status)}
+          disabled={status.endsWith("…")}
           className="group w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-50"
         >
           {status || "Create video"}
@@ -154,7 +154,7 @@ export function AiVideoWorkspace() {
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <section className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-4 shadow-2xl shadow-black/30 sm:p-5">
           <div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">OUTPUT</p><h2 className="mt-1 text-base font-semibold">Your video</h2></div><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">Preview</span></div>
-          <div className={`mx-auto mt-4 flex min-h-[360px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${aspectRatio === "9:16" ? "aspect-[9/16] max-w-[260px]" : "aspect-video w-full"}`}>
+          <div className={`mx-auto mt-4 flex min-h-[360px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${aspectRatio === "9:16" ? "aspect-[9/16] max-w-[260px]" : aspectRatio === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
             {result ? <video src={result.video_url} controls playsInline className="h-full w-full object-contain" /> : <p className="px-5 text-center text-xs text-zinc-600">生成するとここに表示されます</p>}
           </div>
           {result && (
