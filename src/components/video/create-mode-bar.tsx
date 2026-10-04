@@ -14,7 +14,7 @@ const MODES = [
 export function CreateModeBar() {
   return (
     <nav aria-label="Create modes" className="mb-6 overflow-x-auto rounded-2xl border border-white/[0.08] bg-white/[0.025] p-1.5">
-      <div className="flex min-w-max gap-1">
+      <div className="flex min-w-max items-center gap-1">
         {MODES.map((mode) => {
           const className = [
             "min-w-[132px] rounded-xl px-3.5 py-3 text-left",
