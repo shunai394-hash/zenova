@@ -43,9 +43,9 @@ export default async function Home({
       <LandingSteps />
       <LandingSampleVideos />
       <LandingAudienceCards />
-      <LandingBottomCta />
       <LandingReasons />
       <LandingFaq />
+      <LandingBottomCta />
       <SiteFooter />
     </main>
   );
