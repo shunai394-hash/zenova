@@ -113,6 +113,7 @@ export function AiVideoWorkspace() {
   const [result, setResult] = useState<Result | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewPoints, setReviewPoints] = useState<string[]>([]);
+  const [activeSignal, setActiveSignal] = useState<"frame" | "direction" | "motion">("motion");
   const [usage, setUsage] = useState<Usage | null>(null);
   const [pending, setPending] = useState<PendingJob | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -397,6 +398,44 @@ export function AiVideoWorkspace() {
           </div>
           <p className="mt-2 text-xs leading-5 text-zinc-500">まず1本を作り、完成映像を見て次のプロンプトを改善。ZENOVAは「生成したら終わり」ではなく、次の1本までを制作体験にします。</p>
         </div>
+
+        <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#09090b] p-4 sm:p-5" aria-label="Creative signal">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <span className="text-[9px] uppercase tracking-[0.26em] text-zinc-600">ZENOVA SIGNAL</span>
+              <p className="mt-1 text-xs text-zinc-400">1つ選ぶと、次の指示の重心が変わります。</p>
+            </div>
+            <span className="hidden text-[9px] uppercase tracking-[0.2em] text-cyan-200/60 sm:block">Live direction</span>
+          </div>
+          <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+            {([
+              ["frame", "01", "Frame", "構図・主役"],
+              ["direction", "02", "Direction", "光・質感"],
+              ["motion", "03", "Motion", "カメラ・動き"],
+            ] as const).map(([key, number, label, detail]) => {
+              const selected = activeSignal === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setActiveSignal(key)}
+                  className={`group relative min-h-20 border-r border-white/10 px-3 py-3 text-left last:border-r-0 transition ${selected ? "bg-cyan-300/[0.07] text-white" : "text-zinc-500 hover:bg-white/[0.025] hover:text-zinc-300"} disabled:cursor-not-allowed disabled:opacity-50`}
+                  aria-pressed={selected}
+                >
+                  <span className={`text-[9px] tracking-[0.18em] ${selected ? "text-cyan-200" : "text-zinc-700"}`}>{number}</span>
+                  <span className="mt-1 block text-xs font-medium">{label}</span>
+                  <span className="mt-0.5 block text-[9px] text-zinc-600">{detail}</span>
+                  <span className={`absolute bottom-0 left-3 right-3 h-px transition ${selected ? "bg-cyan-200 shadow-[0_0_12px_rgba(103,232,249,0.8)]" : "bg-transparent"}`} />
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-zinc-500">
+            {activeSignal === "frame" ? "Frame：商品・人物・背景の優先順位を明確に。" : activeSignal === "direction" ? "Direction：光、色、質感、ブランドの空気感を揃える。" : "Motion：カメラ移動、速度、自然な動きを主役にする。"}
+          </p>
+        </section>
 
         <div className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] p-4">
           <div className="flex items-center justify-between gap-3">
