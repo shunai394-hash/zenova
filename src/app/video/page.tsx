@@ -5,15 +5,15 @@ import { CreateModeBar } from "@/components/video/create-mode-bar";
 export default function VideoPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-300 selection:text-black">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden">
-        <div className="absolute -top-56 left-[12%] h-[560px] w-[560px] rounded-full bg-violet-600/[0.12] blur-[130px]" />
-        <div className="absolute -top-48 right-[5%] h-[460px] w-[460px] rounded-full bg-cyan-400/[0.08] blur-[120px]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[820px] overflow-hidden">\n        <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
+        <div className="absolute -top-56 left-[12%] h-[620px] w-[620px] rounded-full bg-violet-600/[0.14] blur-[150px] animate-pulse [animation-duration:8s]" />
+        <div className="absolute -top-48 right-[5%] h-[520px] w-[520px] rounded-full bg-cyan-400/[0.10] blur-[135px] animate-pulse [animation-duration:11s]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,#070709_94%)]" />
       </div>
       <div className="relative z-10">
         <SiteHeader />
         <div className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
-          <header className="relative mb-8 overflow-hidden rounded-[2rem] border border-white/[0.09] bg-white/[0.025] px-5 py-8 sm:px-8 sm:py-10 lg:px-11 lg:py-12">
+          <header className="relative mb-8 overflow-hidden rounded-[2.25rem] border border-white/[0.11] bg-black/35 px-5 py-9 shadow-[0_30px_100px_rgba(0,0,0,0.35)] sm:px-8 sm:py-11 lg:px-12 lg:py-14">
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60">
               <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(139,92,246,0.10),transparent_42%,rgba(34,211,238,0.06))]" />
               <div className="absolute right-[-7rem] top-[-11rem] h-[26rem] w-[26rem] rounded-full border border-white/[0.08] sm:right-[-4rem]">
@@ -31,10 +31,10 @@ export default function VideoPage() {
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">Imagine · Direct · Create</span>
                 </div>
-                <h1 className="mt-6 max-w-3xl text-[2.7rem] font-medium leading-[0.96] tracking-[-0.07em] sm:text-6xl lg:text-7xl">
+                <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.34em] text-zinc-500">Creative direction / 01</p>\n                <h1 className="mt-2 max-w-4xl text-[3rem] font-medium leading-[0.9] tracking-[-0.075em] sm:text-6xl lg:text-[5.6rem]">
                   頭の中のアイデアを、
                   <br />
-                  <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">「伝わる映像」に。</span>
+                  <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">「伝わる映像」に<span className="text-cyan-200">.</span></span>
                 </h1>
                 <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">
                   「動画を作りたい。でも、何から始めればいいかわからない。」
@@ -53,9 +53,9 @@ export default function VideoPage() {
                   ))}
                 </div>
               </div>
-              <div className="relative hidden min-h-36 flex-col justify-end border-l border-white/10 pl-5 lg:flex">
-                <span className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Your next scene</span>
-                <span className="mt-2 text-2xl font-light tracking-tight text-zinc-200">Starts here<span className="text-cyan-200">.</span></span>
+              <div className="relative hidden min-h-52 flex-col justify-between border-l border-white/10 pl-6 lg:flex">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.24em] text-zinc-500"><span>Signal / Motion</span><span className="text-cyan-200">LIVE</span></div>
+                <span className="mt-2 text-3xl font-light tracking-[-0.04em] text-zinc-200">Start with a frame<span className="text-cyan-200">.</span></span>
                 <div className="mt-5 flex gap-1.5" aria-hidden="true">
                   {Array.from({ length: 18 }, (_, i) => (
                     <span key={i} className="h-7 w-1 rounded-full bg-gradient-to-t from-violet-400/20 via-zinc-400/50 to-cyan-200/70" style={{ opacity: 0.25 + ((i * 7) % 10) / 13, transform: `scaleY(${0.35 + ((i * 11) % 9) / 10})` }} />
@@ -76,13 +76,13 @@ export default function VideoPage() {
               <span className="rounded-full border border-white/10 px-3 py-1.5">AI motion</span>
             </div>
           </div>
-          <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          <div className="mb-7 grid gap-3 sm:grid-cols-3">
             {[
               ["01", "Describe", "何を見せたいか、普通の文章で。"],
               ["02", "Generate", "AIが動き・カメラ・演出を組み立てます。"],
               ["03", "Review", "完成映像を見て、次の1本へ改善。"],
             ].map(([n, title, body]) => (
-              <div key={n} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+              <div key={n} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-white/[0.035]">
                 <div className="flex items-center gap-2"><span className="text-[10px] tracking-[0.2em] text-cyan-300">{n}</span><span className="text-xs font-medium text-zinc-200">{title}</span></div>
                 <p className="mt-1 text-[11px] leading-5 text-zinc-500">{body}</p>
               </div>
