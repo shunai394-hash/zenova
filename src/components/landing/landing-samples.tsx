@@ -10,12 +10,12 @@ import {
   type DemoCompositionItem,
 } from "@/lib/landing/demo-compositions";
 
-function PlayIcon({ className }: { className?: string }) {
+function PreviewIcon({ className }: { className?: string }) {
   return (
     <div
       className={`flex items-center justify-center rounded-full border border-white/40 bg-black/55 shadow-lg backdrop-blur-sm ${className ?? ""}`}
     >
-      <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-white" />
+      <div className="flex w-5 flex-col gap-1" aria-hidden="true"><span className="h-1 rounded-full bg-white" /><span className="h-1 w-3/4 rounded-full bg-white/70" /><span className="h-1 w-1/2 rounded-full bg-white/45" /></div>
     </div>
   );
 }
@@ -33,7 +33,7 @@ function DemoCard({
         type="button"
         onClick={() => onOpen(demo)}
         className="relative block w-full aspect-[9/14] overflow-hidden bg-gradient-to-b from-zinc-800 via-zinc-900 to-black text-left sm:aspect-video"
-        aria-label={`${demo.title}をプレビュー`}
+        aria-label={`${demo.title}の構成を確認`}
       >
         {demo.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -53,13 +53,13 @@ function DemoCard({
               {demo.title}
             </span>
             <span className="text-[10px] tracking-[0.2em] text-gray-600">
-              ZENOVA ORIGINAL
+              ORIGINAL STORYBOARD
             </span>
           </div>
         )}
 
         <div className="absolute inset-0 flex items-center justify-center opacity-90 transition group-hover:opacity-100">
-          <PlayIcon className="h-14 w-14" />
+          <PreviewIcon className="h-14 w-14" />
         </div>
 
         <span className="absolute bottom-3 right-3 rounded bg-black/70 px-2 py-0.5 text-[11px] font-medium text-gray-200">
@@ -165,7 +165,7 @@ function DemoPreviewModal({
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-black px-6 text-center">
-              <PlayIcon className="h-16 w-16 opacity-60" />
+              <PreviewIcon className="h-16 w-16 opacity-60" />
               <p className="text-sm text-gray-400">
                 実際の生成動画はまだ掲載していません。現在はカット構成と演出案を確認できます。
               </p>
