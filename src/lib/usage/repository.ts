@@ -271,6 +271,23 @@ export async function sumVideoCredits(userId: string): Promise<number> {
   }, 0);
 }
 
+export async function supabaseUsageRequestExists(
+  userId: string,
+  requestId: string
+): Promise<boolean | string> {
+  const { data, error } = await supabase
+    .from("usage_logs")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("usage_type", "video")
+    .eq("metadata->>request_id", requestId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) return error.message;
+  return Boolean(data?.id);
+}
+
 export async function insertUsageLog(input: {
   user_id: string;
   usage_type: UsageType;
