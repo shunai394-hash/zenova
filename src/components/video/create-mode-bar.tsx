@@ -5,8 +5,9 @@ import Link from "next/link";
 const MODES = [
   { id: "video", label: "Video", sub: "Text / Image → Video", href: "/video", available: true },
   { id: "story", label: "Story", sub: "Coming soon", available: false },
-  { id: "character", label: "Character", sub: "Coming soon", available: false },
-  { id: "avatar", label: "Avatar", sub: "Coming soon", available: false },
+  { id: "character", label: "Character", sub: "Identity & look", available: false },
+  { id: "motion", label: "Motion", sub: "Reference → Character", available: false },
+  { id: "avatar", label: "Avatar", sub: "Voice & presence", available: false },
   { id: "ai-person", label: "AI Person", sub: "Planned · Realtime", available: false },
 ] as const;
 
