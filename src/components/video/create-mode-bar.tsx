@@ -13,19 +13,19 @@ const MODES = [
 
 export function CreateModeBar() {
   return (
-    <nav aria-label="Create modes" className="mb-6 overflow-x-auto rounded-2xl border border-white/[0.08] bg-white/[0.025] p-1.5">
-      <div className="flex min-w-max items-center gap-1">
+    <nav aria-label="Create modes" className="mb-7 overflow-x-auto border-y border-white/[0.07] py-1">
+      <div className="flex min-w-max items-stretch gap-0">
         {MODES.map((mode) => {
           const className = [
-            "min-w-[132px] rounded-xl px-3.5 py-3 text-left",
+            "relative min-w-[132px] border-r border-white/[0.07] px-4 py-3 text-left transition duration-300 first:border-l hover:bg-white/[0.025]",
             mode.available
-              ? "bg-white text-black shadow-lg shadow-white/5"
-              : "cursor-not-allowed text-zinc-500 opacity-75",
+              ? "text-white after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-cyan-200/80 after:shadow-[0_0_14px_rgba(103,232,249,0.35)]"
+              : "cursor-not-allowed text-zinc-600 opacity-75",
           ].join(" ");
 
           return mode.available ? (
             <Link key={mode.id} href={mode.href} aria-current="page" className={className}>
-              <span className="block text-sm font-medium">{mode.label}</span>
+              <span className="mb-1 block text-[9px] uppercase tracking-[0.2em] text-zinc-600">{String(MODES.indexOf(mode) + 1).padStart(2, "0")}</span><span className="block text-sm font-medium">{mode.label}</span>
               <span className="mt-0.5 block text-[10px] text-zinc-600">{mode.sub}</span>
             </Link>
           ) : (
