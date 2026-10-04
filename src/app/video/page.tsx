@@ -22,9 +22,9 @@ export default function VideoPage() {
                   <span className="text-zinc-700">01</span>
                 </div>
                 <h1 className="text-[clamp(3.4rem,8vw,8.5rem)] font-medium leading-[0.82] tracking-[-0.075em]">
-                  Make the
+                  Direct the
                   <br />
-                  <span className="text-zinc-500">impossible move.</span>
+                  <span className="text-zinc-500">next moment.</span>
                 </h1>
                 <p className="mt-8 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
                   商品画像と意図を渡す。ZENOVAが構図、カメラ、光、動きを読み取り、
@@ -44,10 +44,10 @@ export default function VideoPage() {
                 </div>
                 <div className="col-span-2 bg-[#090909] p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Quality bar</p>
+                    <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Creative standard</p>
                     <span className="flex items-center gap-2 text-[9px] uppercase tracking-[0.18em] text-zinc-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                      Award-level ambition
+                      Production-grade
                     </span>
                   </div>
                   <div className="mt-3 h-px bg-gradient-to-r from-white/50 via-white/15 to-transparent" />
@@ -76,7 +76,7 @@ export default function VideoPage() {
                   <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Director's note</p>
-                      <p className="mt-1 text-xs text-zinc-300">Don't animate the product. Direct the scene.</p>
+                      <p className="mt-1 text-xs text-zinc-300">Don’t animate the product. Direct the scene.</p>
                     </div>
                     <span className="text-[9px] text-zinc-700">ZENOVA</span>
                   </div>
@@ -91,7 +91,7 @@ export default function VideoPage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Quality check</p>
-                      <p className="mt-2 text-lg font-medium tracking-tight">Clarity over spectacle.</p>
+                      <p className="mt-2 text-lg font-medium tracking-tight">Intent over spectacle.</p>
                     </div>
                     <span className="text-[10px] text-zinc-600">∞</span>
                   </div>
@@ -107,7 +107,7 @@ export default function VideoPage() {
 
           <footer className="mt-16 flex flex-col gap-3 border-t border-white/10 pt-5 text-[9px] uppercase tracking-[0.22em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
             <span>ZENOVA — AI video production OS</span>
-            <span>Direction is the product.</span>
+            <span>The direction is the product.</span>
           </footer>
         </div>
       </div>
