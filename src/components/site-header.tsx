@@ -22,21 +22,21 @@ export function SiteHeader() {
   const loginNext = loginNextFromPath(pathname);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[#070709]/75 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
         <Link
           href="/"
-          className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white"
+          className="group shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.22em] text-white"
         >
           {BRAND_NAME}
         </Link>
 
-        <nav className="hidden items-center gap-5 text-sm text-gray-400 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-white/[0.07] bg-white/[0.025] p-1 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded px-2 py-2 transition hover:text-white"
+              className="rounded-full px-3 py-1.5 text-[12px] transition hover:bg-white/[0.07] hover:text-white"
             >
               {link.label}
             </Link>

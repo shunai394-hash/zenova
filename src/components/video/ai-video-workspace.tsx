@@ -33,6 +33,20 @@ const PROMPT_PRESETS = [
   { label: "SNSリール", text: "SNS向けの短い縦動画。最初の1秒で目を引き、自然なカメラ移動とテンポのよい動き。最後は印象的なフレームで止まる。" },
   { label: "ブランド", text: "洗練されたブランドムービー。シネマティックな光、自然なカメラワーク、余白のある上質な演出。静かに余韻を残す。" },
 ];
+const SIGNAL_DIRECTIVES = {
+  frame: "Creative priority: FRAME. Preserve subject identity, hierarchy, composition, and a deliberate final framing.",
+  direction: "Creative priority: DIRECTION. Prioritize premium light, material, color, atmosphere, and brand consistency.",
+  motion: "Creative priority: MOTION. Prioritize natural camera movement, believable physical motion, rhythm, and a strong opening.",
+} as const;
+
+const DIRECTOR_STAGES = [
+  { id: "source", label: "Source", jp: "素材", note: "主役を決める" },
+  { id: "direct", label: "Direct", jp: "演出", note: "意図を言葉にする" },
+  { id: "control", label: "Control", jp: "制御", note: "出力を整える" },
+  { id: "render", label: "Render", jp: "生成", note: "AIが動かす" },
+  { id: "review", label: "Review", jp: "評価", note: "次の1本へ" },
+] as const;
+
 const REVIEW_POINTS = [
   "最初の1秒をもっと強く",
   "主役・商品をもっと見やすく",
@@ -113,6 +127,8 @@ export function AiVideoWorkspace() {
   const [result, setResult] = useState<Result | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewPoints, setReviewPoints] = useState<string[]>([]);
+  const [activeSignal, setActiveSignal] = useState<"frame" | "direction" | "motion">("motion");
+  const [directorStage, setDirectorStage] = useState("source");
   const [usage, setUsage] = useState<Usage | null>(null);
   const [pending, setPending] = useState<PendingJob | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -218,6 +234,16 @@ export function AiVideoWorkspace() {
   }, [busy]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  useEffect(() => {
+    const nodes = DIRECTOR_STAGES.map((stage) => document.getElementById(`zenova-stage-${stage.id}`)).filter(Boolean) as HTMLElement[];
+    if (!nodes.length || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible?.target.id) setDirectorStage(visible.target.id.replace("zenova-stage-", ""));
+    }, { rootMargin: "-18% 0px -58% 0px", threshold: [0.12, 0.35, 0.65] });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
 
   function selectImage(file: File | null) {
     setError("");
@@ -240,7 +266,7 @@ export function AiVideoWorkspace() {
 
     const form = new FormData();
     if (image) form.set("image", image);
-    form.set("prompt", prompt.trim());
+    form.set("prompt", `${prompt.trim()}\n\n${SIGNAL_DIRECTIVES[activeSignal]}`);
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
     form.set("sound", sound ? "on" : "off");
@@ -299,12 +325,37 @@ export function AiVideoWorkspace() {
   const buttonLabel = busy ? `${PHASE_LABEL[phase]}…${elapsed ? ` ${elapsed}` : ""}` : "Create video";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="relative">
+      <div className="mb-5 lg:sticky lg:top-[76px] lg:z-20">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#08080a]/90 px-3 py-2.5 backdrop-blur-xl">
+          <div className="mx-auto flex min-w-max items-center justify-between gap-2">
+            <div className="flex items-center gap-2 pr-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-200 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
+              <span className="text-[9px] uppercase tracking-[0.24em] text-zinc-500">Director's Interface</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {DIRECTOR_STAGES.map((stage, index) => {
+                const active = directorStage === stage.id;
+                return (
+                  <a key={stage.id} href={`#zenova-stage-${stage.id}`} className={`group flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${active ? "bg-white/[0.07] text-white" : "text-zinc-600 hover:text-zinc-300"}`}>
+                    <span className={`text-[9px] tabular-nums ${active ? "text-cyan-200" : "text-zinc-700"}`}>0${index + 1}</span>
+                    <span className="hidden sm:block text-[10px] uppercase tracking-[0.14em]">{stage.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+            <span className="hidden border-l border-white/10 pl-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 sm:block">
+              {DIRECTOR_STAGES.find((stage) => stage.id === directorStage)?.note}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-5">
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
+        <section id="zenova-stage-source" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">01 / SOURCE</p>
           <div className="mt-2 flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold tracking-tight">Start with an idea</h2><p className="mt-1 text-sm text-zinc-400">画像を置いても、言葉だけでも始められます。</p></div><span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">{isSeedance ? "Image optional" : "Image required"}</span></div>
-          <label className="mt-5 flex min-h-32 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045] focus-within:border-cyan-300/60 focus-within:ring-2 focus-within:ring-cyan-300/30"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 10MBまで · 画像なしでもOK" : "JPG / PNG / WebP · 10MBまで"}</p></div><input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => { selectImage(e.target.files?.[0] || null); e.target.value = ""; }} /></label>
+          <label className="mt-5 flex group/frame relative min-h-40 cursor-pointer items-center justify-center overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#08080a] px-5 text-center transition duration-500 hover:border-cyan-200/30 hover:bg-white/[0.025] focus-within:border-cyan-300/60 focus-within:ring-2 focus-within:ring-cyan-300/30"><div><div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-zinc-400 transition group-hover/frame:border-cyan-200/30 group-hover/frame:text-cyan-200">＋</div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "Drop a frame / choose an image"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 10MBまで · 画像なしでもOK" : "JPG / PNG / WebP · 10MBまで"}</p></div><input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => { selectImage(e.target.files?.[0] || null); e.target.value = ""; }} /></label>
           {preview && (
             <div className="mt-4 flex items-start gap-3">
               {/* ローカルの blob URL プレビューのため next/image の最適化対象外 */}
@@ -315,7 +366,7 @@ export function AiVideoWorkspace() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+        <section id="zenova-stage-direct" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight"><label htmlFor="zenova-video-prompt">Describe the motion</label></h2>
           <p className="mt-1 text-sm text-zinc-400">普通の文章でOK。迷ったら下のプリセットを選んで、そこから書き換えられます。</p>
@@ -335,17 +386,17 @@ export function AiVideoWorkspace() {
             onChange={(e) => setPrompt(e.target.value)}
             rows={7}
             placeholder="例：Golden-hour cinematic reveal, slow dolly-in, subtle camera orbit, premium editorial lighting, natural motion, clean final frame."
-            className="mt-4 w-full resize-y rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/30"
+            className="mt-4 min-h-44 w-full resize-y rounded-[1.2rem] border border-zinc-800 bg-black px-4 pb-4 pt-9 text-sm leading-7 text-white placeholder:text-zinc-600 transition focus:border-cyan-300/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/20"
           />
           <p id="zenova-video-prompt-count" className="mt-2 text-right text-[11px] tabular-nums text-zinc-600">{prompt.trim().length.toLocaleString()} / {MAX_PROMPT_LENGTH.toLocaleString()}</p>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+        <section id="zenova-stage-control" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">03 / CONTROL</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight">Shape the result</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <label className="text-sm text-zinc-400">長さ
-              <select value={duration} onChange={(e) => setDuration(e.target.value)} disabled={busy} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
+              <select value={duration} onChange={(e) => setDuration(e.target.value)} disabled={busy} className="mt-2 min-h-11 w-full rounded-[0.9rem] border border-zinc-800 bg-black px-3 py-2 text-white transition hover:border-zinc-600 focus:border-cyan-300/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/20">
                 <option value="5">5秒</option><option value="10">10秒</option><option value="15">15秒</option>
               </select>
             </label>
@@ -398,19 +449,64 @@ export function AiVideoWorkspace() {
           <p className="mt-2 text-xs leading-5 text-zinc-500">まず1本を作り、完成映像を見て次のプロンプトを改善。ZENOVAは「生成したら終わり」ではなく、次の1本までを制作体験にします。</p>
         </div>
 
+        <section id="zenova-stage-render" className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#09090b] p-4 sm:p-5" aria-label="Creative signal">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <span className="text-[9px] uppercase tracking-[0.26em] text-zinc-600">ZENOVA SIGNAL</span>
+              <p className="mt-1 text-xs text-zinc-400">1つ選ぶと、次の指示の重心が変わります。</p>
+            </div>
+            <span className="hidden text-[9px] uppercase tracking-[0.2em] text-cyan-200/60 sm:block">Live direction</span>
+          </div>
+          <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+            {([
+              ["frame", "01", "Frame", "構図・主役"],
+              ["direction", "02", "Direction", "光・質感"],
+              ["motion", "03", "Motion", "カメラ・動き"],
+            ] as const).map(([key, number, label, detail]) => {
+              const selected = activeSignal === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setActiveSignal(key)}
+                  className={`group relative min-h-20 border-r border-white/10 px-3 py-3 text-left last:border-r-0 transition ${selected ? "bg-cyan-300/[0.07] text-white" : "text-zinc-500 hover:bg-white/[0.025] hover:text-zinc-300"} disabled:cursor-not-allowed disabled:opacity-50`}
+                  aria-pressed={selected}
+                >
+                  <span className={`text-[9px] tracking-[0.18em] ${selected ? "text-cyan-200" : "text-zinc-700"}`}>{number}</span>
+                  <span className="mt-1 block text-xs font-medium">{label}</span>
+                  <span className="mt-0.5 block text-[9px] text-zinc-600">{detail}</span>
+                  <span className={`absolute bottom-0 left-3 right-3 h-px transition ${selected ? "bg-cyan-200 shadow-[0_0_12px_rgba(103,232,249,0.8)]" : "bg-transparent"}`} />
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-zinc-500">
+            {activeSignal === "frame" ? "Frame：商品・人物・背景の優先順位を明確に。" : activeSignal === "direction" ? "Direction：光、色、質感、ブランドの空気感を揃える。" : "Motion：カメラ移動、速度、自然な動きを主役にする。"}
+          </p>
+        </section>
+
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div><span className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">READY STATE</span><p className="mt-1 text-xs text-zinc-400">Frame → Direction → Motion</p></div>
+            <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.7)]" />
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => void generate()}
           disabled={busy || phase === "stalled"}
           aria-busy={busy}
-          className="group w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0"
+          className="group relative w-full overflow-hidden rounded-[1.25rem] bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          <span className="tabular-nums">{buttonLabel}</span>
+          <span className="relative z-10 tabular-nums">{buttonLabel}</span><span aria-hidden="true" className="absolute inset-y-0 right-0 w-24 translate-x-10 bg-gradient-to-l from-cyan-200/60 to-transparent opacity-0 transition duration-500 group-hover:translate-x-0 group-hover:opacity-100" />
         </button>
       </div>
 
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-4 shadow-2xl shadow-black/30 sm:p-5">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/[0.11] bg-[#09090b] p-4 shadow-[0_30px_100px_rgba(0,0,0,0.4)] sm:p-5">
           <div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">OUTPUT</p><h2 className="mt-1 text-base font-semibold">Your video</h2></div><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">Preview</span></div>
           <ol aria-label="生成の進行状況" className="mt-4 grid grid-cols-4 gap-1.5">
             {PHASE_STEPS.map((step, i) => (
@@ -424,16 +520,29 @@ export function AiVideoWorkspace() {
             {phase === "idle" ? "" : `${PHASE_LABEL[phase]}${busy ? "…" : ""}`}{elapsed ? <span className="ml-2 tabular-nums text-zinc-600">{elapsed}</span> : null}
           </p>
           {busy && <p className="mt-1 text-[11px] leading-5 text-zinc-600">通常 1〜5 分ほどかかります。ページを閉じても、再度開くと続きから確認します。</p>}
-          <div className={`mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
+          {busy && (
+            <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.07] bg-black/40 px-3 py-3">
+              <div className="relative flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+                <span className={phase === "uploading" ? "text-cyan-200" : ""}>Send</span>
+                <span className={phase === "queued" ? "text-cyan-200" : ""}>Queue</span>
+                <span className={phase === "in_progress" ? "text-cyan-200" : ""}>Render</span>
+                <span className="text-zinc-700">Reveal</span>
+                <span className="absolute left-0 right-0 top-1/2 -z-0 h-px bg-white/10" />
+                <span className="absolute left-0 top-1/2 h-px bg-cyan-200/70 shadow-[0_0_14px_rgba(103,232,249,0.7)] transition-all duration-700" style={{ width: phase === "uploading" ? "18%" : phase === "queued" ? "42%" : "76%" }} />
+              </div>
+            </div>
+          )}
+          <div className={`relative mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050506] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.025)] ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
             {result ? (
-              <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+              <div className="zenova-reveal h-full w-full">
+                <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+              </div>
             ) : busy ? (
               <div className="flex flex-col items-center gap-3 px-5 text-center" aria-hidden="true">
-                <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-cyan-300/80" />
-                <span className="text-xs text-zinc-500">Rendering</span>
+                <span className="relative h-12 w-12 rounded-full border border-white/10"><span className="absolute inset-1 rounded-full border border-cyan-200/20 border-t-cyan-200/80 animate-spin" /><span className="absolute inset-[13px] rounded-full bg-cyan-200/60 shadow-[0_0_24px_rgba(103,232,249,0.35)]" /></span><span className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">Rendering your frame</span>
               </div>
             ) : (
-              <p className="px-5 text-center text-xs text-zinc-600">生成するとここに表示されます</p>
+              <p className="px-5 text-center text-xs text-zinc-600"><span className="mx-auto block h-px w-10 bg-cyan-200/30" /><span className="mt-3 block text-[10px] uppercase tracking-[0.2em] text-zinc-600">Your frame will appear here</span></p>
             )}
           </div>
           {result && (
@@ -446,7 +555,7 @@ export function AiVideoWorkspace() {
           )}
         </section>
         {result && (
-          <section className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-4 sm:p-5">
+          <section id="zenova-stage-review" className="mt-4 scroll-mt-28 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-cyan-200/70">04 / REVIEW</p>
@@ -474,6 +583,7 @@ export function AiVideoWorkspace() {
           </section>
         )}
       </aside>
+      </div>
     </div>
   );
 }
