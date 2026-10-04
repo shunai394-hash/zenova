@@ -57,24 +57,24 @@ export function ScrollDirector() {
   const stage = STAGES[active];
 
   return (
-    <div className="pointer-events-none sticky top-[4.75rem] z-20 mb-[-2.75rem] hidden h-12 items-center justify-center lg:flex" aria-hidden="true">
+    <div className="pointer-events-none sticky top-[4.75rem] z-20 mb-[-2.25rem] flex h-12 items-center justify-center" aria-hidden="true">
       <div className="relative flex w-full max-w-6xl items-center px-4 sm:px-6">
         <div className="absolute left-1/2 top-1/2 h-px w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 bg-white/[0.07]" />
         <div
           className="absolute left-1/2 top-1/2 h-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-200/70 via-violet-300/70 to-cyan-200/70 shadow-[0_0_16px_rgba(103,232,249,0.22)] transition-[width] duration-300"
           style={{ width: `calc((100% - 3rem) * ${progress})` }}
         />
-        <div className="relative mx-auto flex items-center gap-2 rounded-full border border-white/[0.09] bg-[#08080a]/90 px-2 py-1.5 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <div className="relative mx-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/[0.09] bg-[#08080a]/90 px-1.5 py-1.5 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl">
           {STAGES.map((item, index) => {
             const selected = index === active;
             return (
-              <span key={item.id} className={`flex items-center gap-2 rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[0.16em] transition-all duration-500 ${selected ? "bg-white/[0.08] text-white" : "text-zinc-600"}`}>
+              <span key={item.id} className={`flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[8px] uppercase tracking-[0.16em] transition-all duration-500 ${selected ? "bg-white/[0.08] text-white" : "text-zinc-600"}`}>
                 <span
                   className="h-1.5 w-1.5 rounded-full transition-all duration-500"
                   style={{ background: selected ? item.color : "rgba(255,255,255,0.12)", boxShadow: selected ? `0 0 12px ${item.color}` : "none" }}
                 />
                 {item.index}
-                <span className="hidden xl:inline">{item.label}</span>
+                <span className="hidden sm:inline">{item.label}</span>
               </span>
             );
           })}
