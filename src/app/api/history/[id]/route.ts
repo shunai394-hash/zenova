@@ -3,6 +3,7 @@ import {
   deleteGeneratedVideo,
   getGeneratedVideoById,
 } from "@/lib/sales-data";
+import { requireAuthUser } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,11 @@ type Ctx = { params: Promise<{ id: string }> };
  * DELETE /api/history/[id]
  */
 export async function DELETE(_req: Request, ctx: Ctx) {
+  const user = await requireAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
   try {
     const { id } = await ctx.params;
     const videoId = String(id ?? "").trim();
@@ -25,6 +31,10 @@ export async function DELETE(_req: Request, ctx: Ctx) {
         { error: "動画が見つかりません" },
         { status: 404 }
       );
+    }
+
+    if (existing.user_id !== user.id) {
+      return NextResponse.json({ error: "この動画を削除する権限がありません" }, { status: 403 });
     }
 
     await deleteGeneratedVideo(videoId);

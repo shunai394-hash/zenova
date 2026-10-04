@@ -32,7 +32,8 @@ function emptyPayload(warnings: string[] = []): GeneratedVideoHistoryPayload {
  * 失敗時は空配列（画面を壊さない）。
  */
 export async function listGeneratedVideoHistory(
-  limit = 50
+  limit = 50,
+  userId?: string
 ): Promise<GeneratedVideoHistoryPayload> {
   const warnings: string[] = [];
   let videoRows: Record<string, unknown>[] = [];
@@ -41,6 +42,7 @@ export async function listGeneratedVideoHistory(
     const { data, error } = await supabase
       .from("generated_videos")
       .select("*")
+      .eq("user_id", userId ?? "")
       .order("created_at", { ascending: false })
       .limit(limit);
 
