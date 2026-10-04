@@ -25,7 +25,7 @@ export function CreateModeBar() {
 
           return mode.available ? (
             <Link key={mode.id} href={mode.href} aria-current="page" className={className}>
-              <span className="mb-1 block text-[9px] uppercase tracking-[0.2em] text-zinc-600">{String(MODES.indexOf(mode) + 1).padStart(2, "0")}</span><span className="block text-sm font-medium">{mode.label}</span>
+              <span className="mb-1 block text-[9px] uppercase tracking-[0.2em] text-zinc-600">{String(MODES.indexOf(mode) + 1).padStart(2, "0")}</span><span className="mb-1 block text-[9px] uppercase tracking-[0.2em] text-zinc-600">{String(MODES.indexOf(mode) + 1).padStart(2, "0")}</span><span className="block text-sm font-medium">{mode.label}</span>
               <span className="mt-0.5 block text-[10px] text-zinc-600">{mode.sub}</span>
             </Link>
           ) : (
