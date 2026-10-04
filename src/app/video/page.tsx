@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header";
 import { AiVideoWorkspace } from "@/components/video/ai-video-workspace";
 import { CreateModeBar } from "@/components/video/create-mode-bar";
 import { ScrollDirector } from "@/components/video/scroll-director";
+import { HeroSignal } from "@/components/video/hero-signal";
 
 export default function VideoPage() {
   return (
@@ -56,15 +57,8 @@ export default function VideoPage() {
                   ))}
                 </div>
               </div>
-              <div className="relative hidden min-h-52 flex-col justify-between border-l border-white/10 pl-6 lg:flex">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.24em] text-zinc-500"><span>Signal / Motion</span><span className="text-cyan-200">LIVE</span></div>
-                <span className="mt-2 text-3xl font-light tracking-[-0.04em] text-zinc-200">Start with a frame<span className="text-cyan-200">.</span></span>
-                <div className="mt-5 flex h-8 items-end gap-1.5" aria-hidden="true">
-                  {Array.from({ length: 18 }, (_, i) => (
-                    <span key={i} className="h-7 w-1 origin-bottom rounded-full bg-gradient-to-t from-violet-400/20 via-zinc-400/50 to-cyan-200/70" style={{ opacity: 0.25 + ((i * 7) % 10) / 13, transform: `scaleY(${0.35 + ((i * 11) % 9) / 10})` }} />
-                  ))}
-                </div>
-              </div>
+              <HeroSignal />
+             </div>
             </div>
             <div aria-hidden="true" className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:left-11 sm:right-11" />
           </header>
