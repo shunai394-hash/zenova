@@ -301,10 +301,10 @@ export function AiVideoWorkspace() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-5">
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
+        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">01 / SOURCE</p>
           <div className="mt-2 flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold tracking-tight">Start with an idea</h2><p className="mt-1 text-sm text-zinc-400">画像を置いても、言葉だけでも始められます。</p></div><span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">{isSeedance ? "Image optional" : "Image required"}</span></div>
-          <label className="mt-5 flex min-h-32 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045] focus-within:border-cyan-300/60 focus-within:ring-2 focus-within:ring-cyan-300/30"><div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 10MBまで · 画像なしでもOK" : "JPG / PNG / WebP · 10MBまで"}</p></div><input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => { selectImage(e.target.files?.[0] || null); e.target.value = ""; }} /></label>
+          <label className="mt-5 flex group/frame relative min-h-40 cursor-pointer items-center justify-center overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#08080a] px-5 text-center transition duration-500 hover:border-cyan-200/30 hover:bg-white/[0.025] focus-within:border-cyan-300/60 focus-within:ring-2 focus-within:ring-cyan-300/30"><div><div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-zinc-400 transition group-hover/frame:border-cyan-200/30 group-hover/frame:text-cyan-200">＋</div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "Drop a frame / choose an image"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 10MBまで · 画像なしでもOK" : "JPG / PNG / WebP · 10MBまで"}</p></div><input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => { selectImage(e.target.files?.[0] || null); e.target.value = ""; }} /></label>
           {preview && (
             <div className="mt-4 flex items-start gap-3">
               {/* ローカルの blob URL プレビューのため next/image の最適化対象外 */}
@@ -315,7 +315,7 @@ export function AiVideoWorkspace() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight"><label htmlFor="zenova-video-prompt">Describe the motion</label></h2>
           <p className="mt-1 text-sm text-zinc-400">普通の文章でOK。迷ったら下のプリセットを選んで、そこから書き換えられます。</p>
@@ -335,7 +335,7 @@ export function AiVideoWorkspace() {
             onChange={(e) => setPrompt(e.target.value)}
             rows={7}
             placeholder="例：Golden-hour cinematic reveal, slow dolly-in, subtle camera orbit, premium editorial lighting, natural motion, clean final frame."
-            className="mt-4 w-full resize-y rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/30"
+            className="mt-4 min-h-44 w-full resize-y rounded-[1.2rem] border border-zinc-800 bg-black px-4 pb-4 pt-9 text-sm leading-7 text-white placeholder:text-zinc-600 transition focus:border-cyan-300/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/20"
           />
           <p id="zenova-video-prompt-count" className="mt-2 text-right text-[11px] tabular-nums text-zinc-600">{prompt.trim().length.toLocaleString()} / {MAX_PROMPT_LENGTH.toLocaleString()}</p>
         </section>
@@ -410,7 +410,7 @@ export function AiVideoWorkspace() {
       </div>
 
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-4 shadow-2xl shadow-black/30 sm:p-5">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/[0.11] bg-[#09090b] p-4 shadow-[0_30px_100px_rgba(0,0,0,0.4)] sm:p-5">
           <div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">OUTPUT</p><h2 className="mt-1 text-base font-semibold">Your video</h2></div><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">Preview</span></div>
           <ol aria-label="生成の進行状況" className="mt-4 grid grid-cols-4 gap-1.5">
             {PHASE_STEPS.map((step, i) => (
@@ -424,16 +424,15 @@ export function AiVideoWorkspace() {
             {phase === "idle" ? "" : `${PHASE_LABEL[phase]}${busy ? "…" : ""}`}{elapsed ? <span className="ml-2 tabular-nums text-zinc-600">{elapsed}</span> : null}
           </p>
           {busy && <p className="mt-1 text-[11px] leading-5 text-zinc-600">通常 1〜5 分ほどかかります。ページを閉じても、再度開くと続きから確認します。</p>}
-          <div className={`mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
+          <div className={`relative mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050506] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.025)] ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
             {result ? (
               <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
             ) : busy ? (
               <div className="flex flex-col items-center gap-3 px-5 text-center" aria-hidden="true">
-                <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-cyan-300/80" />
-                <span className="text-xs text-zinc-500">Rendering</span>
+                <span className="relative h-12 w-12 rounded-full border border-white/10"><span className="absolute inset-1 rounded-full border border-cyan-200/20 border-t-cyan-200/80 animate-spin" /><span className="absolute inset-[13px] rounded-full bg-cyan-200/60 shadow-[0_0_24px_rgba(103,232,249,0.35)]" /></span><span className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">Rendering your frame</span>
               </div>
             ) : (
-              <p className="px-5 text-center text-xs text-zinc-600">生成するとここに表示されます</p>
+              <p className="px-5 text-center text-xs text-zinc-600"><span className="mx-auto block h-px w-10 bg-cyan-200/30" /><span className="mt-3 block text-[10px] uppercase tracking-[0.2em] text-zinc-600">Your frame will appear here</span></p>
             )}
           </div>
           {result && (
