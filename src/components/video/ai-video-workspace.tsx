@@ -33,7 +33,21 @@ const PROMPT_PRESETS = [
   { label: "SNSリール", text: "SNS向けの短い縦動画。最初の1秒で目を引き、自然なカメラ移動とテンポのよい動き。最後は印象的なフレームで止まる。" },
   { label: "ブランド", text: "洗練されたブランドムービー。シネマティックな光、自然なカメラワーク、余白のある上質な演出。静かに余韻を残す。" },
 ];
-const SIGNAL_DIRECTIVES = {\n  frame: "Creative priority: FRAME. Preserve subject identity, hierarchy, composition, and a deliberate final framing.",\n  direction: "Creative priority: DIRECTION. Prioritize premium light, material, color, atmosphere, and brand consistency.",\n  motion: "Creative priority: MOTION. Prioritize natural camera movement, believable physical motion, rhythm, and a strong opening.",\n} as const;\n\nconst REVIEW_POINTS = [
+const SIGNAL_DIRECTIVES = {
+  frame: "Creative priority: FRAME. Preserve subject identity, hierarchy, composition, and a deliberate final framing.",
+  direction: "Creative priority: DIRECTION. Prioritize premium light, material, color, atmosphere, and brand consistency.",
+  motion: "Creative priority: MOTION. Prioritize natural camera movement, believable physical motion, rhythm, and a strong opening.",
+} as const;
+
+const DIRECTOR_STAGES = [
+  { id: "source", label: "Source", jp: "素材", note: "主役を決める" },
+  { id: "direct", label: "Direct", jp: "演出", note: "意図を言葉にする" },
+  { id: "control", label: "Control", jp: "制御", note: "出力を整える" },
+  { id: "render", label: "Render", jp: "生成", note: "AIが動かす" },
+  { id: "review", label: "Review", jp: "評価", note: "次の1本へ" },
+] as const;
+
+const REVIEW_POINTS = [
   "最初の1秒をもっと強く",
   "主役・商品をもっと見やすく",
   "動きをもっと自然に",
@@ -114,6 +128,7 @@ export function AiVideoWorkspace() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewPoints, setReviewPoints] = useState<string[]>([]);
   const [activeSignal, setActiveSignal] = useState<"frame" | "direction" | "motion">("motion");
+  const [directorStage, setDirectorStage] = useState("source");
   const [usage, setUsage] = useState<Usage | null>(null);
   const [pending, setPending] = useState<PendingJob | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -219,6 +234,16 @@ export function AiVideoWorkspace() {
   }, [busy]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  useEffect(() => {
+    const nodes = DIRECTOR_STAGES.map((stage) => document.getElementById(`zenova-stage-${stage.id}`)).filter(Boolean) as HTMLElement[];
+    if (!nodes.length || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible?.target.id) setDirectorStage(visible.target.id.replace("zenova-stage-", ""));
+    }, { rootMargin: "-18% 0px -58% 0px", threshold: [0.12, 0.35, 0.65] });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
 
   function selectImage(file: File | null) {
     setError("");
@@ -300,9 +325,34 @@ export function AiVideoWorkspace() {
   const buttonLabel = busy ? `${PHASE_LABEL[phase]}…${elapsed ? ` ${elapsed}` : ""}` : "Create video";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="relative">
+      <div className="mb-5 lg:sticky lg:top-[76px] lg:z-20">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#08080a]/90 px-3 py-2.5 backdrop-blur-xl">
+          <div className="mx-auto flex min-w-max items-center justify-between gap-2">
+            <div className="flex items-center gap-2 pr-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-200 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
+              <span className="text-[9px] uppercase tracking-[0.24em] text-zinc-500">Director's Interface</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {DIRECTOR_STAGES.map((stage, index) => {
+                const active = directorStage === stage.id;
+                return (
+                  <a key={stage.id} href={`#zenova-stage-${stage.id}`} className={`group flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${active ? "bg-white/[0.07] text-white" : "text-zinc-600 hover:text-zinc-300"}`}>
+                    <span className={`text-[9px] tabular-nums ${active ? "text-cyan-200" : "text-zinc-700"}`}>0${index + 1}</span>
+                    <span className="hidden sm:block text-[10px] uppercase tracking-[0.14em]">{stage.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+            <span className="hidden border-l border-white/10 pl-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 sm:block">
+              {DIRECTOR_STAGES.find((stage) => stage.id === directorStage)?.note}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-5">
-        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6">
+        <section id="zenova-stage-source" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">01 / SOURCE</p>
           <div className="mt-2 flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold tracking-tight">Start with an idea</h2><p className="mt-1 text-sm text-zinc-400">画像を置いても、言葉だけでも始められます。</p></div><span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">{isSeedance ? "Image optional" : "Image required"}</span></div>
           <label className="mt-5 flex group/frame relative min-h-40 cursor-pointer items-center justify-center overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#08080a] px-5 text-center transition duration-500 hover:border-cyan-200/30 hover:bg-white/[0.025] focus-within:border-cyan-300/60 focus-within:ring-2 focus-within:ring-cyan-300/30"><div><div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-zinc-400 transition group-hover/frame:border-cyan-200/30 group-hover/frame:text-cyan-200">＋</div><p className="text-sm font-medium text-zinc-200">{image ? image.name : "Drop a frame / choose an image"}</p><p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 10MBまで · 画像なしでもOK" : "JPG / PNG / WebP · 10MBまで"}</p></div><input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => { selectImage(e.target.files?.[0] || null); e.target.value = ""; }} /></label>
@@ -316,7 +366,7 @@ export function AiVideoWorkspace() {
           )}
         </section>
 
-        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
+        <section id="zenova-stage-direct" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight"><label htmlFor="zenova-video-prompt">Describe the motion</label></h2>
           <p className="mt-1 text-sm text-zinc-400">普通の文章でOK。迷ったら下のプリセットを選んで、そこから書き換えられます。</p>
@@ -341,7 +391,7 @@ export function AiVideoWorkspace() {
           <p id="zenova-video-prompt-count" className="mt-2 text-right text-[11px] tabular-nums text-zinc-600">{prompt.trim().length.toLocaleString()} / {MAX_PROMPT_LENGTH.toLocaleString()}</p>
         </section>
 
-        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
+        <section id="zenova-stage-control" className="scroll-mt-28 rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">03 / CONTROL</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight">Shape the result</h2>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -399,7 +449,7 @@ export function AiVideoWorkspace() {
           <p className="mt-2 text-xs leading-5 text-zinc-500">まず1本を作り、完成映像を見て次のプロンプトを改善。ZENOVAは「生成したら終わり」ではなく、次の1本までを制作体験にします。</p>
         </div>
 
-        <section className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#09090b] p-4 sm:p-5" aria-label="Creative signal">
+        <section id="zenova-stage-render" className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-[#09090b] p-4 sm:p-5" aria-label="Creative signal">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent" />
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -505,7 +555,7 @@ export function AiVideoWorkspace() {
           )}
         </section>
         {result && (
-          <section className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-4 sm:p-5">
+          <section id="zenova-stage-review" className="mt-4 scroll-mt-28 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-cyan-200/70">04 / REVIEW</p>
@@ -533,6 +583,7 @@ export function AiVideoWorkspace() {
           </section>
         )}
       </aside>
+      </div>
     </div>
   );
 }
