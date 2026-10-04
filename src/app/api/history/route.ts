@@ -15,6 +15,7 @@ export async function GET() {
   }
 
   try {
+    // Keep history scoped to the authenticated account.
     const payload = await listGeneratedVideoHistory(100, user.id);
     return NextResponse.json(payload);
   } catch (error) {
