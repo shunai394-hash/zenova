@@ -51,7 +51,7 @@ export function LandingHero() {
             <h1 className="mt-7 whitespace-pre-line text-5xl font-medium leading-[.94] tracking-[-0.065em] text-white sm:text-6xl lg:text-7xl">{HERO_COPY_MAIN}</h1>
             <p className="mt-6 max-w-2xl whitespace-pre-line text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">{HERO_COPY_SUB}</p>
             <div className="mt-7 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
-              {[["01","目的を決める"],["02","生成する"],["03","見直す"],["04","改善する"]].map(([n,label]) => (
+              {[["01","アイデアを入れる"],["02","生成する"],["03","見直す"],["04","改善する"]].map(([n,label]) => (
                 <div key={n} className="rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-3">
                   <span className="font-mono text-[9px] tracking-[0.18em] text-cyan-300">{n}</span>
                   <p className="mt-1 text-xs text-zinc-200">{label}</p>
