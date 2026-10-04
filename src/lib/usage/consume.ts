@@ -38,8 +38,8 @@ export async function consumeVideoUsage(
       const { supabaseUsageRequestExists } = await import("./repository");
       const existing = await supabaseUsageRequestExists(userId, requestId);
 
-      if (existingError) {
-        throw new Error(existingError);
+      if (typeof existing === "string") {
+        throw new Error(existing);
       }
 
       if (existing) {
