@@ -34,12 +34,14 @@ export function AiVideoWorkspace() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
+
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
   const supportsAspectRatio = !isKling;
   const supportsSound =
     model !== "minimax/h3/image-to-video" &&
     model !== "kling-video/v3.0-turbo/image-to-video";
+  const rendering = Boolean(status);
 
   useEffect(() => {
     if (!image) {
@@ -54,13 +56,15 @@ export function AiVideoWorkspace() {
   useEffect(() => {
     fetch("/api/usage", { credentials: "same-origin" })
       .then((r) => r.json())
-      .then((d) => setUsage({
-        authenticated: d.authenticated === true,
-        remaining: Number(d.remaining ?? 0),
-        used: Number(d.used ?? 0),
-        video_limit: Number(d.video_limit ?? 0),
-        plan: String(d.plan ?? "free"),
-      }))
+      .then((d) =>
+        setUsage({
+          authenticated: d.authenticated === true,
+          remaining: Number(d.remaining ?? 0),
+          used: Number(d.used ?? 0),
+          video_limit: Number(d.video_limit ?? 0),
+          plan: String(d.plan ?? "free"),
+        })
+      )
       .catch(() => {});
   }, []);
 
@@ -127,6 +131,7 @@ export function AiVideoWorkspace() {
     }
 
     setStatus("画像をアップロードしています…");
+
     const form = new FormData();
     if (image) form.set("image", image);
     form.set("prompt", prompt.trim());
@@ -169,122 +174,239 @@ export function AiVideoWorkspace() {
     }
   }
 
+  const usagePercent = usage?.video_limit
+    ? Math.min(100, (usage.used / usage.video_limit) * 100)
+    : 0;
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <div className="space-y-5">
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">01 / SOURCE</p>
-          <div className="mt-2 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">Start with an idea</h2>
-              <p className="mt-1 text-sm text-zinc-400">画像を置いても、言葉だけでも始められます。</p>
+    <div className="relative overflow-hidden border border-white/10 bg-[#080808] shadow-[0_30px_100px_rgba(0,0,0,0.35)]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_34%)]"
+      />
+
+      <div className="relative">
+        <div className="grid border-b border-white/10 lg:grid-cols-2">
+          <section className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">01 / SOURCE</p>
+                <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Give it a subject.</h2>
+              </div>
+              <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+                {isSeedance ? "Image optional" : "Image required"}
+              </span>
             </div>
-            <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">
-              {isSeedance ? "Image optional" : "Image required"}
-            </span>
-          </div>
-          <label className="mt-5 flex min-h-32 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 text-center transition hover:border-white/25 hover:bg-white/[0.045]">
-            <div>
-              <p className="text-sm font-medium text-zinc-200">{image ? image.name : "画像を追加"}</p>
-              <p className="mt-1 text-xs text-zinc-500">{isSeedance ? "JPG / PNG / WebP · 画像なしでもOK" : "JPG / PNG / WebP"}</p>
+
+            <label className="group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed border-white/10 bg-white/[0.018] px-5 text-center transition duration-300 hover:border-white/30 hover:bg-white/[0.035]">
+              <div>
+                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
+                  +
+                </div>
+                <p className="text-sm text-zinc-200">{image ? image.name : "Drop a product image"}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600">JPG · PNG · WEBP</p>
+              </div>
+              <input
+                className="sr-only"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files?.[0] || null)}
+              />
+            </label>
+
+            {preview && (
+              <div className="mt-4 overflow-hidden border border-white/10 bg-black">
+                <img src={preview} alt="Selected source" className="max-h-72 w-full object-contain" />
+              </div>
+            )}
+          </section>
+
+          <section className="p-5 sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">02 / DIRECTION</p>
+                <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Tell it what to feel.</h2>
+              </div>
+              <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">{prompt.length}/5000</span>
             </div>
-            <input
-              className="sr-only"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
+
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={8}
+              maxLength={5000}
+              placeholder="Slow dolly-in. The product catches late-afternoon light. Camera arcs around the subject. Premium editorial mood. End on a clean hero frame."
+              className="mt-6 min-h-40 w-full resize-none border border-white/10 bg-black/60 px-4 py-4 text-sm leading-6 text-white placeholder:text-zinc-700 transition focus:border-white/35 focus:outline-none"
             />
-          </label>
-          {preview && <img src={preview} alt="" className="mt-4 max-h-72 rounded-xl object-contain" />}
-        </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">02 / DIRECT</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight">Describe the motion</h2>
-          <p className="mt-1 text-sm text-zinc-400">普通の文章で指示してください。CMに限定せず、SNS動画・紹介動画・映像作品などに使えます。</p>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={7}
-            placeholder="例：Golden-hour cinematic reveal, slow dolly-in, subtle camera orbit, premium editorial lighting, natural motion, clean final frame."
-            className="mt-4 w-full resize-y rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
-          />
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">03 / CONTROL</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight">Shape the result</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            <label className="text-sm text-zinc-400">長さ
-              <select value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
-                <option value="5">5秒</option><option value="10">10秒</option><option value="15">15秒</option>
-              </select>
-            </label>
-            <label className="text-sm text-zinc-400">画面比率
-              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} disabled={!supportsAspectRatio} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40">
-                <option value="9:16">9:16 縦</option><option value="16:9">16:9 横</option><option value="1:1">1:1 正方形</option>
-              </select>
-            </label>
-            <label className="text-sm text-zinc-400">モデル
-              <select value={model} onChange={(e) => setModel(e.target.value)} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
-                <option value="bytedance/seedance-2.5/text-to-video">Seedance 2.5（Text to Video）</option>
-                <option value="alibaba/wan-3.0-prime/image-to-video">Wan 3.0 Prime（Image to Video）</option>
-                <option value="kling-video/v3.0/pro/image-to-video">Kling 3.0 Pro（高品質）</option>
-                <option value="kling-video/v3.0-turbo/image-to-video">Kling 3.0 Turbo（高速）</option>
-                <option value="minimax/h3/image-to-video">MiniMax H3（比率対応）</option>
-              </select>
-            </label>
-          </div>
-          <div className="mt-4 rounded-xl border border-white/5 bg-black/40 px-4 py-3 text-xs leading-5 text-zinc-500">
-            {isSeedance
-              ? "Seedance 2.5 · テキストから生成。画像を追加すると参照画像として構図に反映します。"
-              : isKling
-                ? "Kling · 出力比率は入力画像に合わせて生成されます。"
-                : "画像から動きとカメラワークを生成。モデルごとに対応する表現が異なります。"}
-          </div>
-          <label className="mt-4 flex items-center gap-3 text-sm text-zinc-300">
-            <input type="checkbox" checked={sound} disabled={!supportsSound} onChange={(e) => setSound(e.target.checked)} className="disabled:cursor-not-allowed disabled:opacity-40" />
-            AI音声・サウンドを生成 {!supportsSound && <span className="text-xs text-zinc-600">（このモデルでは非対応）</span>}
-          </label>
-        </section>
-
-        {usage?.authenticated && (
-          <div className="flex items-center justify-between text-xs text-zinc-500">
-            <span>利用状況：残り {usage.remaining} 本</span><span>{usage.plan}</span>
-          </div>
-        )}
-
-        {error && <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
-
-        <button
-          type="button"
-          onClick={() => void generate()}
-          disabled={status.endsWith("…")}
-          className="group w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-50"
-        >
-          {status || "Create video"}
-        </button>
-      </div>
-
-      <aside className="lg:sticky lg:top-24 lg:self-start">
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-4 shadow-2xl shadow-black/30 sm:p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">OUTPUT</p>
-              <h2 className="mt-1 text-base font-semibold">Your video</h2>
+            <div className="mt-3 flex items-center justify-between gap-4 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
+              <span>Natural language direction</span>
+              <span className="hidden sm:inline">Camera · Light · Pace · Mood</span>
             </div>
-            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-zinc-500">Preview</span>
+          </section>
+        </div>
+
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">03 / FRAME</p>
+                <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Direct the frame.</h2>
+              </div>
+              <span className="text-[9px] uppercase tracking-[0.16em] text-zinc-700">Live output</span>
+            </div>
+
+            <div className="mt-6 flex min-h-[420px] items-center justify-center border border-white/10 bg-black p-4">
+              <div
+                className={`relative flex max-h-[560px] w-full items-center justify-center overflow-hidden bg-[#050505] ${
+                  aspectRatio === "9:16"
+                    ? "aspect-[9/16] max-w-[300px]"
+                    : aspectRatio === "1:1"
+                      ? "aspect-square max-w-[520px]"
+                      : "aspect-video max-w-[760px]"
+                }`}
+              >
+                {result ? (
+                  <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+                ) : preview ? (
+                  <>
+                    <img src={preview} alt="" className="h-full w-full object-contain opacity-70" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_0,rgba(0,0,0,0.28)_70%)]" />
+                    <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/70 px-4 py-3 backdrop-blur">
+                      <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+                        <span>Reference frame</span>
+                        <span>{aspectRatio}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-8 text-center">
+                    <div className="mx-auto h-px w-12 bg-white/20" />
+                    <p className="mt-5 text-[10px] uppercase tracking-[0.24em] text-zinc-700">Your frame appears here</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {result && (
+              <a
+                href={result.video_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 block border border-white/10 px-4 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-zinc-400 transition hover:border-white/30 hover:text-white"
+              >
+                Open finished film ↗
+              </a>
+            )}
+          </section>
+
+          <aside className="p-5 sm:p-7">
+            <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">04 / MOTION</p>
+            <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Set the language.</h2>
+
+            <div className="mt-6 space-y-5">
+              <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+                Model
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="mt-2 w-full border border-white/10 bg-black px-3 py-3 text-sm normal-case tracking-normal text-white focus:border-white/30 focus:outline-none"
+                >
+                  <option value="bytedance/seedance-2.5/text-to-video">Seedance 2.5 / Text</option>
+                  <option value="alibaba/wan-3.0-prime/image-to-video">Wan 3.0 Prime</option>
+                  <option value="kling-video/v3.0/pro/image-to-video">Kling 3.0 Pro</option>
+                  <option value="kling-video/v3.0-turbo/image-to-video">Kling 3.0 Turbo</option>
+                  <option value="minimax/h3/image-to-video">MiniMax H3</option>
+                </select>
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+                  Duration
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className="mt-2 w-full border border-white/10 bg-black px-3 py-3 text-sm normal-case tracking-normal text-white focus:border-white/30 focus:outline-none"
+                  >
+                    <option value="5">05 sec</option>
+                    <option value="10">10 sec</option>
+                    <option value="15">15 sec</option>
+                  </select>
+                </label>
+
+                <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+                  Frame
+                  <select
+                    value={aspectRatio}
+                    onChange={(e) => setAspectRatio(e.target.value)}
+                    disabled={!supportsAspectRatio}
+                    className="mt-2 w-full border border-white/10 bg-black px-3 py-3 text-sm normal-case tracking-normal text-white disabled:opacity-30"
+                  >
+                    <option value="9:16">9:16</option>
+                    <option value="16:9">16:9</option>
+                    <option value="1:1">1:1</option>
+                  </select>
+                </label>
+              </div>
+
+              <label className="flex cursor-pointer items-center justify-between border-t border-white/10 pt-4 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                <span>Sound design</span>
+                <input
+                  type="checkbox"
+                  checked={sound}
+                  disabled={!supportsSound}
+                  onChange={(e) => setSound(e.target.checked)}
+                  className="h-4 w-4 accent-white disabled:opacity-30"
+                />
+              </label>
+
+              <div className="border-t border-white/10 pt-4 text-[10px] leading-5 text-zinc-600">
+                {isSeedance
+                  ? "Text-led direction. Add a reference image when composition matters."
+                  : isKling
+                    ? "Kling follows the source frame ratio."
+                    : "Image-led direction. Motion is composed around the source."}
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-white/10 pt-5">
+              <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+                <span>Usage</span>
+                <span>{usage?.authenticated ? `${usage.remaining} remaining` : "Sign in required"}</span>
+              </div>
+              <div className="mt-2 h-px bg-white/10">
+                <div className="h-px bg-white/50 transition-all" style={{ width: `${usagePercent}%` }} />
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div className="border-t border-white/10 bg-[#050505] p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">05 / RENDER</p>
+              <p className="mt-1 text-sm text-zinc-400">
+                {status || "Everything is ready. Make the move."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void generate()}
+              disabled={rendering}
+              className="border border-white bg-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
+            >
+              {rendering ? "Rendering" : "Create film"}
+            </button>
           </div>
-          <div className={`mx-auto mt-4 flex min-h-[360px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-zinc-700 bg-black ${aspectRatio === "9:16" ? "aspect-[9/16] max-w-[260px]" : aspectRatio === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
-            {result ? <video src={result.video_url} controls playsInline className="h-full w-full object-contain" /> : <p className="px-5 text-center text-xs text-zinc-600">生成するとここに表示されます</p>}
-          </div>
-          {result && (
-            <a href={result.video_url} target="_blank" rel="noreferrer" className="mt-4 block rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm hover:border-zinc-500">
-              動画を開く
-            </a>
+
+          {error && (
+            <div className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
+              {error}
+            </div>
           )}
-        </section>
-      </aside>
+        </div>
+      </div>
     </div>
   );
 }
