@@ -470,6 +470,18 @@ export function AiVideoWorkspace() {
             {phase === "idle" ? "" : `${PHASE_LABEL[phase]}${busy ? "…" : ""}`}{elapsed ? <span className="ml-2 tabular-nums text-zinc-600">{elapsed}</span> : null}
           </p>
           {busy && <p className="mt-1 text-[11px] leading-5 text-zinc-600">通常 1〜5 分ほどかかります。ページを閉じても、再度開くと続きから確認します。</p>}
+          {busy && (
+            <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.07] bg-black/40 px-3 py-3">
+              <div className="relative flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+                <span className={phase === "uploading" ? "text-cyan-200" : ""}>Send</span>
+                <span className={phase === "queued" ? "text-cyan-200" : ""}>Queue</span>
+                <span className={phase === "in_progress" ? "text-cyan-200" : ""}>Render</span>
+                <span className="text-zinc-700">Reveal</span>
+                <span className="absolute left-0 right-0 top-1/2 -z-0 h-px bg-white/10" />
+                <span className="absolute left-0 top-1/2 h-px bg-cyan-200/70 shadow-[0_0_14px_rgba(103,232,249,0.7)] transition-all duration-700" style={{ width: phase === "uploading" ? "18%" : phase === "queued" ? "42%" : "76%" }} />
+              </div>
+            </div>
+          )}
           <div className={`relative mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050506] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.025)] ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
             {result ? (
               <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
