@@ -5,7 +5,8 @@ import { CreateModeBar } from "@/components/video/create-mode-bar";
 export default function VideoPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-300 selection:text-black">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[820px] overflow-hidden">\n        <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[820px] overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
         <div className="absolute -top-56 left-[12%] h-[620px] w-[620px] rounded-full bg-violet-600/[0.14] blur-[150px] animate-pulse [animation-duration:8s]" />
         <div className="absolute -top-48 right-[5%] h-[520px] w-[520px] rounded-full bg-cyan-400/[0.10] blur-[135px] animate-pulse [animation-duration:11s]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,#070709_94%)]" />
@@ -56,9 +57,9 @@ export default function VideoPage() {
               <div className="relative hidden min-h-52 flex-col justify-between border-l border-white/10 pl-6 lg:flex">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.24em] text-zinc-500"><span>Signal / Motion</span><span className="text-cyan-200">LIVE</span></div>
                 <span className="mt-2 text-3xl font-light tracking-[-0.04em] text-zinc-200">Start with a frame<span className="text-cyan-200">.</span></span>
-                <div className="mt-5 flex gap-1.5" aria-hidden="true">
+                <div className="mt-5 flex h-8 items-end gap-1.5" aria-hidden="true">
                   {Array.from({ length: 18 }, (_, i) => (
-                    <span key={i} className="h-7 w-1 rounded-full bg-gradient-to-t from-violet-400/20 via-zinc-400/50 to-cyan-200/70" style={{ opacity: 0.25 + ((i * 7) % 10) / 13, transform: `scaleY(${0.35 + ((i * 11) % 9) / 10})` }} />
+                    <span key={i} className="h-7 w-1 origin-bottom rounded-full bg-gradient-to-t from-violet-400/20 via-zinc-400/50 to-cyan-200/70" style={{ opacity: 0.25 + ((i * 7) % 10) / 13, transform: `scaleY(${0.35 + ((i * 11) % 9) / 10})` }} />
                   ))}
                 </div>
               </div>
@@ -76,13 +77,13 @@ export default function VideoPage() {
               <span className="rounded-full border border-white/10 px-3 py-1.5">AI motion</span>
             </div>
           </div>
-          <div className="mb-7 grid gap-3 sm:grid-cols-3">
+          <div className="mb-8 grid gap-3 sm:grid-cols-3">
             {[
               ["01", "Describe", "何を見せたいか、普通の文章で。"],
               ["02", "Generate", "AIが動き・カメラ・演出を組み立てます。"],
               ["03", "Review", "完成映像を見て、次の1本へ改善。"],
             ].map(([n, title, body]) => (
-              <div key={n} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition duration-300 hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-white/[0.035]">
+              <div key={n} className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 transition duration-300 hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-white/[0.035]">
                 <div className="flex items-center gap-2"><span className="text-[10px] tracking-[0.2em] text-cyan-300">{n}</span><span className="text-xs font-medium text-zinc-200">{title}</span></div>
                 <p className="mt-1 text-[11px] leading-5 text-zinc-500">{body}</p>
               </div>
