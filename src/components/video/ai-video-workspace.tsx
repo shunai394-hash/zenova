@@ -340,12 +340,12 @@ export function AiVideoWorkspace() {
           <p id="zenova-video-prompt-count" className="mt-2 text-right text-[11px] tabular-nums text-zinc-600">{prompt.trim().length.toLocaleString()} / {MAX_PROMPT_LENGTH.toLocaleString()}</p>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20 sm:p-6">
+        <section className="rounded-[1.75rem] border border-white/[0.09] bg-[#0b0b0e] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">03 / CONTROL</p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight">Shape the result</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <label className="text-sm text-zinc-400">長さ
-              <select value={duration} onChange={(e) => setDuration(e.target.value)} disabled={busy} className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 text-white">
+              <select value={duration} onChange={(e) => setDuration(e.target.value)} disabled={busy} className="mt-2 min-h-11 w-full rounded-[0.9rem] border border-zinc-800 bg-black px-3 py-2 text-white transition hover:border-zinc-600 focus:border-cyan-300/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/20">
                 <option value="5">5秒</option><option value="10">10秒</option><option value="15">15秒</option>
               </select>
             </label>
@@ -398,14 +398,21 @@ export function AiVideoWorkspace() {
           <p className="mt-2 text-xs leading-5 text-zinc-500">まず1本を作り、完成映像を見て次のプロンプトを改善。ZENOVAは「生成したら終わり」ではなく、次の1本までを制作体験にします。</p>
         </div>
 
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div><span className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">READY STATE</span><p className="mt-1 text-xs text-zinc-400">Frame → Direction → Motion</p></div>
+            <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.7)]" />
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => void generate()}
           disabled={busy || phase === "stalled"}
           aria-busy={busy}
-          className="group w-full rounded-2xl bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0"
+          className="group relative w-full overflow-hidden rounded-[1.25rem] bg-white px-5 py-4 text-base font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.08)] transition hover:-translate-y-0.5 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          <span className="tabular-nums">{buttonLabel}</span>
+          <span className="relative z-10 tabular-nums">{buttonLabel}</span><span aria-hidden="true" className="absolute inset-y-0 right-0 w-24 translate-x-10 bg-gradient-to-l from-cyan-200/60 to-transparent opacity-0 transition duration-500 group-hover:translate-x-0 group-hover:opacity-100" />
         </button>
       </div>
 
