@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZENOVA — AI Video Studio",
+  title: "ZENOVA — AI Create Studio | Video & Motion",
   description:
-    "画像でも、言葉でも。Higgsfieldの生成モデルで、アイデアをそのまま映像へ。",
+    "画像・プロンプトからAI動画を制作。生成・レビュー・改善をひとつのワークスペースにまとめるクリエイター向けCreate Studio。",
   openGraph: {
-    title: "ZENOVA — AI Video Studio",
+    title: "ZENOVA — AI Create Studio | Video & Motion",
     description:
-      "画像でも、言葉でも。アイデアをそのまま映像へ。",
+      "画像・プロンプトからAI動画を制作。生成・レビュー・改善をひとつのワークスペースに。",
   },
   twitter: {
     card: "summary_large_image",
