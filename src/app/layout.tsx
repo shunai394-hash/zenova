@@ -13,19 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZENOVA — AI Video Studio",
+  title: "ZENOVA — 商品から始めるAIショート動画スタジオ",
   description:
-    "画像でも、言葉でも。Higgsfieldの生成モデルで、アイデアをそのまま映像へ。",
+    "商品URLや画像から、ショート動画の企画・日本語台本・映像制作を進めるAIスタジオ。",
   openGraph: {
-    title: "ZENOVA — AI Video Studio",
-    description:
-      "画像でも、言葉でも。アイデアをそのまま映像へ。",
+    title: "ZENOVA — 商品から始めるAIショート動画スタジオ",
+    description: "商品URLや画像から、企画・日本語台本・映像制作へ。",
+    type: "website",
+    locale: "ja_JP",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ZENOVA — AI Video Studio",
-    description:
-      "画像でも、言葉でも。アイデアをそのまま映像へ。",
+    title: "ZENOVA — 商品から始めるAIショート動画スタジオ",
+    description: "商品URLや画像から、企画・日本語台本・映像制作へ。",
   },
 };
 
