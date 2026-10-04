@@ -24,11 +24,8 @@ function StoryboardArtwork({ demo, compact = false }: { demo: DemoCompositionIte
   const isBeforeAfter = demo.id === "demo-before-after";
 
   if (demo.thumbnail) {
-    return (
-      // The configured thumbnail is authored for this demo and has meaningful alt text.
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={demo.thumbnail} alt={`${demo.title}の構成イメージ`} className="absolute inset-0 h-full w-full object-cover" />
-    );
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={demo.thumbnail} alt={`${demo.title}の構成イメージ`} className="absolute inset-0 h-full w-full object-cover" />;
   }
 
   return (
@@ -112,15 +109,26 @@ function DemoCard({ demo, onOpen, index }: { demo: DemoCompositionItem; onOpen: 
 
 function Modal({ demo, onClose }: { demo: DemoCompositionItem; onClose: () => void }) {
   const id = useId();
+  const dialog = useRef<HTMLDivElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
-      if (event.key === "Tab" && event.shiftKey && document.activeElement === close.current) {
-        event.preventDefault();
-        const last = document.querySelector<HTMLAnchorElement>("[data-modal-last]");
-        last?.focus();
+      if (event.key === "Tab" && dialog.current) {
+        const focusable = Array.from(dialog.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
     document.addEventListener("keydown", key);
@@ -136,7 +144,7 @@ function Modal({ demo, onClose }: { demo: DemoCompositionItem; onClose: () => vo
 
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-black/85 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby={id} onClick={onClose}>
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[28px] border border-white/10 bg-[#080808] shadow-2xl shadow-black/60" onClick={(event) => event.stopPropagation()}>
+      <div ref={dialog} className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[28px] border border-white/10 bg-[#080808] shadow-2xl shadow-black/60" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7">
           <div>
             <p className="text-[9px] font-semibold uppercase tracking-[.24em] text-[#d7ff43]">ZENOVA / STORYBOARD</p>
@@ -161,7 +169,7 @@ function Modal({ demo, onClose }: { demo: DemoCompositionItem; onClose: () => vo
           ))}
         </div>
         <div className="flex flex-col gap-3 px-5 pb-6 sm:flex-row sm:px-7 sm:pb-7">
-          <Link data-modal-last href={buildAnalyzeDemoHref(demo.templateKey)} className="flex flex-1 items-center justify-center rounded-full bg-[#d7ff43] py-3.5 text-sm font-bold text-black transition hover:bg-white">この構成で動画を作る ↗</Link>
+          <Link href={buildAnalyzeDemoHref(demo.templateKey)} className="flex flex-1 items-center justify-center rounded-full bg-[#d7ff43] py-3.5 text-sm font-bold text-black transition hover:bg-white">この構成で動画を作る ↗</Link>
           <button type="button" onClick={onClose} className="rounded-full border border-white/15 px-6 py-3.5 text-sm text-white/70 transition hover:bg-white/5">閉じる</button>
         </div>
       </div>
