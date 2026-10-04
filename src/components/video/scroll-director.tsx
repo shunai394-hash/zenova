@@ -24,6 +24,7 @@ export function ScrollDirector() {
     const targets = STAGES.map((stage) => document.getElementById(`zenova-stage-${stage.id}`)).filter(Boolean) as HTMLElement[];
     if (!targets.length) return;
 
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     const update = () => {
       frame = 0;
@@ -33,10 +34,21 @@ export function ScrollDirector() {
       let bestDistance = Number.POSITIVE_INFINITY;
 
       targets.forEach((target, index) => {
-        const distance = Math.abs(target.getBoundingClientRect().top - focus);
+        const rect = target.getBoundingClientRect();
+        const distance = Math.abs(rect.top - focus);
         if (distance < bestDistance) {
           bestDistance = distance;
           best = index;
+        }
+        if (!reducedMotion) {
+          const normalized = Math.max(-1, Math.min(1, (rect.top - focus) / Math.max(viewport * 0.8, 1)));
+          const depth = Math.min(10, Math.abs(normalized) * 10);
+          target.style.setProperty("--zenova-scroll-shift", `${normalized * -1.5}px`);
+          target.style.setProperty("--zenova-scroll-scale", `${1 - depth * 0.0015}`);
+          target.style.setProperty("--zenova-scroll-opacity", `${1 - depth * 0.012}`);
+          target.style.transform = `translate3d(0, var(--zenova-scroll-shift), 0) scale(var(--zenova-scroll-scale))`;
+          target.style.opacity = "var(--zenova-scroll-opacity)";
+          target.style.willChange = "transform, opacity";
         }
       });
 
@@ -54,6 +66,14 @@ export function ScrollDirector() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
+      targets.forEach((target) => {
+        target.style.removeProperty("--zenova-scroll-shift");
+        target.style.removeProperty("--zenova-scroll-scale");
+        target.style.removeProperty("--zenova-scroll-opacity");
+        target.style.removeProperty("transform");
+        target.style.removeProperty("opacity");
+        target.style.removeProperty("will-change");
+      });
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) window.cancelAnimationFrame(frame);
