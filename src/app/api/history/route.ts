@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listGeneratedVideoHistory } from "@/lib/sales-data";
+import { listGeneratedVideoHistory } from "@/lib/sales-data/video-history";
 import { requireAuthUser } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
