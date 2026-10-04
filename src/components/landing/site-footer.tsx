@@ -45,12 +45,12 @@ const LEGAL_LINKS = FOOTER_LINKS.legal.filter((link) => {
 });
 
 export function SiteFooter() {
-  const columns = 2 + (LEGAL_LINKS.length > 0 ? 1 : 0);
+  const gridColumns = LEGAL_LINKS.length > 0 ? "md:grid-cols-3" : "md:grid-cols-2";
 
   return (
     <footer className="border-t border-zinc-800 bg-zinc-950">
       <div
-        className={`mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-${columns}`}
+        className={`mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 sm:py-16 ${gridColumns}`}
       >
         <div>
           <p className="text-sm font-semibold tracking-[0.18em] text-white">
