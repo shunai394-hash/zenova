@@ -484,7 +484,9 @@ export function AiVideoWorkspace() {
           )}
           <div className={`relative mx-auto mt-4 flex min-h-[200px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050506] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.025)] ${outputAspect === "9:16" ? "aspect-[9/16] max-w-[260px]" : outputAspect === "1:1" ? "aspect-square w-full max-w-[320px]" : "aspect-video w-full"}`}>
             {result ? (
-              <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+              <div className="zenova-reveal h-full w-full">
+                <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+              </div>
             ) : busy ? (
               <div className="flex flex-col items-center gap-3 px-5 text-center" aria-hidden="true">
                 <span className="relative h-12 w-12 rounded-full border border-white/10"><span className="absolute inset-1 rounded-full border border-cyan-200/20 border-t-cyan-200/80 animate-spin" /><span className="absolute inset-[13px] rounded-full bg-cyan-200/60 shadow-[0_0_24px_rgba(103,232,249,0.35)]" /></span><span className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">Rendering your frame</span>
