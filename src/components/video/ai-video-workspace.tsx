@@ -33,7 +33,7 @@ const PROMPT_PRESETS = [
   { label: "SNSリール", text: "SNS向けの短い縦動画。最初の1秒で目を引き、自然なカメラ移動とテンポのよい動き。最後は印象的なフレームで止まる。" },
   { label: "ブランド", text: "洗練されたブランドムービー。シネマティックな光、自然なカメラワーク、余白のある上質な演出。静かに余韻を残す。" },
 ];
-const REVIEW_POINTS = [
+const SIGNAL_DIRECTIVES = {\n  frame: "Creative priority: FRAME. Preserve subject identity, hierarchy, composition, and a deliberate final framing.",\n  direction: "Creative priority: DIRECTION. Prioritize premium light, material, color, atmosphere, and brand consistency.",\n  motion: "Creative priority: MOTION. Prioritize natural camera movement, believable physical motion, rhythm, and a strong opening.",\n} as const;\n\nconst REVIEW_POINTS = [
   "最初の1秒をもっと強く",
   "主役・商品をもっと見やすく",
   "動きをもっと自然に",
@@ -241,7 +241,7 @@ export function AiVideoWorkspace() {
 
     const form = new FormData();
     if (image) form.set("image", image);
-    form.set("prompt", prompt.trim());
+    form.set("prompt", `${prompt.trim()}\n\n${SIGNAL_DIRECTIVES[activeSignal]}`);
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
     form.set("sound", sound ? "on" : "off");
