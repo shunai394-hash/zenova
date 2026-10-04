@@ -66,6 +66,33 @@ export default function VideoPage() {
             </div>
             <div aria-hidden="true" className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:left-11 sm:right-11" />
           </header>
+          <section aria-label="ZENOVA creative sequence" className="relative mb-10 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#09090b] px-5 py-6 sm:px-7 sm:py-7">
+            <div aria-hidden="true" className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/45 to-transparent" />
+            <div aria-hidden="true" className="absolute -left-20 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-cyan-300/[0.06] blur-3xl" />
+            <div className="relative grid gap-6 lg:grid-cols-[180px_minmax(0,1fr)_220px] lg:items-center">
+              <div className="flex items-center gap-3 lg:block">
+                <span className="text-[9px] uppercase tracking-[0.28em] text-cyan-200/70">The ZENOVA method</span>
+                <span className="hidden text-[10px] uppercase tracking-[0.18em] text-zinc-700 lg:block lg:pt-2">01 — 05</span>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  ["01", "FRAME"], ["02", "DIRECT"], ["03", "CONTROL"], ["04", "RENDER"], ["05", "REVIEW"],
+                ].map(([n, label], i) => (
+                  <div key={n} className="group">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-[9px] tabular-nums text-zinc-600">{n}</span>
+                      <span className="h-px flex-1 bg-white/[0.08] group-last:bg-transparent" />
+                    </div>
+                    <span className="text-[9px] uppercase tracking-[0.13em] text-zinc-400 transition group-hover:text-cyan-200">{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-l border-white/[0.08] pl-4 text-[11px] leading-5 text-zinc-500 lg:text-right">
+                <span className="text-zinc-300">One direction.</span><br />
+                Five deliberate stages.
+              </div>
+            </div>
+          </section>
           <CreateModeBar />
           <div className="mb-5 grid gap-4 px-1 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
