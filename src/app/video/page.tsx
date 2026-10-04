@@ -32,7 +32,7 @@ export default function VideoPage() {
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">Imagine · Direct · Create</span>
                 </div>
-                <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.34em] text-zinc-500">Creative direction / 01</p>\n                <h1 className="mt-2 max-w-4xl text-[3rem] font-medium leading-[0.9] tracking-[-0.075em] sm:text-6xl lg:text-[5.6rem]">
+                <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.34em] text-zinc-500">Creative direction / 01</p>                <h1 className="mt-2 max-w-4xl text-[3rem] font-medium leading-[0.9] tracking-[-0.075em] sm:text-6xl lg:text-[5.6rem]">
                   頭の中のアイデアを、
                   <br />
                   <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">「伝わる映像」に<span className="text-cyan-200">.</span></span>
