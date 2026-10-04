@@ -5,7 +5,8 @@ import { ScrollDirector } from "@/components/video/scroll-director";
 
 export default function VideoPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-300 selection:text-black">
+    <a href="#zenova-content" className="sr-only z-[100] rounded-full bg-white px-4 py-2 text-sm font-medium text-black focus:not-sr-only focus:absolute focus:left-4 focus:top-4">コンテンツへ移動</a>
+    <main id="zenova-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-300 selection:text-black">
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[820px] overflow-hidden">
         <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
         <div className="absolute -top-56 left-[12%] h-[620px] w-[620px] rounded-full bg-violet-600/[0.14] blur-[150px] animate-pulse [animation-duration:8s]" />
