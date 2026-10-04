@@ -3,70 +3,111 @@ import { AiVideoWorkspace } from "@/components/video/ai-video-workspace";
 
 export default function VideoPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-300 selection:text-black">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden">
-        <div className="absolute -top-56 left-[12%] h-[560px] w-[560px] rounded-full bg-violet-600/[0.12] blur-[130px]" />
-        <div className="absolute -top-48 right-[5%] h-[460px] w-[460px] rounded-full bg-cyan-400/[0.08] blur-[120px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,#070709_94%)]" />
+    <main className="min-h-screen overflow-hidden bg-[#050505] text-white selection:bg-white selection:text-black">
+      <div aria-hidden className="pointer-events-none fixed inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_8%,rgba(255,255,255,0.07),transparent_28%),radial-gradient(circle_at_12%_32%,rgba(99,102,241,0.08),transparent_24%)]" />
+        <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:72px_72px]" />
       </div>
+
       <div className="relative z-10">
         <SiteHeader />
-        <div className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
-          <header className="relative mb-8 overflow-hidden rounded-[2rem] border border-white/[0.09] bg-white/[0.025] px-5 py-8 sm:px-8 sm:py-10 lg:px-11 lg:py-12">
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60">
-              <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(139,92,246,0.10),transparent_42%,rgba(34,211,238,0.06))]" />
-              <div className="absolute right-[-7rem] top-[-11rem] h-[26rem] w-[26rem] rounded-full border border-white/[0.08] sm:right-[-4rem]">
-                <div className="absolute inset-8 rounded-full border border-white/[0.07]" />
-                <div className="absolute inset-16 rounded-full border border-white/[0.06]" />
-                <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-400/25 via-fuchsia-400/10 to-cyan-300/20 blur-2xl" />
-              </div>
-            </div>
-            <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-end">
-              <div>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
-                    ZENOVA / AI VIDEO STUDIO
-                  </span>
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">Imagine · Direct · Create</span>
+
+        <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-10 lg:pt-10">
+          <header className="relative border-b border-white/10 pb-10 lg:pb-14">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-5xl">
+                <div className="mb-6 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-zinc-500">
+                  <span className="h-px w-8 bg-zinc-600" />
+                  ZENOVA / MOTION DIRECTOR
+                  <span className="text-zinc-700">01</span>
                 </div>
-                <h1 className="mt-6 max-w-3xl text-[2.7rem] font-medium leading-[0.98] tracking-[-0.065em] sm:text-6xl lg:text-7xl">
-                  Turn a thought
+                <h1 className="text-[clamp(3.4rem,8vw,8.5rem)] font-medium leading-[0.82] tracking-[-0.075em]">
+                  Make the
                   <br />
-                  <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">into motion.</span>
+                  <span className="text-zinc-500">impossible move.</span>
                 </h1>
-                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
-                  画像でも、言葉でも。アイデアを映像へ。
+                <p className="mt-8 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
+                  商品画像と意図を渡す。ZENOVAが構図、カメラ、光、動きを読み取り、
                   <br className="hidden sm:block" />
-                  Higgsfieldの生成モデルで、まだ存在しないシーンを形にする。
+                  一枚の静止画を「次の一瞬」へ設計する。
                 </p>
               </div>
-              <div className="relative hidden min-h-36 flex-col justify-end border-l border-white/10 pl-5 lg:flex">
-                <span className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">Your next scene</span>
-                <span className="mt-2 text-2xl font-light tracking-tight text-zinc-200">Starts here<span className="text-cyan-200">.</span></span>
-                <div className="mt-5 flex gap-1.5" aria-hidden="true">
-                  {Array.from({ length: 18 }, (_, i) => (
-                    <span key={i} className="h-7 w-1 rounded-full bg-gradient-to-t from-violet-400/20 via-zinc-400/50 to-cyan-200/70" style={{ opacity: 0.25 + ((i * 7) % 10) / 13, transform: `scaleY(${0.35 + ((i * 11) % 9) / 10})` }} />
-                  ))}
+
+              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 lg:w-[300px] lg:shrink-0">
+                <div className="bg-[#090909] p-4">
+                  <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Direction</p>
+                  <p className="mt-2 text-sm text-zinc-300">AI Director</p>
+                </div>
+                <div className="bg-[#090909] p-4">
+                  <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Engine</p>
+                  <p className="mt-2 text-sm text-zinc-300">Higgsfield</p>
+                </div>
+                <div className="col-span-2 bg-[#090909] p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Quality bar</p>
+                    <span className="flex items-center gap-2 text-[9px] uppercase tracking-[0.18em] text-zinc-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      Award-level ambition
+                    </span>
+                  </div>
+                  <div className="mt-3 h-px bg-gradient-to-r from-white/50 via-white/15 to-transparent" />
                 </div>
               </div>
             </div>
-            <div aria-hidden="true" className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent sm:left-11 sm:right-11" />
           </header>
-          <div className="mb-5 flex items-center justify-between gap-4 px-1">
+
+          <div className="grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-600">Creative workspace</p>
-              <p className="mt-1 text-sm text-zinc-400">Build your next visual, one decision at a time.</p>
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">Creative console</p>
+                  <p className="mt-1 text-xs text-zinc-500">Source → Direction → Motion</p>
+                </div>
+                <span className="hidden text-[9px] uppercase tracking-[0.2em] text-zinc-700 sm:block">
+                  9:16 / cinematic
+                </span>
+              </div>
+              <AiVideoWorkspace />
             </div>
-            <div className="hidden items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-zinc-600 sm:flex">
-              <span className="rounded-full border border-white/10 px-3 py-1.5">Prompt-first</span>
-              <span className="rounded-full border border-white/10 px-3 py-1.5">AI motion</span>
-            </div>
+
+            <aside className="lg:pt-9">
+              <div className="sticky top-24 space-y-4">
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#080808]">
+                  <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Director's note</p>
+                      <p className="mt-1 text-xs text-zinc-300">Don't animate the product. Direct the scene.</p>
+                    </div>
+                    <span className="text-[9px] text-zinc-700">ZENOVA</span>
+                  </div>
+                  <div className="space-y-4 p-4 text-xs leading-6 text-zinc-500">
+                    <p><span className="text-zinc-300">01</span> Subject stays readable. Motion serves the idea.</p>
+                    <p><span className="text-zinc-300">02</span> Camera movement has a reason: reveal, tension, desire.</p>
+                    <p><span className="text-zinc-300">03</span> Light and depth create the premium feel before effects do.</p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Quality check</p>
+                      <p className="mt-2 text-lg font-medium tracking-tight">Clarity over spectacle.</p>
+                    </div>
+                    <span className="text-[10px] text-zinc-600">∞</span>
+                  </div>
+                  <div className="mt-5 space-y-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Composition</span><span>01</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion intent</span><span>02</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Product focus</span><span>03</span></div>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
-          <AiVideoWorkspace />
-          <footer className="mt-10 flex flex-col gap-2 border-t border-white/[0.07] px-1 py-5 text-[10px] uppercase tracking-[0.16em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-            <span>ZENOVA · Creative tools for ideas in motion</span>
-            <span>Designed for the frame you imagine.</span>
+
+          <footer className="mt-16 flex flex-col gap-3 border-t border-white/10 pt-5 text-[9px] uppercase tracking-[0.22em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
+            <span>ZENOVA — AI video production OS</span>
+            <span>Direction is the product.</span>
           </footer>
         </div>
       </div>
