@@ -18,8 +18,8 @@ import {
 } from "./video-test-allowance";
 
 /**
- * 動画生成成功（generated_videos 保存後）に使用数を記録。
- * 失敗した生成では呼ばないこと。
+ * 動画生成成功時に使用数を記録。
+ * request_id を渡した場合は同じ生成の二重ポーリングによる二重課金を防ぐ。
  */
 export async function consumeVideoUsage(
   userId: string,
@@ -31,6 +31,26 @@ export async function consumeVideoUsage(
   error: string | null;
 }> {
   try {
+    const requestId =
+      typeof metadata.request_id === "string" ? metadata.request_id.trim() : "";
+
+    if (requestId) {
+      const { supabaseUsageRequestExists } = await import("./repository");
+      const existing = await supabaseUsageRequestExists(userId, requestId);
+
+      if (existingError) {
+        throw new Error(existingError);
+      }
+
+      if (existing) {
+        return {
+          ok: true,
+          summary: await getUsageSummary(userId),
+          error: null,
+        };
+      }
+    }
+
     const subscription = await ensureActiveSubscription(userId, "free");
     const planId = subscription.plan_id || "free";
     const videoLimit = getVideoMonthlyLimit(planId);
