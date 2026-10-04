@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://zenova-eosin.vercel.app";
+const siteUrl = "https://zenova-1mwpvwfwn-shunai394-9704s-projects.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
