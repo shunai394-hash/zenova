@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { AiVideoWorkspace } from "@/components/video/ai-video-workspace";
 import { CreateModeBar } from "@/components/video/create-mode-bar";
+import { ScrollDirector } from "@/components/video/scroll-director";
 
 export default function VideoPage() {
   return (
@@ -93,6 +94,7 @@ export default function VideoPage() {
               </div>
             </div>
           </section>
+          <ScrollDirector />
           <CreateModeBar />
           <div className="mb-5 grid gap-4 px-1 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
