@@ -13,8 +13,14 @@ const STAGES = [
 export function ScrollDirector() {
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(motionQuery.matches);
+    const onMotionChange = () => setReducedMotion(motionQuery.matches);
+    motionQuery.addEventListener?.("change", onMotionChange);
+
     const targets = STAGES.map((stage) => document.getElementById(`zenova-stage-${stage.id}`)).filter(Boolean) as HTMLElement[];
     if (!targets.length) return;
 
@@ -51,6 +57,7 @@ export function ScrollDirector() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) window.cancelAnimationFrame(frame);
+      motionQuery.removeEventListener?.("change", onMotionChange);
     };
   }, []);
 
@@ -61,14 +68,14 @@ export function ScrollDirector() {
       <div className="relative flex w-full max-w-6xl items-center px-4 sm:px-6">
         <div className="absolute left-1/2 top-1/2 h-px w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 bg-white/[0.07]" />
         <div
-          className="absolute left-1/2 top-1/2 h-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-200/70 via-violet-300/70 to-cyan-200/70 shadow-[0_0_16px_rgba(103,232,249,0.22)] transition-[width] duration-300"
-          style={{ width: `calc((100% - 3rem) * ${progress})` }}
+          className="absolute left-1/2 top-1/2 h-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-200/70 via-violet-300/70 to-cyan-200/70 shadow-[0_0_16px_rgba(103,232,249,0.22)] transition-[width] duration-300 motion-reduce:transition-none"
+          style={{ width: reducedMotion ? "0%" : `calc((100% - 3rem) * ${progress})` }}
         />
         <div className="relative mx-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/[0.09] bg-[#08080a]/90 px-1.5 py-1.5 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl">
           {STAGES.map((item, index) => {
             const selected = index === active;
             return (
-              <span key={item.id} className={`flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[8px] uppercase tracking-[0.16em] transition-all duration-500 ${selected ? "bg-white/[0.08] text-white" : "text-zinc-600"}`}>
+              <span key={item.id} className={`flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[8px] uppercase tracking-[0.16em] transition-all duration-500 motion-reduce:transition-none ${selected ? "bg-white/[0.08] text-white" : "text-zinc-600"}`}>
                 <span
                   className="h-1.5 w-1.5 rounded-full transition-all duration-500"
                   style={{ background: selected ? item.color : "rgba(255,255,255,0.12)", boxShadow: selected ? `0 0 12px ${item.color}` : "none" }}
