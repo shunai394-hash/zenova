@@ -47,7 +47,7 @@ function DemoCard({
             className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b ${demo.accent} px-4 text-center`}
           >
             <span className="rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-medium tracking-wide text-emerald-300">
-              AI生成デモ
+              構成プレビュー
             </span>
             <span className="text-sm font-medium text-gray-200">
               {demo.title}
@@ -132,7 +132,7 @@ function DemoPreviewModal({
               {demo.title}
             </h3>
             <p className="mt-1 text-xs text-gray-400">
-              Zenova AI生成デモ · {demo.duration}
+              ZENOVA · 構成プレビュー · {demo.duration}
             </p>
           </div>
           <button
@@ -167,10 +167,10 @@ function DemoPreviewModal({
             <div className="flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-black px-6 text-center">
               <PlayIcon className="h-16 w-16 opacity-60" />
               <p className="text-sm text-gray-400">
-                デモ動画は準備中です。ファイル差し替え後に再生されます。
+                実際の生成動画はまだ掲載していません。現在はカット構成と演出案を確認できます。
               </p>
               <p className="text-xs text-gray-600">
-                例: public/demos/{demo.id.replace("demo-", "")}.mp4
+                動画サンプル公開後、このエリアで再生できます。
               </p>
             </div>
           )}
