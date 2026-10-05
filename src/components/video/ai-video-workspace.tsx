@@ -48,6 +48,7 @@ export function AiVideoWorkspace() {
   const [history, setHistory] = useState<Result[]>([]);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeCancelToken, setActiveCancelToken] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState(false);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -120,12 +121,16 @@ export function AiVideoWorkspace() {
       .catch(() => {});
   }, []);
 
-  async function pollVideo(requestId: string): Promise<Result> {
+  async function pollVideo(
+    requestId: string,
+    meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound">,
+    cancelToken: string
+  ): Promise<Result> {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
 
     while (Date.now() < deadline) {
       const res = await fetch(
-        `/api/generate-higgsfield-video/status?request_id=${encodeURIComponent(requestId)}`,
+        `/api/generate-higgsfield-video/status?request_id=${encodeURIComponent(requestId)}&cancel_token=${encodeURIComponent(cancelToken)}`,
         { credentials: "same-origin", cache: "no-store" }
       );
       const data = await res.json();
@@ -141,10 +146,10 @@ export function AiVideoWorkspace() {
         return {
           video_url: String(data.video_url),
           request_id: requestId,
-          model,
-          duration_sec: Number(duration),
-          aspect_ratio: aspectRatio,
-          sound,
+          model: meta.model,
+          duration_sec: meta.duration_sec,
+          aspect_ratio: meta.aspect_ratio,
+          sound: meta.sound,
         };
       }
 
@@ -165,6 +170,98 @@ export function AiVideoWorkspace() {
     );
   }
 
+  useEffect(() => {
+    let cancelled = false;
+
+    try {
+      const raw = localStorage.getItem("zenova-video-active-job");
+      if (!raw) return;
+      const job = JSON.parse(raw) as {
+        requestId?: string;
+        cancelToken?: string;
+        startedAt?: number;
+        model?: string;
+        duration_sec?: number;
+        aspect_ratio?: string;
+        sound?: boolean;
+      };
+
+      if (
+        !job.requestId ||
+        !job.cancelToken ||
+        !job.model ||
+        !job.duration_sec ||
+        !job.aspect_ratio
+      ) {
+        localStorage.removeItem("zenova-video-active-job");
+        return;
+      }
+
+      setRecovering(true);
+      setIsGenerating(true);
+      setStartedAt(Number(job.startedAt) || Date.now());
+      setActiveRequestId(job.requestId);
+      setActiveCancelToken(job.cancelToken);
+      setStatus("前回の生成を復元しています…");
+
+      void pollVideo(
+        job.requestId,
+        {
+          model: job.model,
+          duration_sec: Number(job.duration_sec),
+          aspect_ratio: job.aspect_ratio,
+          sound: Boolean(job.sound),
+        },
+        job.cancelToken
+      )
+        .then((completed) => {
+          if (cancelled) return;
+          setResult(completed);
+          setHistory((current) => {
+            const next = [
+              completed,
+              ...current.filter((item) => item.video_url !== completed.video_url),
+            ].slice(0, 6);
+            localStorage.setItem("zenova-video-history", JSON.stringify(next));
+            return next;
+          });
+          localStorage.removeItem("zenova-video-active-job");
+          setStatus("前回の生成が完成しました。");
+          void fetch("/api/usage", { credentials: "same-origin", cache: "no-store" })
+            .then((r) => r.json())
+            .then((d) =>
+              setUsage({
+                authenticated: d.authenticated === true,
+                remaining: Number(d.remaining ?? 0),
+                used: Number(d.used ?? 0),
+                video_limit: Number(d.video_limit ?? 0),
+                plan: String(d.plan ?? "free"),
+              })
+            )
+            .catch(() => {});
+        })
+        .catch((e) => {
+          if (cancelled) return;
+          setError(e instanceof Error ? e.message : String(e));
+          setStatus("前回の生成状態を確認できませんでした。request_id は保持されています。");
+        })
+        .finally(() => {
+          if (cancelled) return;
+          setRecovering(false);
+          setIsGenerating(false);
+          setStartedAt(null);
+          setActiveRequestId(null);
+          setActiveCancelToken(null);
+        });
+    } catch {
+      localStorage.removeItem("zenova-video-active-job");
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  
   async function cancelGeneration() {
     if (!isGenerating || !activeRequestId || !activeCancelToken) return;
     setStatus("生成をキャンセルしています…");
@@ -186,6 +283,7 @@ export function AiVideoWorkspace() {
       setStartedAt(null);
       setActiveRequestId(null);
       setActiveCancelToken(null);
+      localStorage.removeItem("zenova-video-active-job");
       setStatus("生成をキャンセルしました。条件を調整して、もう一度作れます。");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -248,8 +346,29 @@ export function AiVideoWorkspace() {
       if (!cancelToken) throw new Error("キャンセル認証情報が返りませんでした");
       setActiveRequestId(requestId);
       setActiveCancelToken(cancelToken);
+      localStorage.setItem(
+        "zenova-video-active-job",
+        JSON.stringify({
+          requestId,
+          cancelToken,
+          startedAt: Date.now(),
+          model: String(data.model || model),
+          duration_sec: Number(data.duration_sec || duration),
+          aspect_ratio: String(data.aspect_ratio || aspectRatio),
+          sound: Boolean(data.sound),
+        })
+      );
       setStatus("生成を開始しました。Higgsfieldでレンダリング中…");
-      const completed = await pollVideo(requestId);
+      const completed = await pollVideo(
+        requestId,
+        {
+          model: String(data.model || model),
+          duration_sec: Number(data.duration_sec || duration),
+          aspect_ratio: String(data.aspect_ratio || aspectRatio),
+          sound: Boolean(data.sound),
+        },
+        cancelToken
+      );
 
       setResult(completed);
       setHistory((current) => {
@@ -257,6 +376,7 @@ export function AiVideoWorkspace() {
         localStorage.setItem("zenova-video-history", JSON.stringify(next));
         return next;
       });
+      localStorage.removeItem("zenova-video-active-job");
       setStatus("完成しました。Refineで次のテイクを作れます。");
       setUsage((prev) =>
         prev
@@ -274,6 +394,8 @@ export function AiVideoWorkspace() {
       setIsGenerating(false);
       setStartedAt(null);
       setActiveRequestId(null);
+      setActiveCancelToken(null);
+      setRecovering(false);
     }
   }
 
@@ -582,7 +704,7 @@ export function AiVideoWorkspace() {
               disabled={rendering}
               className="border border-white bg-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
             >
-              {rendering ? "Rendering…" : result ? "Create next take" : "Create film"}
+              {rendering ? (recovering ? "Recovering…" : "Rendering…") : result ? "Create next take" : "Create film"}
             </button>
           </div>
 
