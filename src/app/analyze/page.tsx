@@ -792,6 +792,7 @@ export default function Home() {
     setSalesVideoHook(null);
     setSalesVideoAngle(null);
     setSalesVideoError(null);
+    setSalesVideoWarnings([]);
     setSalesVideoSteps(EMPTY_SALES_VIDEO_STEPS);
     setGenerationStatus("idle");
   };
@@ -1742,6 +1743,11 @@ export default function Home() {
           saved: Boolean(data.steps.saved),
         });
       }
+      setSalesVideoWarnings(
+        Array.isArray(data?.warnings)
+          ? data.warnings.filter((item: unknown): item is string => typeof item === "string")
+          : []
+      );
 
       if (typeof data.video_url === "string" && data.video_url) {
         setSalesVideoUrl(data.video_url);
@@ -2371,6 +2377,17 @@ export default function Home() {
                       );
                     })}
                   </ul>
+
+                  {salesVideoWarnings.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3">
+                      <p className="text-xs font-medium text-amber-200">生成時の注意</p>
+                      <ul className="mt-2 space-y-1 text-xs text-amber-300">
+                        {salesVideoWarnings.map((warning) => (
+                          <li key={warning}>・{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {salesVideoError && (
                     <p className="mt-4 text-sm text-red-300" role="alert">
