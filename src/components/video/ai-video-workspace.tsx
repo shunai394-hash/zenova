@@ -122,8 +122,8 @@ export function AiVideoWorkspace() {
     setError("");
     setResult(null);
 
-    if (!image && !video && !isSeedance) {
-      setError("このモデルでは画像または動画素材を1つ追加してください。");
+    if (!image && !isSeedance) {
+      setError("このモデルでは画像素材を1つ追加してください。動画素材の直接生成は現在のエンジン接続では未対応です。");
       return;
     }
     if (!prompt.trim()) {
@@ -139,7 +139,6 @@ export function AiVideoWorkspace() {
 
     const form = new FormData();
     if (image) form.set("image", image);
-    if (video) form.set("video", video);
     if (audio) form.set("audio", audio);
     form.set("bgm", bgm ? "on" : "off");
     form.set("narration", narration ? "on" : "off");
