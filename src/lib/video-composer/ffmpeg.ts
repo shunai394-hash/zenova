@@ -610,3 +610,27 @@ export async function mergeVideoWithNarrationAndBgm(input: {
     ]);
   }
 }
+
+/**
+ * 最終MP4に実音声トラックが存在するかをFFmpeg自身で検査する。
+ * UI/APIの成功フラグだけを信用せず、実ファイルを品質ゲートに通す。
+ */
+export async function probeHasAudioTrack(filePath: string): Promise<boolean> {
+  const bin = getFfmpegPath();
+
+  return new Promise((resolve) => {
+    const child = spawn(bin, ["-i", filePath], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stderr = "";
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", () => resolve(false));
+    child.on("close", () => {
+      resolve(/Stream #\d+:\d+.*Audio:/i.test(stderr));
+    });
+  });
+}
