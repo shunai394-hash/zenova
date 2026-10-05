@@ -2286,6 +2286,8 @@ export default function Home() {
             {/* STEP 4: 動画生成開始 → 生成中 → 完成 → ダウンロード */}
             <div
               id="generate-video"
+              aria-busy={salesVideoLoading}
+              aria-live="polite"
               className="scroll-mt-24 rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6"
             >
               <div className="flex items-center gap-2">
@@ -2300,7 +2302,7 @@ export default function Home() {
                       : "AI生成"}
                 </h2>
               </div>
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-2 text-sm text-gray-400" aria-live="polite">
                 {generatePhase === "generating"
                   ? "商品特徴の分析から映像生成まで進行中です。このままお待ちください"
                   : generatePhase === "complete"
@@ -2367,7 +2369,7 @@ export default function Home() {
                   </ul>
 
                   {salesVideoError && (
-                    <p className="mt-4 text-sm text-red-300">
+                    <p className="mt-4 text-sm text-red-300" role="alert">
                       {salesVideoError}
                     </p>
                   )}
