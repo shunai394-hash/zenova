@@ -256,10 +256,36 @@ export function AiVideoWorkspace() {
               </span>
             </div>
 
-            <label className={`group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300 ${dragActive ? "border-white/60 bg-white/[0.07]" : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]"}`}
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            <label
+              className={[
+                "group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300",
+                dragActive
+                  ? "border-white/60 bg-white/[0.07]"
+                  : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]",
+              ].join(" ")}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
               onDragLeave={() => setDragActive(false)}
-              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragActive(false);
+                const file = e.dataTransfer.files?.[0];
+                if (!file) return;
+                if (file.type.startsWith("video/")) {
+                  setVideo(file);
+                  setImage(null);
+                  return;
+                }
+                if (file.type.startsWith("image/")) {
+                  setImage(file);
+                  setVideo(null);
+                  return;
+                }
+                setError("画像または動画を追加してください。");
+              }}
+            >
               <div>
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
                   +
