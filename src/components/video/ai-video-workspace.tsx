@@ -716,12 +716,24 @@ export function AiVideoWorkspace() {
             </div>
 
             {result && (
-              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
-                <input value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
-                <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+                  <span>Direct the next take</span>
+                  <span>Context preserved</span>
+                </div>
+                <div className="flex flex-wrap gap-2" aria-label="Quick refinement directions">
+                  {["Closer", "Slower", "Darker", "More cinematic"].map((direction) => (
+                    <button key={direction} type="button" disabled={rendering} onClick={() => setRefinePrompt(direction)} className="border border-white/10 px-3 py-2 text-[9px] uppercase tracking-[0.14em] text-zinc-500 transition hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      {direction}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input aria-label="Refine the next take" value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
+                  <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+                </div>
               </div>
             )}
-
             {result && (
               <div className="mt-4 grid grid-cols-3 gap-px border border-white/10 bg-white/10 text-[9px] uppercase tracking-[0.14em]">
                 <div className="bg-[#070707] px-3 py-2"><span className="text-zinc-600">Model</span><span className="mt-1 block truncate text-zinc-300">{result.model.split("/").slice(-2).join(" / ")}</span></div>
