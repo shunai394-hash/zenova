@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth/session";
-import { checkVideoLimit } from "@/lib/usage";
+import { checkVideoLimit, recordVideoGenerationAttempt } from "@/lib/usage";
 
 export const runtime = "nodejs";
 
@@ -97,6 +97,8 @@ export async function POST(req: NextRequest) {
         video_limit: limit.video_limit,
       }, { status: 402 });
     }
+
+    recordVideoGenerationAttempt(user.id);
 
     const form = await req.formData();
     const image = form.get("image");
