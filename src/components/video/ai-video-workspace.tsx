@@ -621,9 +621,26 @@ export function AiVideoWorkspace() {
               className="mt-6 min-h-40 w-full resize-none border border-white/10 bg-black/70 px-4 py-4 text-sm leading-6 text-white placeholder:text-zinc-700 transition duration-500 focus:border-white/40 focus:bg-black focus:outline-none"
             />
 
-            <div className="mt-3 flex items-center justify-between gap-4 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
               <span>Natural language direction</span>
               <span className="hidden sm:inline">Camera · Light · Pace · Mood · Story</span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2" aria-label="Direction starters">
+              {[
+                ["Cinematic", "cinematic lighting, deliberate camera movement, filmic pacing"],
+                ["Editorial", "fashion editorial composition, refined motion, controlled light"],
+                ["Product", "premium product film, macro details, precise camera movement"],
+                ["Dreamlike", "dreamlike atmosphere, soft light, slow expressive movement"],
+              ].map(([label, value]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setPrompt((current) => current.trim() ? current : value)}
+                  className="border border-white/10 px-2.5 py-2 text-[9px] uppercase tracking-[0.12em] text-zinc-600 transition hover:border-white/30 hover:text-white"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </section>
         </div>
@@ -700,6 +717,14 @@ export function AiVideoWorkspace() {
               <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
                 <input value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
                 <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+              </div>
+            )}
+
+            {result && (
+              <div className="mt-4 grid grid-cols-3 gap-px border border-white/10 bg-white/10 text-[9px] uppercase tracking-[0.14em]">
+                <div className="bg-[#070707] px-3 py-2"><span className="text-zinc-600">Model</span><span className="mt-1 block truncate text-zinc-300">{result.model.split("/").slice(-2).join(" / ")}</span></div>
+                <div className="bg-[#070707] px-3 py-2"><span className="text-zinc-600">Length</span><span className="mt-1 block text-zinc-300">{result.duration_sec}s</span></div>
+                <div className="bg-[#070707] px-3 py-2"><span className="text-zinc-600">Frame</span><span className="mt-1 block text-zinc-300">{result.aspect_ratio}</span></div>
               </div>
             )}
 
