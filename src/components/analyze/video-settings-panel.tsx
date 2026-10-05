@@ -18,8 +18,8 @@ import type { RecommendedVideoSettings } from "@/lib/analyze/recommend-settings"
 import { toVideoSettings } from "@/lib/analyze/recommend-settings";
 import { getStyleVideoTemplate } from "@/lib/analyze/style-templates";
 
-/** BGM合成は未実装。UI上は「開発中」を明示する。 */
-export const BGM_FEATURE_STATUS = "開発中" as const;
+/** BGMはサーバー側のトラック設定（ZENOVA_BGM_*_URL）を使って最終MP4へミックスする。 */
+export const BGM_FEATURE_STATUS = "トラック設定式" as const;
 
 function OptionGroup<T extends string | number>({
   label,
@@ -54,8 +54,9 @@ function OptionGroup<T extends string | number>({
               key={String(opt.id)}
               type="button"
               disabled={disabled}
+              aria-pressed={active}
               onClick={() => onChange(opt.id)}
-              className={`rounded-xl border px-3 py-2 text-sm transition disabled:opacity-40 ${
+              className={`rounded-xl border px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:opacity-40 ${
                 active
                   ? "border-white bg-white text-black"
                   : "border-zinc-700 bg-zinc-950 text-gray-300 hover:border-zinc-500"
@@ -94,8 +95,9 @@ function VideoTypeSelector({
               key={opt.id}
               type="button"
               disabled={disabled}
+              aria-pressed={active}
               onClick={() => onChange(opt.id)}
-              className={`rounded-xl border p-3.5 text-left transition disabled:opacity-40 ${
+              className={`rounded-xl border p-3.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:opacity-40 ${
                 active
                   ? "border-white bg-white text-black shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
                   : "border-zinc-700 bg-zinc-950 text-gray-300 hover:border-zinc-500"
@@ -243,8 +245,9 @@ export function VideoSettingsPanel({
                 key={String(on)}
                 type="button"
                 disabled={disabled}
+                aria-pressed={settings.captions_enabled === on}
                 onClick={() => patch("captions_enabled", on)}
-                className={`rounded-xl border px-3 py-2 text-sm transition disabled:opacity-40 ${
+                className={`rounded-xl border px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:opacity-40 ${
                   settings.captions_enabled === on
                     ? "border-white bg-white text-black"
                     : "border-zinc-700 bg-zinc-950 text-gray-300 hover:border-zinc-500"
