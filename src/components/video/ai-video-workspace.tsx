@@ -46,6 +46,7 @@ export function AiVideoWorkspace() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [history, setHistory] = useState<Result[]>([]);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -167,7 +168,6 @@ export function AiVideoWorkspace() {
     if (!isGenerating) return;
     setStatus("生成をキャンセルしています…");
     try {
-      const activeRequestId = result?.request_id;
       if (activeRequestId) {
         await fetch("/api/generate-higgsfield-video/cancel", {
           method: "POST",
@@ -203,6 +203,7 @@ export function AiVideoWorkspace() {
 
     setIsGenerating(true);
     setStartedAt(Date.now());
+    setActiveRequestId(null);
     setStatus("素材を準備しています…");
 
     const form = new FormData();
@@ -257,6 +258,7 @@ export function AiVideoWorkspace() {
     } finally {
       setIsGenerating(false);
       setStartedAt(null);
+      setActiveRequestId(null);
     }
   }
 
