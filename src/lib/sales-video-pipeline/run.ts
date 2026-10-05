@@ -25,7 +25,10 @@ import {
 import { generateAiVideo } from "@/lib/video-generation";
 import { generateSalesNarration } from "@/lib/voice-narration";
 import { generateVideoCaptions } from "@/lib/video-caption";
-import { composeSalesVideo } from "@/lib/video-composer";
+import {
+  composeSalesVideo,
+  probeHasAudioTrack,
+} from "@/lib/video-composer";
 import { analyzeVideoPerformance } from "@/lib/video-performance";
 import {
   ensureProductRow,
@@ -564,6 +567,17 @@ export async function runCreateSalesVideo(
     videoUrl = composed.final_video_url;
     watermarkApplied = Boolean(composed.watermark_applied);
     compositionSucceeded = Boolean(composed.final_video_url);
+
+    if (compositionSucceeded && finalVideoUrl) {
+      const finalPath = path.join(
+        process.cwd(),
+        "public",
+        finalVideoUrl.replace(/^\//, "")
+      );
+      if (!(await probeHasAudioTrack(finalPath))) {
+        throw new Error("最終MP4に音声トラックがありません");
+      }
+    }
   } catch (error) {
     warnings.push(
       `composer: ${error instanceof Error ? error.message : String(error)}`
