@@ -94,6 +94,7 @@ export function LandingHero() {
               className="min-h-12 w-full flex-1 rounded-xl bg-black px-4 py-3.5 text-base text-white outline-none ring-1 ring-zinc-700 placeholder:text-gray-500 focus:ring-zinc-400 disabled:opacity-50"
               aria-label="商品URL"
               aria-describedby={error ? "hero-url-error" : undefined}
+              aria-invalid={error ? true : undefined}
             />
             <button
               type="button"
@@ -125,7 +126,7 @@ export function LandingHero() {
           </div>
 
           {error && (
-            <p id="hero-url-error" className="mt-3 text-left text-sm text-red-300" role="alert">
+            <p id="hero-url-error" className="mt-3 text-left text-sm text-red-300" role="alert" aria-live="assertive">
               {error}
             </p>
           )}
@@ -158,7 +159,8 @@ export function LandingHero() {
             jpg / png / webp ・ 10MBまで
           </p>
 
-          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ">
+          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ" aria-describedby="hero-flow-description">
+            <span id="hero-flow-description" className="sr-only">商品を入力し、ストーリーを作り、映像を生成する3ステップです。</span>
             {[
               ["01", "INPUT", "商品"],
               ["02", "STORY", "フック・台本"],
