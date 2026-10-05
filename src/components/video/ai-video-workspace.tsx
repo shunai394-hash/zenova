@@ -249,6 +249,7 @@ export function AiVideoWorkspace() {
 
       setRecovering(true);
       setIsGenerating(true);
+      setProviderStatus("processing");
       setStartedAt(Number(job.startedAt) || Date.now());
       setActiveRequestId(job.requestId);
       setActiveCancelToken(job.cancelToken);
@@ -358,7 +359,7 @@ export function AiVideoWorkspace() {
         .then((completed) => {
           setResult(completed);
           setHistory((current) => {
-            const next = [completedWithContext, ...current.filter((item) => item.video_url !== completedWithContext.video_url)].slice(0, 6);
+            const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
             localStorage.setItem("zenova-video-history", JSON.stringify(next));
             return next;
           });
