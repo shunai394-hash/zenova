@@ -26,7 +26,8 @@ export function AiVideoWorkspace() {
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [audio, setAudio] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);\n  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("9:16");
@@ -53,6 +54,36 @@ export function AiVideoWorkspace() {
     model !== "minimax/h3/image-to-video" &&
     model !== "kling-video/v3.0-turbo/image-to-video";
   const rendering = isGenerating;
+
+  useEffect(() => {
+    if (!video) {
+      setVideoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(video);
+    setVideoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [video]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("zenova-video-history") || "[]");
+      if (Array.isArray(saved)) setHistory(saved.slice(0, 6));
+    } catch {
+      localStorage.removeItem("zenova-video-history");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!startedAt) {
+      setElapsed(0);
+      return;
+    }
+    const tick = () => setElapsed(Date.now() - startedAt);
+    tick();
+    const id = window.setInterval(tick, 250);
+    return () => window.clearInterval(id);
+  }, [startedAt]);
 
   useEffect(() => {
     if (!image) {
@@ -124,15 +155,16 @@ export function AiVideoWorkspace() {
     );
   }
 
-  async function generate() {
+  async function generate(nextPrompt?: string) {
     setError("");
-    setResult(null);
+
+    const effectivePrompt = (nextPrompt ?? prompt).trim();
 
     if (!image && !video && !isSeedance) {
       setError("このモデルでは画像または動画素材を1つ追加してください。動画入力はSeedance 2.5で処理されます。");
       return;
     }
-    if (!prompt.trim()) {
+    if (!effectivePrompt) {
       setError("どんな動画にしたいか入力してください。");
       return;
     }
@@ -157,8 +189,8 @@ export function AiVideoWorkspace() {
       sfx ? "purposeful sound effects" : "",
     ].filter(Boolean).join(", ");
     const directedPrompt = audioDirections
-      ? `${prompt.trim()}\n\nAudio direction: ${audioDirections}.`
-      : prompt.trim();
+      ? `${effectivePrompt}\n\nAudio direction: ${audioDirections}.`
+      : effectivePrompt;
     form.set("prompt", directedPrompt);
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
@@ -183,6 +215,11 @@ export function AiVideoWorkspace() {
       const completed = await pollVideo(String(data.request_id));
 
       setResult(completed);
+      setHistory((current) => {
+        const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
+        localStorage.setItem("zenova-video-history", JSON.stringify(next));
+        return next;
+      });
       setStatus("完成しました。Refineで次のテイクを作れます。");
       setUsage((prev) =>
         prev
@@ -225,7 +262,8 @@ export function AiVideoWorkspace() {
               </span>
             </div>
 
-            <label className={`group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300 ${dragActive ? "border-white/60 bg-white/[0.07]" : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]"}`}\n              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}\n              onDragLeave={() => setDragActive(false)}\n              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
+            <label className={`group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300 ${dragActive ? "border-white/60 bg-white/[0.07]" : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}\n              onDragLeave={() => setDragActive(false)}\n              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
               <div>
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
                   +
@@ -241,7 +279,9 @@ export function AiVideoWorkspace() {
               />
             </label>
 
-            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}\n\n            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={videoPreview || undefined} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
+            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}
+
+            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={videoPreview || undefined} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
 
             {preview && (
               <div className="mt-4 overflow-hidden border border-white/10 bg-black">
@@ -295,7 +335,9 @@ export function AiVideoWorkspace() {
                       : "aspect-video max-w-[760px]"
                 }`}
               >
-                {isGenerating ? (\n                  <div className="px-8 text-center">\n                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />\n                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>\n                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>\n                  </div>\n                ) : result ? (
+                {isGenerating ? (
+                  <div className="px-8 text-center">\n                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />\n                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>\n                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>\n                  </div>
+                ) : result ? (
                   <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
                 ) : preview ? (
                   <>
@@ -320,7 +362,7 @@ export function AiVideoWorkspace() {
             {result && (
               <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
                 <input value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
-                <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); setRefinePrompt(""); setPrompt((current) => `${current}\n\nRefinement: ${next}`); window.setTimeout(() => void generate(), 0); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+                <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
               </div>
             )}
 
@@ -453,7 +495,10 @@ export function AiVideoWorkspace() {
             </button>
           </div>
 
-          {history.length > 0 && (\n            <div className="mt-5 border-t border-white/10 pt-4">\n              <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>\n              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}\n              </div>\n            </div>\n          )}\n\n          {error && (
+          {history.length > 0 && (
+            <div className="mt-5 border-t border-white/10 pt-4">\n              <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>\n              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}\n              </div>
+            </div>
+          )}\n\n          {error && (
             <div className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
               {error}
             </div>
