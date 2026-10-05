@@ -183,15 +183,7 @@ export function AiVideoWorkspace() {
     form.set("bgm", bgm ? "on" : "off");
     form.set("narration", narration ? "on" : "off");
     form.set("sfx", sfx ? "on" : "off");
-    const audioDirections = [
-      bgm ? "cinematic background music" : "",
-      narration ? "clear spoken narration" : "",
-      sfx ? "purposeful sound effects" : "",
-    ].filter(Boolean).join(", ");
-    const directedPrompt = audioDirections
-      ? `${effectivePrompt}\n\nAudio direction: ${audioDirections}.`
-      : effectivePrompt;
-    form.set("prompt", directedPrompt);
+    form.set("prompt", effectivePrompt);
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
     form.set("sound", sound ? "on" : "off");
