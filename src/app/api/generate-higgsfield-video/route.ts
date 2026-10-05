@@ -1,3 +1,4 @@
+import { createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth/session";
 import { checkVideoLimit, recordVideoGenerationAttempt } from "@/lib/usage";
@@ -34,6 +35,21 @@ const SUPPORTED_MODELS = new Set([
 function modelDurationClamp(model: string, duration: number) {
   if (model === "bytedance/seedance-2.5/text-to-video") return Math.min(30, Math.max(4, duration));
   return Math.min(15, Math.max(3, duration));
+}
+
+function getCancelSecret(): string {
+  const secret =
+    process.env.HIGGSFIELD_CANCEL_SECRET?.trim() ||
+    process.env.HIGGSFIELD_API_KEY?.trim() ||
+    process.env.HF_API_KEY?.trim();
+  if (!secret) throw new Error("HIGGSFIELD_CANCEL_SECRET が設定されていません");
+  return secret;
+}
+
+function createCancelToken(userId: string, requestId: string): string {
+  return createHmac("sha256", getCancelSecret())
+    .update(`zenova:cancel:${userId}:${requestId}`)
+    .digest("hex");
 }
 
 function getApiKey() {
@@ -266,6 +282,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       status: "queued",
       request_id: queued.request_id,
+      cancel_token: createCancelToken(user.id, queued.request_id),
       model: endpointModel,
       duration_sec: duration,
       aspect_ratio: aspectRatio,
