@@ -49,6 +49,7 @@ export function AiVideoWorkspace() {
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeCancelToken, setActiveCancelToken] = useState<string | null>(null);
   const [recovering, setRecovering] = useState(false);
+  const [recoverable, setRecoverable] = useState(false);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -233,6 +234,7 @@ export function AiVideoWorkspace() {
             return next;
           });
           localStorage.removeItem("zenova-video-active-job");
+          setRecoverable(false);
           setStatus("前回の生成が完成しました。");
           void fetch("/api/usage", { credentials: "same-origin", cache: "no-store" })
             .then((r) => r.json())
@@ -250,7 +252,8 @@ export function AiVideoWorkspace() {
         .catch((e) => {
           if (cancelled) return;
           setError(e instanceof Error ? e.message : String(e));
-          setStatus("前回の生成状態を確認できませんでした。request_id は保持されています。");
+          setRecoverable(Boolean(localStorage.getItem("zenova-video-active-job")));
+          setStatus("生成は継続中の可能性があります。request_id を保持しています。");
         })
         .finally(() => {
           if (cancelled) return;
@@ -269,6 +272,78 @@ export function AiVideoWorkspace() {
     };
   }, []);
   
+  function resumeActiveRender() {
+    const raw = localStorage.getItem("zenova-video-active-job");
+    if (!raw) {
+      setRecoverable(false);
+      setError("再開できる生成リクエストが見つかりません。");
+      return;
+    }
+
+    try {
+      const job = JSON.parse(raw) as {
+        requestId?: string;
+        cancelToken?: string;
+        startedAt?: number;
+        model?: string;
+        duration_sec?: number;
+        aspect_ratio?: string;
+        sound?: boolean;
+      };
+      if (!job.requestId || !job.cancelToken || !job.model || !job.duration_sec || !job.aspect_ratio) {
+        throw new Error("保存された生成リクエストが不完全です。");
+      }
+
+      setError("");
+      setRecoverable(false);
+      setRecovering(true);
+      setIsGenerating(true);
+      setStartedAt(Number(job.startedAt) || Date.now());
+      setActiveRequestId(job.requestId);
+      setActiveCancelToken(job.cancelToken);
+      setStatus("生成状態を再確認しています…");
+
+      void pollVideo(
+        job.requestId,
+        {
+          model: job.model,
+          duration_sec: Number(job.duration_sec),
+          aspect_ratio: job.aspect_ratio,
+          sound: Boolean(job.sound),
+        },
+        job.cancelToken
+      )
+        .then((completed) => {
+          setResult(completed);
+          setHistory((current) => {
+            const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
+            localStorage.setItem("zenova-video-history", JSON.stringify(next));
+            return next;
+          });
+          localStorage.removeItem("zenova-video-active-job");
+          setStatus("完成しました。Refineで次のテイクを作れます。");
+          void fetch("/api/usage", { credentials: "same-origin", cache: "no-store" });
+        })
+        .catch((e) => {
+          setRecoverable(Boolean(localStorage.getItem("zenova-video-active-job")));
+          setError(e instanceof Error ? e.message : String(e));
+          setStatus("まだ生成中の可能性があります。必要なら再度状態を確認できます。");
+        })
+        .finally(() => {
+          setRecovering(false);
+          setIsGenerating(false);
+          setStartedAt(null);
+          setActiveRequestId(null);
+          setActiveCancelToken(null);
+        });
+    } catch (e) {
+      setRecoverable(false);
+      localStorage.removeItem("zenova-video-active-job");
+      setError(e instanceof Error ? e.message : String(e));
+      setStatus("生成状態を復元できませんでした。");
+    }
+  }
+
   async function cancelGeneration() {
     if (!isGenerating || !activeRequestId || !activeCancelToken) return;
     setStatus("生成をキャンセルしています…");
@@ -291,6 +366,7 @@ export function AiVideoWorkspace() {
       setActiveRequestId(null);
       setActiveCancelToken(null);
       localStorage.removeItem("zenova-video-active-job");
+      setRecoverable(false);
       setStatus("生成をキャンセルしました。条件を調整して、もう一度作れます。");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -738,13 +814,24 @@ export function AiVideoWorkspace() {
             <div role="alert" className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
               <div>{error}</div>
               {!rendering && (
-                <button
-                  type="button"
-                  onClick={() => void generate()}
-                  className="mt-3 border border-red-300/20 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-red-200 transition hover:border-red-300/50"
-                >
-                  Try again
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {recoverable && (
+                    <button
+                      type="button"
+                      onClick={resumeActiveRender}
+                      className="border border-white/25 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-white transition hover:border-white/60"
+                    >
+                      Resume render
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void generate()}
+                    className="border border-red-300/20 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-red-200 transition hover:border-red-300/50"
+                  >
+                    Start a new take
+                  </button>
+                </div>
               )}
             </div>
           )}
