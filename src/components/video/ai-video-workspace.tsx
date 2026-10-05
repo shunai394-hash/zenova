@@ -497,7 +497,8 @@ export function AiVideoWorkspace() {
           {history.length > 0 && (
             <div className="mt-5 border-t border-white/10 pt-4">
               <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
               </div>
             </div>
           )}
