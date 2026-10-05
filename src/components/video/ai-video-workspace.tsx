@@ -358,10 +358,21 @@ export function AiVideoWorkspace() {
                 }`}
               >
                 {isGenerating ? (
-                  <div className="px-8 text-center">
-                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />
-                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>
-                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>
+                  <div className="w-full px-6 py-10 sm:px-10">
+                    <div className="relative mx-auto aspect-square w-40 max-w-full">
+                      <div className="absolute inset-0 animate-[spin_8s_linear_infinite] rounded-full border border-white/10 border-t-white/60" />
+                      <div className="absolute inset-4 animate-[spin_5s_linear_infinite_reverse] rounded-full border border-white/10 border-b-white/35" />
+                      <div className="absolute inset-8 flex items-center justify-center rounded-full bg-white/[0.025]">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                      </div>
+                    </div>
+                    <div className="mt-8 flex items-end justify-between gap-4 border-t border-white/10 pt-4 text-[9px] uppercase tracking-[0.18em]">
+                      <div>
+                        <p className="text-zinc-300">Rendering take</p>
+                        <p className="mt-2 text-zinc-700">Direction → motion → final frame</p>
+                      </div>
+                      <p className="tabular-nums text-zinc-500">{Math.floor(elapsed / 1000)}s</p>
+                    </div>
                   </div>
                 ) : result ? (
                   <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
@@ -517,7 +528,7 @@ export function AiVideoWorkspace() {
               disabled={rendering}
               className="border border-white bg-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
             >
-              {rendering ? "Rendering" : "Create film"}
+              {rendering ? "Rendering…" : result ? "Create next take" : "Create film"}
             </button>
           </div>
 
