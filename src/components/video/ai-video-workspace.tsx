@@ -659,13 +659,13 @@ export function AiVideoWorkspace() {
               </label>
 
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4" aria-label="Sound direction">
-                <button type="button" disabled={!sound} onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} aria-pressed={bgm} onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   BGM
                 </button>
-                <button type="button" disabled={!sound} onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} aria-pressed={narration} onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   Narration
                 </button>
-                <button type="button" disabled={!sound} onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} aria-pressed={sfx} onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   SFX
                 </button>
               </div>
@@ -673,7 +673,12 @@ export function AiVideoWorkspace() {
               <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
                 Audio reference
                 <input type="file" accept="audio/*" onChange={(e) => setAudio(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs normal-case tracking-normal text-zinc-400 file:mr-2 file:border file:border-white/10 file:bg-black file:px-2 file:py-2 file:text-zinc-300" />
-                {audio && <span className="mt-2 block normal-case tracking-normal text-zinc-500">{audio.name}</span>}
+                {audio && (
+                  <div className="mt-2 flex items-center justify-between gap-3 border border-white/10 bg-black px-3 py-2">
+                    <span className="min-w-0 truncate normal-case tracking-normal text-zinc-500">{audio.name}</span>
+                    <button type="button" onClick={() => setAudio(null)} className="shrink-0 text-[9px] uppercase tracking-[0.14em] text-zinc-600 transition hover:text-white">Remove</button>
+                  </div>
+                )}
               </label>
 
               <div className="border-t border-white/10 pt-4 text-[10px] leading-5 text-zinc-600">
