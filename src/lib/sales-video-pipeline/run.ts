@@ -56,6 +56,22 @@ function emptySteps(): CreateSalesVideoSteps {
   };
 }
 
+function resolveBgmUrl(bgmId: string): string | null {
+  if (bgmId === "none") return null;
+
+  const envKey =
+    bgmId === "trend"
+      ? "ZENOVA_BGM_TREND_URL"
+      : bgmId === "pop"
+        ? "ZENOVA_BGM_POP_URL"
+        : bgmId === "cinematic"
+          ? "ZENOVA_BGM_CINEMATIC_URL"
+          : null;
+
+  const configured = envKey ? process.env[envKey]?.trim() : "";
+  return configured || null;
+}
+
 /**
  * 商品分析 → シナリオ → 最適化 → Kling → 音声 → 字幕 → 合成 → 評価 → 保存
  * 既存 API / Kling provider は変更せず、lib を直接呼び出す。
@@ -508,10 +524,10 @@ export async function runCreateSalesVideo(
     }
   }
 
-  if (bgmId !== "none") {
-    // FUTURE(BGM): composeSalesVideo に bgm_track を渡し ffmpeg で mix する
+  const bgmUrl = resolveBgmUrl(bgmId);
+  if (bgmId !== "none" && !bgmUrl) {
     warnings.push(
-      `bgm: ${bgmId} は設定を受け取りました（合成は開発中。現状はナレーション優先）`
+      `bgm: ${bgmId} が選択されていますが、対応するBGMトラックが未設定です。ZENOVA_BGM_${bgmId.toUpperCase()}_URL を設定してください。`
     );
   }
 
@@ -521,6 +537,7 @@ export async function runCreateSalesVideo(
     const composed = await composeSalesVideo({
       video_url: videoUrl,
       audio_url: audioUrl,
+      bgm_url: bgmUrl,
       narration_script: narrationScript || null,
       subtitle_file: subtitleFile,
       burn_captions: captionsEnabled && Boolean(subtitleFile),
