@@ -33,21 +33,21 @@ export default function VideoPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 lg:w-[300px] lg:shrink-0">
+              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 lg:w-[320px] lg:shrink-0">
                 <div className="bg-[#090909] p-4">
                   <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Direction</p>
                   <p className="mt-2 text-sm text-zinc-300">AI Director</p>
                 </div>
                 <div className="bg-[#090909] p-4">
-                  <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Engine</p>
-                  <p className="mt-2 text-sm text-zinc-300">Higgsfield</p>
+                  <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Loop</p>
+                  <p className="mt-2 text-sm text-zinc-300">Refine → Repeat</p>
                 </div>
                 <div className="col-span-2 bg-[#090909] p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">Creative standard</p>
                     <span className="flex items-center gap-2 text-[9px] uppercase tracking-[0.18em] text-zinc-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                      Production-grade
+                      Idea → Film
                     </span>
                   </div>
                   <div className="mt-3 h-px bg-gradient-to-r from-white/50 via-white/15 to-transparent" />
@@ -81,9 +81,9 @@ export default function VideoPage() {
                     <span className="text-[9px] text-zinc-700">ZENOVA</span>
                   </div>
                   <div className="space-y-4 p-4 text-xs leading-6 text-zinc-500">
-                    <p><span className="text-zinc-300">01</span> Your prompt is the creative direction.</p>
-                    <p><span className="text-zinc-300">02</span> Camera, light, pacing and atmosphere follow the intent.</p>
-                    <p><span className="text-zinc-300">03</span> Assets can become references, ingredients or the starting frame.</p>
+                    <p><span className="text-zinc-300">01</span> Start with intent — not a preset.</p>
+                    <p><span className="text-zinc-300">02</span> Shape camera, light, pacing and atmosphere.</p>
+                    <p><span className="text-zinc-300">03</span> Watch the result, then direct the next take.</p>
                   </div>
                 </div>
 
@@ -96,9 +96,10 @@ export default function VideoPage() {
                     <span className="text-[10px] text-zinc-600">∞</span>
                   </div>
                   <div className="mt-5 space-y-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Composition</span><span>01</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion intent</span><span>02</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Story clarity</span><span>03</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Intent</span><span>01</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion</span><span>02</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Sound</span><span>03</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Next take</span><span>04</span></div>
                   </div>
                 </div>
               </div>
