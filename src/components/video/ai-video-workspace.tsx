@@ -47,6 +47,7 @@ export function AiVideoWorkspace() {
   const [elapsed, setElapsed] = useState(0);
   const [history, setHistory] = useState<Result[]>([]);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+  const [activeCancelToken, setActiveCancelToken] = useState<string | null>(null);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -165,7 +166,7 @@ export function AiVideoWorkspace() {
   }
 
   async function cancelGeneration() {
-    if (!isGenerating || !activeRequestId) return;
+    if (!isGenerating || !activeRequestId || !activeCancelToken) return;
     setStatus("生成をキャンセルしています…");
     setError("");
 
@@ -174,7 +175,7 @@ export function AiVideoWorkspace() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ request_id: activeRequestId }),
+        body: JSON.stringify({ request_id: activeRequestId, cancel_token: activeCancelToken }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -184,6 +185,7 @@ export function AiVideoWorkspace() {
       setIsGenerating(false);
       setStartedAt(null);
       setActiveRequestId(null);
+      setActiveCancelToken(null);
       setStatus("生成をキャンセルしました。条件を調整して、もう一度作れます。");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -242,7 +244,10 @@ export function AiVideoWorkspace() {
       }
 
       const requestId = String(data.request_id);
+      const cancelToken = String(data.cancel_token || "");
+      if (!cancelToken) throw new Error("キャンセル認証情報が返りませんでした");
       setActiveRequestId(requestId);
+      setActiveCancelToken(cancelToken);
       setStatus("生成を開始しました。Higgsfieldでレンダリング中…");
       const completed = await pollVideo(requestId);
 
