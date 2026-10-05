@@ -341,6 +341,7 @@ export function AiVideoWorkspace() {
       setRecoverable(false);
       setRecovering(true);
       setIsGenerating(true);
+      setProviderStatus("processing");
       setStartedAt(Number(job.startedAt) || Date.now());
       setActiveRequestId(job.requestId);
       setActiveCancelToken(job.cancelToken);
