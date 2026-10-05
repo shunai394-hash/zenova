@@ -58,6 +58,8 @@ export function AiVideoWorkspace() {
     model !== "minimax/h3/image-to-video" &&
     model !== "kling-video/v3.0-turbo/image-to-video";
   const rendering = isGenerating;
+  const renderPhase = !rendering ? "READY" : elapsed < 5000 ? "PREPARE" : elapsed < 20000 ? "DIRECT" : elapsed < 60000 ? "MOTION" : "FINISH";
+  const renderPhaseIndex = ["PREPARE", "DIRECT", "MOTION", "FINISH"].indexOf(renderPhase);
 
   useEffect(() => {
     if (!supportsSound && sound) {
@@ -674,7 +676,7 @@ export function AiVideoWorkspace() {
                         <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
                       </div>
                     </div>
-                    <div className="mt-8 flex items-end justify-between gap-4 border-t border-white/10 pt-4 text-[9px] uppercase tracking-[0.18em]">
+                    <div className="mt-8 border-t border-white/10 pt-4"><div className="grid grid-cols-4 gap-1" aria-label="Render progress">{["PREPARE","DIRECT","MOTION","FINISH"].map((phase,index)=><div key={phase} className="space-y-2"><div className={`h-px transition-all duration-700 ${index <= renderPhaseIndex ? "bg-white/70" : "bg-white/10"}`} /><span className={`block text-[8px] uppercase tracking-[0.14em] ${index === renderPhaseIndex ? "text-white" : index < renderPhaseIndex ? "text-zinc-500" : "text-zinc-800"}`}>{phase}</span></div>)}</div><div className="mt-5 flex items-end justify-between gap-4 text-[9px] uppercase tracking-[0.18em]">
                       <div>
                         <p className="text-zinc-300">Rendering take</p>
                         <p className="mt-2 text-zinc-700">Direction → motion → final frame</p>
