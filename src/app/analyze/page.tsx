@@ -421,7 +421,6 @@ export default function Home() {
   const [enginePrepMessage, setEnginePrepMessage] = useState<string | null>(
     null
   );
-  const [salesVideoProgressIndex, setSalesVideoProgressIndex] = useState(0);
   const [salesVideoDownloading, setSalesVideoDownloading] = useState(false);
   const [usageRefreshToken, setUsageRefreshToken] = useState(0);
 
@@ -523,17 +522,6 @@ export default function Home() {
   useEffect(() => {
     void refreshDashboardData();
   }, []);
-
-  useEffect(() => {
-    if (!salesVideoLoading) return;
-    setSalesVideoProgressIndex(0);
-    const timer = window.setInterval(() => {
-      setSalesVideoProgressIndex((prev) =>
-        Math.min(prev + 1, SALES_VIDEO_STEPS.length - 1)
-      );
-    }, 12000);
-    return () => window.clearInterval(timer);
-  }, [salesVideoLoading]);
 
   useEffect(() => {
     return () => {
@@ -805,7 +793,6 @@ export default function Home() {
     setSalesVideoAngle(null);
     setSalesVideoError(null);
     setSalesVideoSteps(EMPTY_SALES_VIDEO_STEPS);
-    setSalesVideoProgressIndex(0);
     setGenerationStatus("idle");
   };
 
@@ -1742,8 +1729,31 @@ export default function Home() {
         );
       }
 
+      // 進捗表示は経過時間で推測せず、生成APIが返した実測ステップだけを反映する。
+      // これにより「まだKling中なのにナレーション完了」のような誤表示を防ぐ。
+      if (data?.steps && typeof data.steps === "object") {
+        setSalesVideoSteps({
+          analysis: Boolean(data.steps.analysis),
+          scenario: Boolean(data.steps.scenario),
+          kling: Boolean(data.steps.kling),
+          narration: Boolean(data.steps.narration),
+          captions: Boolean(data.steps.captions),
+          evaluation: Boolean(data.steps.evaluation),
+          saved: Boolean(data.steps.saved),
+        });
+      }
+
       if (typeof data.video_url === "string" && data.video_url) {
         setSalesVideoUrl(data.video_url);
+      }
+      if (typeof data.score === "number") {
+        setSalesVideoScore(data.score);
+      }
+      if (typeof data.hook === "string" && data.hook) {
+        setSalesVideoHook(data.hook);
+      }
+      if (typeof data.selling_angle === "string" && data.selling_angle) {
+        setSalesVideoAngle(data.selling_angle);
       }
       setUsageRefreshToken((n) => n + 1);
     } catch (gateErr) {
@@ -2340,12 +2350,8 @@ export default function Home() {
                     {generatePhase === "complete" ? "生成結果" : "生成進捗"}
                   </h3>
                   <ul className="mt-3 space-y-2">
-                    {SALES_VIDEO_STEPS.map((step, index) => {
+                    {SALES_VIDEO_STEPS.map((step) => {
                       const done = salesVideoSteps[step.key];
-                      const running =
-                        salesVideoLoading &&
-                        !done &&
-                        index === salesVideoProgressIndex;
                       return (
                         <li
                           key={step.key}
@@ -2356,12 +2362,10 @@ export default function Home() {
                             className={
                               done
                                 ? "text-emerald-400"
-                                : running
-                                  ? "text-amber-300"
-                                  : "text-gray-600"
+                                : "text-gray-600"
                             }
                           >
-                            {done ? "完了" : running ? "進行中..." : "待機"}
+                            {done ? "完了" : salesVideoLoading ? "処理中" : "未完了"}
                           </span>
                         </li>
                       );
