@@ -9,6 +9,10 @@ type Result = {
   duration_sec: number;
   aspect_ratio: string;
   sound: boolean;
+  prompt?: string;
+  bgm?: boolean;
+  narration?: boolean;
+  sfx?: boolean;
 };
 
 type Usage = {
@@ -50,6 +54,7 @@ export function AiVideoWorkspace() {
   const [activeCancelToken, setActiveCancelToken] = useState<string | null>(null);
   const [recovering, setRecovering] = useState(false);
   const [recoverable, setRecoverable] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<"queued" | "processing" | "completed" | "failed">("processing");
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -58,8 +63,7 @@ export function AiVideoWorkspace() {
     model !== "minimax/h3/image-to-video" &&
     model !== "kling-video/v3.0-turbo/image-to-video";
   const rendering = isGenerating;
-  const renderPhase = !rendering ? "READY" : elapsed < 5000 ? "PREPARE" : elapsed < 20000 ? "DIRECT" : elapsed < 60000 ? "MOTION" : "FINISH";
-  const renderPhaseIndex = ["PREPARE", "DIRECT", "MOTION", "FINISH"].indexOf(renderPhase);
+  const liveStage = providerStatus === "queued" ? "QUEUED" : providerStatus === "processing" ? "RENDERING" : providerStatus === "completed" ? "COMPLETE" : "FAILED";
 
   useEffect(() => {
     if (!supportsSound && sound) {
@@ -176,6 +180,14 @@ export function AiVideoWorkspace() {
 
       transientErrors = 0;
       const current = String(data.status || "processing").toLowerCase();
+
+      if (current === "queued" || current === "processing") {
+        setProviderStatus(current);
+      } else if (current === "completed") {
+        setProviderStatus("completed");
+      } else if (current === "failed" || current === "error" || current === "nsfw" || current === "canceled" || current === "cancelled") {
+        setProviderStatus("failed");
+      }
 
       if (current === "completed") {
         if (!data.video_url) throw new Error("動画URLが返りませんでした");
@@ -346,7 +358,7 @@ export function AiVideoWorkspace() {
         .then((completed) => {
           setResult(completed);
           setHistory((current) => {
-            const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
+            const next = [completedWithContext, ...current.filter((item) => item.video_url !== completedWithContext.video_url)].slice(0, 6);
             localStorage.setItem("zenova-video-history", JSON.stringify(next));
             return next;
           });
@@ -494,7 +506,14 @@ export function AiVideoWorkspace() {
         cancelToken
       );
 
-      setResult(completed);
+      const completedWithContext: Result = {
+        ...completed,
+        prompt: effectivePrompt,
+        bgm,
+        narration,
+        sfx,
+      };
+      setResult(completedWithContext);
       setHistory((current) => {
         const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
         localStorage.setItem("zenova-video-history", JSON.stringify(next));
@@ -676,10 +695,18 @@ export function AiVideoWorkspace() {
                         <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
                       </div>
                     </div>
-                    <div className="mt-8 border-t border-white/10 pt-4"><div className="grid grid-cols-4 gap-1" aria-label="Render progress">{["PREPARE","DIRECT","MOTION","FINISH"].map((phase,index)=><div key={phase} className="space-y-2"><div className={`h-px transition-all duration-700 ${index <= renderPhaseIndex ? "bg-white/70" : "bg-white/10"}`} /><span className={`block text-[8px] uppercase tracking-[0.14em] ${index === renderPhaseIndex ? "text-white" : index < renderPhaseIndex ? "text-zinc-500" : "text-zinc-800"}`}>{phase}</span></div>)}</div><div className="mt-5 flex items-end justify-between gap-4 text-[9px] uppercase tracking-[0.18em]">
+                    <div className="mt-8 border-t border-white/10 pt-4">
+                      <div className="flex items-center justify-between gap-4 text-[8px] uppercase tracking-[0.16em]">
+                        <span className="text-zinc-600">Provider status</span>
+                        <span className="text-white">{liveStage}</span>
+                      </div>
+                      <div className="mt-3 h-px overflow-hidden bg-white/10">
+                        <div className={`h-full transition-all duration-700 ${providerStatus === "queued" ? "w-1/4" : "w-2/3"} bg-white/60`} />
+                      </div>
+                      <div className="mt-5 flex items-end justify-between gap-4 text-[9px] uppercase tracking-[0.18em]">
                       <div>
                         <p className="text-zinc-300">Rendering take</p>
-                        <p className="mt-2 text-zinc-700">Direction → motion → final frame</p>
+                        <p className="mt-2 text-zinc-700">Live status from the generation provider</p>
                       </div>
                       <div className="text-right">
                         <p className="tabular-nums text-zinc-500">{Math.floor(elapsed / 1000)}s</p>
@@ -885,7 +912,19 @@ export function AiVideoWorkspace() {
             <div className="mt-5 border-t border-white/10 pt-4" aria-label="Recent generated takes">
               <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
+                {history.map((item) => <button key={item.video_url} type="button" onClick={() => {
+  setResult(item);
+  if (item.prompt) setPrompt(item.prompt);
+  if (typeof item.bgm === "boolean") setBgm(item.bgm);
+  if (typeof item.narration === "boolean") setNarration(item.narration);
+  if (typeof item.sfx === "boolean") setSfx(item.sfx);
+  setDuration(String(item.duration_sec));
+  setAspectRatio(item.aspect_ratio);
+  setModel(item.model);
+  setSound(item.sound);
+  setError("");
+  setStatus("Take restored. You can direct the next version.");
+}} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
               </div>
             </div>
           )}
