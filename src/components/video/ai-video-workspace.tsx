@@ -39,6 +39,8 @@ export function AiVideoWorkspace() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
+  const [refinePrompt, setRefinePrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -46,7 +48,7 @@ export function AiVideoWorkspace() {
   const supportsSound =
     model !== "minimax/h3/image-to-video" &&
     model !== "kling-video/v3.0-turbo/image-to-video";
-  const rendering = Boolean(status);
+  const rendering = isGenerating;
 
   useEffect(() => {
     if (!image) {
@@ -121,9 +123,10 @@ export function AiVideoWorkspace() {
   async function generate() {
     setError("");
     setResult(null);
+    setIsGenerating(true);
 
-    if (!image && !isSeedance) {
-      setError("このモデルでは画像素材を1つ追加してください。動画素材の直接生成は現在のエンジン接続では未対応です。");
+    if (!image && !video && !isSeedance) {
+      setError("このモデルでは画像または動画素材を1つ追加してください。動画入力はSeedance 2.5で処理されます。");
       return;
     }
     if (!prompt.trim()) {
@@ -139,11 +142,20 @@ export function AiVideoWorkspace() {
 
     const form = new FormData();
     if (image) form.set("image", image);
+    if (video) form.set("video", video);
     if (audio) form.set("audio", audio);
     form.set("bgm", bgm ? "on" : "off");
     form.set("narration", narration ? "on" : "off");
     form.set("sfx", sfx ? "on" : "off");
-    form.set("prompt", prompt.trim());
+    const audioDirections = [
+      bgm ? "cinematic background music" : "",
+      narration ? "clear spoken narration" : "",
+      sfx ? "purposeful sound effects" : "",
+    ].filter(Boolean).join(", ");
+    const directedPrompt = audioDirections
+      ? `${prompt.trim()}\n\nAudio direction: ${audioDirections}.`
+      : prompt.trim();
+    form.set("prompt", directedPrompt);
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
     form.set("sound", sound ? "on" : "off");
@@ -167,7 +179,7 @@ export function AiVideoWorkspace() {
       const completed = await pollVideo(String(data.request_id));
 
       setResult(completed);
-      setStatus("完成しました。");
+      setStatus("完成しました。Refineで次のテイクを作れます。");
       setUsage((prev) =>
         prev
           ? {
@@ -180,6 +192,8 @@ export function AiVideoWorkspace() {
     } catch (e) {
       setStatus("");
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsGenerating(false);
     }
   }
 
@@ -298,6 +312,13 @@ export function AiVideoWorkspace() {
                 )}
               </div>
             </div>
+
+            {result && (
+              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
+                <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); setRefinePrompt(""); setPrompt((current) => `${current}\n\nRefinement: ${next}`); window.setTimeout(() => void generate(), 0); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+              </div>
+            )}
 
             {result && (
               <a
