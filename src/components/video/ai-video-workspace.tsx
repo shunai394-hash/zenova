@@ -174,6 +174,7 @@ export function AiVideoWorkspace() {
     }
 
     setIsGenerating(true);
+    setStartedAt(Date.now());
     setStatus("素材を準備しています…");
 
     const form = new FormData();
@@ -227,6 +228,7 @@ export function AiVideoWorkspace() {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setIsGenerating(false);
+      setStartedAt(null);
     }
   }
 
