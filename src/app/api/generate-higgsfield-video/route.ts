@@ -180,6 +180,9 @@ export async function POST(req: NextRequest) {
     }
 
     const duration = modelDurationClamp(model, requestedDuration);
+    const imageUrl = image instanceof File ? await uploadMedia(image) : null;
+    const videoUrl = video instanceof File ? await uploadMedia(video) : null;
+    const audioUrl = audio instanceof File ? await uploadMedia(audio) : null;
     const audioDirections = [
       effectiveBgm ? "include background music" : "no background music",
       effectiveNarration ? "include spoken narration or voiceover" : "no spoken narration",
@@ -187,9 +190,6 @@ export async function POST(req: NextRequest) {
       audioUrl ? "use the uploaded audio reference where supported" : "no uploaded audio reference",
     ].join(", ");
     const directedPrompt = `${prompt}\n\nAudio direction: ${audioDirections}.`;
-    const imageUrl = image instanceof File ? await uploadMedia(image) : null;
-    const videoUrl = video instanceof File ? await uploadMedia(video) : null;
-    const audioUrl = audio instanceof File ? await uploadMedia(audio) : null;
 
     const seedance = model === "bytedance/seedance-2.5/text-to-video";
 
