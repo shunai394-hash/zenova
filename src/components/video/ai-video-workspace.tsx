@@ -263,7 +263,8 @@ export function AiVideoWorkspace() {
             </div>
 
             <label className={`group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300 ${dragActive ? "border-white/60 bg-white/[0.07]" : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]""}`}
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}\n              onDragLeave={() => setDragActive(false)}\n              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
+              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+              onDragLeave={() => setDragActive(false)}\n              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
               <div>
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
                   +
@@ -336,7 +337,11 @@ export function AiVideoWorkspace() {
                 }`}
               >
                 {isGenerating ? (
-                  <div className="px-8 text-center">\n                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />\n                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>\n                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>\n                  </div>
+                  <div className="px-8 text-center">
+                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />
+                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>
+                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>
+                  </div>
                 ) : result ? (
                   <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
                 ) : preview ? (
@@ -496,9 +501,14 @@ export function AiVideoWorkspace() {
           </div>
 
           {history.length > 0 && (
-            <div className="mt-5 border-t border-white/10 pt-4">\n              <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>\n              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}\n              </div>
+            <div className="mt-5 border-t border-white/10 pt-4">
+              <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
+              </div>
             </div>
-          )}\n\n          {error && (
+          )}
+
+          {error && (
             <div className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
               {error}
             </div>
