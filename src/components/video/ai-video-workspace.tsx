@@ -528,7 +528,7 @@ export function AiVideoWorkspace() {
     : 0;
 
   return (
-    <div className="relative overflow-hidden border border-white/10 bg-[#080808] shadow-[0_30px_100px_rgba(0,0,0,0.35)]">
+    <div className="relative overflow-hidden border border-white/10 bg-[#080808] shadow-[0_40px_120px_rgba(0,0,0,0.42)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_34%)]"
@@ -539,7 +539,7 @@ export function AiVideoWorkspace() {
           <section className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">01 / SOURCE</p>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">01 / SOURCE <span className="text-zinc-800">— INPUT</span></p>
                 <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Bring your idea in.</h2>
               </div>
               <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">
@@ -606,7 +606,7 @@ export function AiVideoWorkspace() {
           <section className="p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">02 / DIRECTION</p>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">02 / DIRECTION <span className="text-zinc-800">— INTENT</span></p>
                 <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Tell it what to feel.</h2>
               </div>
               <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">{prompt.length}/5000</span>
@@ -618,7 +618,7 @@ export function AiVideoWorkspace() {
               rows={8}
               maxLength={5000}
               placeholder="Describe the scene, story, camera, light, pacing, character, atmosphere — anything you want to see."
-              className="mt-6 min-h-40 w-full resize-none border border-white/10 bg-black/60 px-4 py-4 text-sm leading-6 text-white placeholder:text-zinc-700 transition focus:border-white/35 focus:outline-none"
+              className="mt-6 min-h-40 w-full resize-none border border-white/10 bg-black/70 px-4 py-4 text-sm leading-6 text-white placeholder:text-zinc-700 transition duration-500 focus:border-white/40 focus:bg-black focus:outline-none"
             />
 
             <div className="mt-3 flex items-center justify-between gap-4 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
@@ -632,7 +632,7 @@ export function AiVideoWorkspace() {
           <section className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">03 / FRAME</p>
+                <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">03 / FRAME <span className="text-zinc-800">— PREVIEW</span></p>
                 <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Direct the frame.</h2>
               </div>
               <span className="text-[9px] uppercase tracking-[0.16em] text-zinc-700">Live output</span>
@@ -716,7 +716,7 @@ export function AiVideoWorkspace() {
           </section>
 
           <aside className="p-5 sm:p-7">
-            <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">04 / MOTION</p>
+            <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">04 / MOTION <span className="text-zinc-800">— PARAMETERS</span></p>
             <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Set the language.</h2>
 
             <div className="mt-6 space-y-5">
@@ -826,7 +826,7 @@ export function AiVideoWorkspace() {
         <div className="border-t border-white/10 bg-[#050505] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">05 / RENDER</p>
+              <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">05 / RENDER <span className="text-zinc-800">— OUTPUT</span></p>
               <p aria-live="polite" className="mt-1 text-sm text-zinc-400">
                 {status || "Everything is ready. Make the move."}
               </p>
