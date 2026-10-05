@@ -185,6 +185,7 @@ export async function runCreateSalesVideo(
   let hook = "";
   let watermarkApplied = false;
   let narrationScript = "";
+  let compositionSucceeded = false;
 
   // 1) 商品分析（確定済み ProductAnalysis があれば再生成しない = 事実ドリフト防止）
   let analysis: ProductAnalysis;
@@ -546,11 +547,13 @@ export async function runCreateSalesVideo(
     finalVideoUrl = composed.final_video_url;
     videoUrl = composed.final_video_url;
     watermarkApplied = Boolean(composed.watermark_applied);
+    compositionSucceeded = Boolean(composed.final_video_url);
   } catch (error) {
     warnings.push(
       `composer: ${error instanceof Error ? error.message : String(error)}`
     );
-    finalVideoUrl = videoUrl;
+    finalVideoUrl = null;
+    compositionSucceeded = false;
     watermarkApplied = false;
   }
 
@@ -649,7 +652,17 @@ export async function runCreateSalesVideo(
     steps.saved = false;
   }
 
-  const success = steps.analysis && steps.scenario && steps.kling;
+  // 成功は「動画APIが返った」ではなく、最終MP4まで品質工程を通過したことを意味する。
+  // ナレーション/字幕/評価/保存の失敗を成功扱いにしない。
+  const success =
+    steps.analysis &&
+    steps.scenario &&
+    steps.kling &&
+    compositionSucceeded &&
+    steps.narration &&
+    (!captionsEnabled || steps.captions) &&
+    steps.evaluation &&
+    steps.saved;
 
   return {
     success,
