@@ -165,21 +165,29 @@ export function AiVideoWorkspace() {
   }
 
   async function cancelGeneration() {
-    if (!isGenerating) return;
+    if (!isGenerating || !activeRequestId) return;
     setStatus("生成をキャンセルしています…");
+    setError("");
+
     try {
-      if (activeRequestId) {
-        await fetch("/api/generate-higgsfield-video/cancel", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ request_id: activeRequestId }),
-        });
+      const res = await fetch("/api/generate-higgsfield-video/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ request_id: activeRequestId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `生成キャンセル失敗 (HTTP ${res.status})`);
       }
-    } finally {
+
       setIsGenerating(false);
       setStartedAt(null);
+      setActiveRequestId(null);
       setStatus("生成をキャンセルしました。条件を調整して、もう一度作れます。");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatus("キャンセルできませんでした。生成を継続しています。");
     }
   }
 
