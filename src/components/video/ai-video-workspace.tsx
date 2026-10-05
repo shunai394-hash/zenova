@@ -56,6 +56,14 @@ export function AiVideoWorkspace() {
   const rendering = isGenerating;
 
   useEffect(() => {
+    if (!sound) {
+      setBgm(false);
+      setNarration(false);
+      setSfx(false);
+    }
+  }, [sound]);
+
+  useEffect(() => {
     if (!video) {
       setVideoPreview(null);
       return;
@@ -153,6 +161,26 @@ export function AiVideoWorkspace() {
     throw new Error(
       "生成に時間がかかっています。request_id を保持したまま再試行できる状態です。"
     );
+  }
+
+  async function cancelGeneration() {
+    if (!isGenerating) return;
+    setStatus("生成をキャンセルしています…");
+    try {
+      const activeRequestId = result?.request_id;
+      if (activeRequestId) {
+        await fetch("/api/generate-higgsfield-video/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ request_id: activeRequestId }),
+        });
+      }
+    } finally {
+      setIsGenerating(false);
+      setStartedAt(null);
+      setStatus("生成をキャンセルしました。条件を調整して、もう一度作れます。");
+    }
   }
 
   async function generate(nextPrompt?: string) {
@@ -371,7 +399,16 @@ export function AiVideoWorkspace() {
                         <p className="text-zinc-300">Rendering take</p>
                         <p className="mt-2 text-zinc-700">Direction → motion → final frame</p>
                       </div>
-                      <p className="tabular-nums text-zinc-500">{Math.floor(elapsed / 1000)}s</p>
+                      <div className="text-right">
+                        <p className="tabular-nums text-zinc-500">{Math.floor(elapsed / 1000)}s</p>
+                        <button
+                          type="button"
+                          onClick={() => void cancelGeneration()}
+                          className="mt-3 border border-white/15 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-zinc-500 transition hover:border-white/40 hover:text-white"
+                        >
+                          Cancel render
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : result ? (
@@ -476,13 +513,13 @@ export function AiVideoWorkspace() {
               </label>
 
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
-                <button type="button" onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                <button type="button" disabled={!sound} onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   BGM
                 </button>
-                <button type="button" onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                <button type="button" disabled={!sound} onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   Narration
                 </button>
-                <button type="button" onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                <button type="button" disabled={!sound} onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   SFX
                 </button>
               </div>
