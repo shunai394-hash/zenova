@@ -72,6 +72,33 @@ function resolveBgmUrl(bgmId: string): string | null {
   return configured || null;
 }
 
+function buildTimedSalesTimeline(input: {
+  durationSec: number;
+  hook: string;
+  scene1: string;
+  scene2: string;
+  scene3: string;
+  cta: string;
+}) {
+  const duration = Math.max(5, Math.round(input.durationSec));
+  const hookEnd = Math.max(1, Math.round(duration * 0.1));
+  const scene1End = Math.max(hookEnd + 1, Math.round(duration * 0.4));
+  const scene2End = Math.max(scene1End + 1, Math.round(duration * 0.7));
+  const scene3End = Math.max(scene2End + 1, Math.round(duration * 0.9));
+  const safeScene3End = Math.min(duration - 1, scene3End);
+  const safeScene2End = Math.min(safeScene3End - 1, scene2End);
+  const safeScene1End = Math.min(safeScene2End - 1, scene1End);
+  const safeHookEnd = Math.min(safeScene1End - 1, hookEnd);
+
+  return [
+    { scene: "Hook", second: "0-" + safeHookEnd, text: input.hook },
+    { scene: "Scene1", second: safeHookEnd + "-" + safeScene1End, text: input.scene1 },
+    { scene: "Scene2", second: safeScene1End + "-" + safeScene2End, text: input.scene2 },
+    { scene: "Scene3", second: safeScene2End + "-" + safeScene3End, text: input.scene3 },
+    { scene: "CTA", second: safeScene3End + "-" + duration, text: input.cta },
+  ];
+}
+
 /**
  * 商品分析 → シナリオ → 最適化 → Kling → 音声 → 字幕 → 合成 → 評価 → 保存
  * 既存 API / Kling provider は変更せず、lib を直接呼び出す。
@@ -351,25 +378,14 @@ export async function runCreateSalesVideo(
       ideaId: gatedVideoPlan?.ideaId,
       goal: gatedVideoPlan?.goal,
       cta: finalCta,
-      timeline: [
-        { scene: "Hook", second: "0-2", text: hook },
-        {
-          scene: "Scene1",
-          second: "2-6",
-          text: optimized.optimized_scene_1,
-        },
-        {
-          scene: "Scene2",
-          second: "6-10",
-          text: optimized.optimized_scene_2,
-        },
-        {
-          scene: "Scene3",
-          second: "10-13",
-          text: optimized.optimized_scene_3,
-        },
-        { scene: "CTA", second: "13-15", text: finalCta },
-      ],
+      timeline: buildTimedSalesTimeline({
+        durationSec,
+        hook,
+        scene1: optimized.optimized_scene_1,
+        scene2: optimized.optimized_scene_2,
+        scene3: optimized.optimized_scene_3,
+        cta: finalCta,
+      }),
     },
     claimCtx
   );
