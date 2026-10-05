@@ -233,8 +233,10 @@ export function AiVideoWorkspace() {
         throw new Error("Higgsfieldのrequest_idが返りませんでした");
       }
 
+      const requestId = String(data.request_id);
+      setActiveRequestId(requestId);
       setStatus("生成を開始しました。Higgsfieldでレンダリング中…");
-      const completed = await pollVideo(String(data.request_id));
+      const completed = await pollVideo(requestId);
 
       setResult(completed);
       setHistory((current) => {
