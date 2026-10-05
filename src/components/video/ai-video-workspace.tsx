@@ -123,7 +123,6 @@ export function AiVideoWorkspace() {
   async function generate() {
     setError("");
     setResult(null);
-    setIsGenerating(true);
 
     if (!image && !video && !isSeedance) {
       setError("このモデルでは画像または動画素材を1つ追加してください。動画入力はSeedance 2.5で処理されます。");
@@ -138,6 +137,7 @@ export function AiVideoWorkspace() {
       return;
     }
 
+    setIsGenerating(true);
     setStatus("素材を準備しています…");
 
     const form = new FormData();
