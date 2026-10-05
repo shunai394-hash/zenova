@@ -41,6 +41,10 @@ export function AiVideoWorkspace() {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [refinePrompt, setRefinePrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [history, setHistory] = useState<Result[]>([]);
 
   const isSeedance = model === "bytedance/seedance-2.5/text-to-video";
   const isKling = model.startsWith("kling-video/");
@@ -221,12 +225,12 @@ export function AiVideoWorkspace() {
               </span>
             </div>
 
-            <label className="group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed border-white/10 bg-white/[0.018] px-5 text-center transition duration-300 hover:border-white/30 hover:bg-white/[0.035]">
+            <label className={`group mt-6 flex min-h-40 cursor-pointer items-center justify-center border border-dashed px-5 text-center transition duration-300 ${dragActive ? "border-white/60 bg-white/[0.07]" : "border-white/10 bg-white/[0.018] hover:border-white/30 hover:bg-white/[0.035]"}`}\n              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}\n              onDragLeave={() => setDragActive(false)}\n              onDrop={(e) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else if (file.type.startsWith("image/")) setImage(file); else setError("画像または動画を追加してください。"); }}>
               <div>
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
                   +
                 </div>
-                <p className="text-sm text-zinc-200">{image ? image.name : "Drop an image, video, or choose a file"}</p>
+                <p className="text-sm text-zinc-200">{video ? video.name : image ? image.name : dragActive ? "Drop to load your reference" : "Drop an image, video, or choose a file"}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600">IMAGE · VIDEO</p>
               </div>
               <input
@@ -237,7 +241,7 @@ export function AiVideoWorkspace() {
               />
             </label>
 
-            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={URL.createObjectURL(video)} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
+            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}\n\n            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={URL.createObjectURL(video)} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
 
             {preview && (
               <div className="mt-4 overflow-hidden border border-white/10 bg-black">
@@ -291,7 +295,7 @@ export function AiVideoWorkspace() {
                       : "aspect-video max-w-[760px]"
                 }`}
               >
-                {result ? (
+                {isGenerating ? (\n                  <div className="px-8 text-center">\n                    <div className="mx-auto h-16 w-16 animate-pulse rounded-full border border-white/20" />\n                    <p className="mt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-400">Rendering {Math.floor(elapsed / 1000)}s</p>\n                    <p className="mt-2 text-xs text-zinc-700">Direction → generation → final frame</p>\n                  </div>\n                ) : result ? (
                   <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
                 ) : preview ? (
                   <>
@@ -449,7 +453,7 @@ export function AiVideoWorkspace() {
             </button>
           </div>
 
-          {error && (
+          {history.length > 0 && (\n            <div className="mt-5 border-t border-white/10 pt-4">\n              <div className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-zinc-600"><span>Recent takes</span><button type="button" onClick={() => { setHistory([]); localStorage.removeItem("zenova-video-history"); }} className="hover:text-white">Clear</button></div>\n              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                {history.map((item) => <button key={item.video_url} type="button" onClick={() => setResult(item)} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}\n              </div>\n            </div>\n          )}\n\n          {error && (
             <div className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
               {error}
             </div>
