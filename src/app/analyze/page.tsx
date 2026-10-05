@@ -217,9 +217,36 @@ async function fetchProductFromUrl(url: string): Promise<{
   productName?: string;
   description?: string;
   target?: string;
-} | null> {
-  void url;
-  return null;
+  imageUrl?: string | null;
+}> {
+  const res = await fetch("/api/parse-product-url", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  const data = await res.json();
+  if (!res.ok || data?.success === false) {
+    throw new Error(
+      typeof data?.error === "string"
+        ? data.error
+        : "商品ページを解析できませんでした"
+    );
+  }
+  return {
+    productName:
+      typeof data?.product?.productName === "string"
+        ? data.product.productName
+        : undefined,
+    description:
+      typeof data?.product?.description === "string"
+        ? data.product.description
+        : undefined,
+    imageUrl:
+      typeof data?.product?.imageUrl === "string"
+        ? data.product.imageUrl
+        : null,
+  };
 }
 
 function AnalysisList({
@@ -1185,12 +1212,26 @@ export default function Home() {
         if (remote.productName) setProductName(remote.productName);
         if (remote.description) setDescription(remote.description);
         if (remote.target) setTarget(remote.target);
-        setUrlHint("商品URLから情報を取得しました");
+        if (remote.imageUrl) {
+          if (productImagePreview?.startsWith("blob:")) {
+            URL.revokeObjectURL(productImagePreview);
+          }
+          setProductImage(null);
+          setProductImagePreview(remote.imageUrl);
+        }
+        const found = [
+          remote.productName ? "商品名" : null,
+          remote.description ? "説明" : null,
+          remote.imageUrl ? "商品画像" : null,
+        ].filter(Boolean);
+        setUrlHint(
+          found.length > 0
+            ? `商品URLから取得: ${found.join("・")}`
+            : "URLは取得できましたが、商品情報を自動取得できませんでした。"
+        );
         markInputDirty();
       } else {
-        setUrlHint(
-          "URLを保存しました。商品ページ解析APIは未接続のため、商品名・説明は手動入力してください。"
-        );
+        setUrlHint("URLは取得できましたが、商品情報を自動取得できませんでした。");
       }
     } catch (err) {
       setUrlError(
