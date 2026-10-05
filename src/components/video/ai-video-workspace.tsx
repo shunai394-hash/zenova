@@ -26,7 +26,7 @@ export function AiVideoWorkspace() {
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [audio, setAudio] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);\n  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("9:16");
@@ -241,7 +241,7 @@ export function AiVideoWorkspace() {
               />
             </label>
 
-            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}\n\n            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={URL.createObjectURL(video)} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
+            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}\n\n            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={videoPreview || undefined} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
 
             {preview && (
               <div className="mt-4 overflow-hidden border border-white/10 bg-black">
