@@ -322,7 +322,18 @@ export function AiVideoWorkspace() {
           });
           localStorage.removeItem("zenova-video-active-job");
           setStatus("完成しました。Refineで次のテイクを作れます。");
-          void fetch("/api/usage", { credentials: "same-origin", cache: "no-store" });
+          void fetch("/api/usage", { credentials: "same-origin", cache: "no-store" })
+            .then((r) => r.json())
+            .then((d) =>
+              setUsage({
+                authenticated: d.authenticated === true,
+                remaining: Number(d.remaining ?? 0),
+                used: Number(d.used ?? 0),
+                video_limit: Number(d.video_limit ?? 0),
+                plan: String(d.plan ?? "free"),
+              })
+            )
+            .catch(() => {});
         })
         .catch((e) => {
           setRecoverable(Boolean(localStorage.getItem("zenova-video-active-job")));
