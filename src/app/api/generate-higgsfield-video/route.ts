@@ -113,6 +113,13 @@ export async function POST(req: NextRequest) {
     const narration = String(form.get("narration") || "off") === "on";
     const sfx = String(form.get("sfx") || "off") === "on";
 
+    // Audio controls are meaningful only when generated audio is enabled.
+    // Keep the server as the source of truth so a stale client cannot request
+    // contradictory combinations such as sound=off + narration=on.
+    const effectiveBgm = sound && bgm;
+    const effectiveNarration = sound && narration;
+    const effectiveSfx = sound && sfx;
+
     if (!SUPPORTED_MODELS.has(model)) {
       return NextResponse.json({ error: "model が不正です" }, { status: 400 });
     }
@@ -158,9 +165,9 @@ export async function POST(req: NextRequest) {
 
     const duration = modelDurationClamp(model, requestedDuration);
     const audioDirections = [
-      bgm ? "include background music" : "no background music",
-      narration ? "include spoken narration or voiceover" : "no spoken narration",
-      sfx ? "include purposeful sound effects" : "no added sound effects",
+      effectiveBgm ? "include background music" : "no background music",
+      effectiveNarration ? "include spoken narration or voiceover" : "no spoken narration",
+      effectiveSfx ? "include purposeful sound effects" : "no added sound effects",
     ].join(", ");
     const directedPrompt = `${prompt}\n\nAudio direction: ${audioDirections}.`;
     const imageUrl = image instanceof File ? await uploadMedia(image) : null;
@@ -263,7 +270,12 @@ export async function POST(req: NextRequest) {
       duration_sec: duration,
       aspect_ratio: aspectRatio,
       sound,
-      audio_direction: { bgm, narration, sfx },
+      audio_direction: {
+        master: sound,
+        bgm: effectiveBgm,
+        narration: effectiveNarration,
+        sfx: effectiveSfx,
+      },
       inputs: {
         image: Boolean(imageUrl),
         video: Boolean(videoUrl),
