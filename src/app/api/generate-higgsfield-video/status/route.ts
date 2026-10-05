@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/auth/session";
 import { consumeVideoUsage } from "@/lib/usage";
@@ -5,6 +6,28 @@ import { consumeVideoUsage } from "@/lib/usage";
 export const runtime = "nodejs";
 
 const HF_BASE = "https://api.higgsfield.ai";
+
+function getRequestSecret(): string {
+  const secret =
+    process.env.HIGGSFIELD_CANCEL_SECRET?.trim() ||
+    process.env.HIGGSFIELD_API_KEY?.trim() ||
+    process.env.HF_API_KEY?.trim();
+  if (!secret) throw new Error("HIGGSFIELD_CANCEL_SECRET が設定されていません");
+  return secret;
+}
+
+function createRequestToken(userId: string, requestId: string): string {
+  return createHmac("sha256", getRequestSecret())
+    .update(`zenova:cancel:${userId}:${requestId}`)
+    .digest("hex");
+}
+
+function isValidRequestToken(userId: string, requestId: string, token: string): boolean {
+  const expected = createRequestToken(userId, requestId);
+  const provided = Buffer.from(token, "hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
+  return provided.length === expectedBuffer.length && timingSafeEqual(provided, expectedBuffer);
+}
 
 function getApiKey() {
   const key = process.env.HIGGSFIELD_API_KEY?.trim() || process.env.HF_API_KEY?.trim();
@@ -44,8 +67,12 @@ export async function GET(req: NextRequest) {
     }
 
     const requestId = req.nextUrl.searchParams.get("request_id")?.trim();
+    const requestToken = req.nextUrl.searchParams.get("cancel_token")?.trim();
     if (!requestId) {
       return NextResponse.json({ error: "request_id が必要です" }, { status: 400 });
+    }
+    if (!requestToken || !isValidRequestToken(user.id, requestId, requestToken)) {
+      return NextResponse.json({ error: "この生成リクエストを確認する権限がありません" }, { status: 403 });
     }
 
     const res = await hfFetch(`/requests/${encodeURIComponent(requestId)}/status`);
