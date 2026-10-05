@@ -18,18 +18,18 @@ export default function VideoPage() {
               <div className="max-w-5xl">
                 <div className="mb-6 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.28em] text-zinc-500">
                   <span className="h-px w-8 bg-zinc-600" />
-                  ZENOVA / MOTION DIRECTOR
+                  ZENOVA / VIDEO STUDIO
                   <span className="text-zinc-700">01</span>
                 </div>
                 <h1 className="text-[clamp(3.4rem,8vw,8.5rem)] font-medium leading-[0.82] tracking-[-0.075em]">
-                  Direct the
+                  Create anything.
                   <br />
-                  <span className="text-zinc-500">next moment.</span>
+                  <span className="text-zinc-500">Make it move.</span>
                 </h1>
                 <p className="mt-8 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
-                  商品画像と意図を渡す。ZENOVAが構図、カメラ、光、動きを読み取り、
+                  画像、動画、音声、そしてあなたの言葉から、ひとつの映像をつくる。
                   <br className="hidden sm:block" />
-                  一枚の静止画を「次の一瞬」へ設計する。
+                  プロダクト、物語、キャラクター、ショートフィルムまで。
                 </p>
               </div>
 
@@ -61,10 +61,10 @@ export default function VideoPage() {
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">Creative console</p>
-                  <p className="mt-1 text-xs text-zinc-500">Source → Direction → Motion</p>
+                  <p className="mt-1 text-xs text-zinc-500">Assets → Direction → Render</p>
                 </div>
                 <span className="hidden text-[9px] uppercase tracking-[0.2em] text-zinc-700 sm:block">
-                  9:16 / cinematic
+                  16:9 · 9:16 · 1:1
                 </span>
               </div>
               <AiVideoWorkspace />
@@ -76,14 +76,14 @@ export default function VideoPage() {
                   <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Director's note</p>
-                      <p className="mt-1 text-xs text-zinc-300">Don’t animate the product. Direct the scene.</p>
+                      <p className="mt-1 text-xs text-zinc-300">Start with an idea. Shape the scene.</p>
                     </div>
                     <span className="text-[9px] text-zinc-700">ZENOVA</span>
                   </div>
                   <div className="space-y-4 p-4 text-xs leading-6 text-zinc-500">
-                    <p><span className="text-zinc-300">01</span> Subject stays readable. Motion serves the idea.</p>
-                    <p><span className="text-zinc-300">02</span> Camera movement has a reason: reveal, tension, desire.</p>
-                    <p><span className="text-zinc-300">03</span> Light and depth create the premium feel before effects do.</p>
+                    <p><span className="text-zinc-300">01</span> Your prompt is the creative direction.</p>
+                    <p><span className="text-zinc-300">02</span> Camera, light, pacing and atmosphere follow the intent.</p>
+                    <p><span className="text-zinc-300">03</span> Assets can become references, ingredients or the starting frame.</p>
                   </div>
                 </div>
 
@@ -91,14 +91,14 @@ export default function VideoPage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Quality check</p>
-                      <p className="mt-2 text-lg font-medium tracking-tight">Intent over spectacle.</p>
+                      <p className="mt-2 text-lg font-medium tracking-tight">Clarity over clutter.</p>
                     </div>
                     <span className="text-[10px] text-zinc-600">∞</span>
                   </div>
                   <div className="mt-5 space-y-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
                     <div className="flex justify-between border-t border-white/5 pt-2"><span>Composition</span><span>01</span></div>
                     <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion intent</span><span>02</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Product focus</span><span>03</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Story clarity</span><span>03</span></div>
                   </div>
                 </div>
               </div>
@@ -107,7 +107,7 @@ export default function VideoPage() {
 
           <footer className="mt-16 flex flex-col gap-3 border-t border-white/10 pt-5 text-[9px] uppercase tracking-[0.22em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
             <span>ZENOVA — AI video production OS</span>
-            <span>The direction is the product.</span>
+            <span>Your idea. Your direction. Your film.</span>
           </footer>
         </div>
       </div>
