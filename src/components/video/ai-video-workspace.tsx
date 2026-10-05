@@ -24,11 +24,16 @@ const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
 export function AiVideoWorkspace() {
   const [image, setImage] = useState<File | null>(null);
+  const [video, setVideo] = useState<File | null>(null);
+  const [audio, setAudio] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [duration, setDuration] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [sound, setSound] = useState(true);
+  const [bgm, setBgm] = useState(true);
+  const [narration, setNarration] = useState(false);
+  const [sfx, setSfx] = useState(true);
   const [model, setModel] = useState("bytedance/seedance-2.5/text-to-video");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -117,8 +122,8 @@ export function AiVideoWorkspace() {
     setError("");
     setResult(null);
 
-    if (!image && !isSeedance) {
-      setError("このモデルでは画像を1枚選択してください。");
+    if (!image && !video && !isSeedance) {
+      setError("このモデルでは画像または動画素材を1つ追加してください。");
       return;
     }
     if (!prompt.trim()) {
@@ -130,10 +135,15 @@ export function AiVideoWorkspace() {
       return;
     }
 
-    setStatus("画像をアップロードしています…");
+    setStatus("素材を準備しています…");
 
     const form = new FormData();
     if (image) form.set("image", image);
+    if (video) form.set("video", video);
+    if (audio) form.set("audio", audio);
+    form.set("bgm", bgm ? "on" : "off");
+    form.set("narration", narration ? "on" : "off");
+    form.set("sfx", sfx ? "on" : "off");
     form.set("prompt", prompt.trim());
     form.set("duration", duration);
     form.set("aspect_ratio", aspectRatio);
@@ -191,10 +201,10 @@ export function AiVideoWorkspace() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">01 / SOURCE</p>
-                <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Give it a subject.</h2>
+                <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">Bring your idea in.</h2>
               </div>
               <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">
-                {isSeedance ? "Image optional" : "Image required"}
+                {isSeedance ? "Reference optional" : "Reference required"}
               </span>
             </div>
 
@@ -203,16 +213,18 @@ export function AiVideoWorkspace() {
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-white/10 text-xl font-light text-zinc-500 transition group-hover:border-white/30 group-hover:text-white">
                   +
                 </div>
-                <p className="text-sm text-zinc-200">{image ? image.name : "Drop a product image"}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600">JPG · PNG · WEBP</p>
+                <p className="text-sm text-zinc-200">{image ? image.name : "Drop an image, video, or choose a file"}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-zinc-600">IMAGE · VIDEO</p>
               </div>
               <input
                 className="sr-only"
                 type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
+                accept="image/*,video/*"
+                onChange={(e) => { const file = e.target.files?.[0] || null; if (!file) return; if (file.type.startsWith("video/")) setVideo(file); else setImage(file); }}
               />
             </label>
+
+            {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={URL.createObjectURL(video)} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
 
             {preview && (
               <div className="mt-4 overflow-hidden border border-white/10 bg-black">
@@ -235,13 +247,13 @@ export function AiVideoWorkspace() {
               onChange={(e) => setPrompt(e.target.value)}
               rows={8}
               maxLength={5000}
-              placeholder="Slow dolly-in. The product catches late-afternoon light. Camera arcs around the subject. Premium editorial mood. End on a clean hero frame."
+              placeholder="Describe the scene, story, camera, light, pacing, character, atmosphere — anything you want to see."
               className="mt-6 min-h-40 w-full resize-none border border-white/10 bg-black/60 px-4 py-4 text-sm leading-6 text-white placeholder:text-zinc-700 transition focus:border-white/35 focus:outline-none"
             />
 
             <div className="mt-3 flex items-center justify-between gap-4 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
               <span>Natural language direction</span>
-              <span className="hidden sm:inline">Camera · Light · Pace · Mood</span>
+              <span className="hidden sm:inline">Camera · Light · Pace · Mood · Story</span>
             </div>
           </section>
         </div>
@@ -350,7 +362,7 @@ export function AiVideoWorkspace() {
               </div>
 
               <label className="flex cursor-pointer items-center justify-between border-t border-white/10 pt-4 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-                <span>Sound design</span>
+                <span>Generated audio</span>
                 <input
                   type="checkbox"
                   checked={sound}
@@ -358,6 +370,27 @@ export function AiVideoWorkspace() {
                   onChange={(e) => setSound(e.target.checked)}
                   className="h-4 w-4 accent-white disabled:opacity-30"
                 />
+              </label>
+
+              <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
+                {[
+                  ["BGM", bgm, setBgm],
+                  ["Narration", narration, setNarration],
+                  ["SFX", sfx, setSfx],
+                ].map(([label, value, setter]) => (
+                  <button
+                    key={String(label)}
+                    type="button"
+                    onClick={() => (setter as (next: boolean) => void)(!Boolean(value))}
+                    className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${value ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}
+                  >
+                    {String(label)}
+                  </button>
+                ))}
+              </div>
+              <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+                Audio reference
+                <input type="file" accept="audio/*" onChange={(e) => setAudio(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs normal-case tracking-normal text-zinc-400 file:mr-2 file:border file:border-white/10 file:bg-black file:px-2 file:py-2 file:text-zinc-300" />
               </label>
 
               <div className="border-t border-white/10 pt-4 text-[10px] leading-5 text-zinc-600">
