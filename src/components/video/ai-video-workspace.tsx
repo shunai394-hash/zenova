@@ -372,21 +372,17 @@ export function AiVideoWorkspace() {
               </label>
 
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
-                {[
-                  ["BGM", bgm, setBgm],
-                  ["Narration", narration, setNarration],
-                  ["SFX", sfx, setSfx],
-                ].map(([label, value, setter]) => (
-                  <button
-                    key={String(label)}
-                    type="button"
-                    onClick={() => (setter as (next: boolean) => void)(!Boolean(value))}
-                    className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${value ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}
-                  >
-                    {String(label)}
-                  </button>
-                ))}
+                <button type="button" onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                  BGM
+                </button>
+                <button type="button" onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                  Narration
+                </button>
+                <button type="button" onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"}`}>
+                  SFX
+                </button>
               </div>
+
               <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
                 Audio reference
                 <input type="file" accept="audio/*" onChange={(e) => setAudio(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs normal-case tracking-normal text-zinc-400 file:mr-2 file:border file:border-white/10 file:bg-black file:px-2 file:py-2 file:text-zinc-300" />
