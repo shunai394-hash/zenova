@@ -495,46 +495,39 @@ export async function mergeVideoWithNarrationAndBgm(input: {
     throw new Error("narrationPath または bgmPath が必要です");
   }
 
-  const args = [
-    "-y",
-    "-i",
-    input.videoPath,
-  ];
+  const args = ["-y", "-i", input.videoPath];
 
-  if (narrationPath) {
-    args.push("-i", narrationPath);
-  }
-
-  if (bgmPath) {
-    args.push("-stream_loop", "-1", "-i", bgmPath);
-  }
+  if (narrationPath) args.push("-i", narrationPath);
+  if (bgmPath) args.push("-stream_loop", "-1", "-i", bgmPath);
 
   const narrationIndex = narrationPath ? 1 : -1;
   const bgmIndex = bgmPath ? (narrationPath ? 2 : 1) : -1;
-
   const filters: string[] = [];
-  const mixInputs: string[] = [];
 
   if (narrationPath) {
     filters.push(
-      `[${narrationIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[narration]`
+      `[${narrationIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,loudnorm=I=-16:TP=-1.5:LRA=11[narration]`
     );
-    mixInputs.push("[narration]");
   }
 
   if (bgmPath) {
     filters.push(
-      `[${bgmIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=${bgmVolume},aloop=loop=-1:size=2e+09[bgm]`
+      `[${bgmIndex}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=${bgmVolume},loudnorm=I=-28:TP=-8:LRA=12[bgm]`
     );
-    mixInputs.push("[bgm]");
   }
 
-  if (mixInputs.length === 1) {
-    filters.push(`${mixInputs[0]}apad[aout]`);
-  } else {
+  if (narrationPath && bgmPath) {
+    // ナレーションを主役にし、BGMは発話中に自動で下げる。
     filters.push(
-      `${mixInputs.join("")}amix=inputs=${mixInputs.length}:duration=first:dropout_transition=2:normalize=0[aout]`
+      "[bgm][narration]sidechaincompress=threshold=0.025:ratio=8:attack=20:release=280:makeup=0[ducked_bgm]"
     );
+    filters.push(
+      "[narration][ducked_bgm]amix=inputs=2:duration=first:dropout_transition=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=10[aout]"
+    );
+  } else if (narrationPath) {
+    filters.push("[narration]apad[aout]");
+  } else {
+    filters.push("[bgm]apad[aout]");
   }
 
   args.push(
@@ -558,8 +551,62 @@ export async function mergeVideoWithNarrationAndBgm(input: {
 
   console.log(
     `[video-composer] mix narration=${narrationPath ?? "none"} ` +
-      `bgm=${bgmPath ?? "none"} volume=${bgmVolume} out=${input.outputPath}`
+      `bgm=${bgmPath ?? "none"} volume=${bgmVolume} ducking=${Boolean(narrationPath && bgmPath)} ` +
+      `out=${input.outputPath}`
   );
 
-  await runFfmpeg(args);
+  try {
+    await runFfmpeg(args);
+  } catch (error) {
+    console.warn(
+      "[video-composer] audio mix failed; retrying without loudness filters",
+      error instanceof Error ? error.message : error
+    );
+
+    const fallbackFilters: string[] = [];
+    if (narrationPath) {
+      fallbackFilters.push(
+        `[${narrationIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[narration]`
+      );
+    }
+    if (bgmPath) {
+      fallbackFilters.push(
+        `[${bgmIndex}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=${bgmVolume}[bgm]`
+      );
+    }
+    if (narrationPath && bgmPath) {
+      fallbackFilters.push(
+        "[bgm][narration]sidechaincompress=threshold=0.025:ratio=6:attack=20:release=280:makeup=0[ducked_bgm]",
+        "[narration][ducked_bgm]amix=inputs=2:duration=first:dropout_transition=2:normalize=0,alimiter=limit=0.95[aout]"
+      );
+    } else if (narrationPath) {
+      fallbackFilters.push("[narration]apad[aout]");
+    } else {
+      fallbackFilters.push("[bgm]apad[aout]");
+    }
+
+    await runFfmpeg([
+      "-y",
+      "-i",
+      input.videoPath,
+      ...(narrationPath ? ["-i", narrationPath] : []),
+      ...(bgmPath ? ["-stream_loop", "-1", "-i", bgmPath] : []),
+      "-filter_complex",
+      fallbackFilters.join(";"),
+      "-map",
+      "0:v:0",
+      "-map",
+      "[aout]",
+      "-c:v",
+      "copy",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-shortest",
+      "-movflags",
+      "+faststart",
+      input.outputPath,
+    ]);
+  }
 }
