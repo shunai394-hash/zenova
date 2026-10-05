@@ -188,7 +188,9 @@ export function AiVideoWorkspace() {
       }
 
       if (current === "failed" || current === "error") {
-        throw new Error(data.error || "Higgsfieldで動画生成に失敗しました");
+        // Provider has reached a terminal state; the saved job is no longer resumable.
+        localStorage.removeItem("zenova-video-active-job");
+        throw new Error(String(data.error || "Higgsfieldで動画生成に失敗しました"));
       }
 
       setStatus(
