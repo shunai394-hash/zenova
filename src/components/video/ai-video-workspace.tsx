@@ -648,7 +648,7 @@ export function AiVideoWorkspace() {
               </div>
 
               <label className="flex cursor-pointer items-center justify-between border-t border-white/10 pt-4 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-                <span>Generated audio</span>
+                <span>Generated sound</span>
                 <input
                   type="checkbox"
                   checked={sound}
@@ -658,7 +658,7 @@ export function AiVideoWorkspace() {
                 />
               </label>
 
-              <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
+              <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4" aria-label="Sound direction">
                 <button type="button" disabled={!sound} onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   BGM
                 </button>
@@ -673,7 +673,12 @@ export function AiVideoWorkspace() {
               <label className="block text-[10px] uppercase tracking-[0.16em] text-zinc-600">
                 Audio reference
                 <input type="file" accept="audio/*" onChange={(e) => setAudio(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs normal-case tracking-normal text-zinc-400 file:mr-2 file:border file:border-white/10 file:bg-black file:px-2 file:py-2 file:text-zinc-300" />
+                {audio && <span className="mt-2 block normal-case tracking-normal text-zinc-500">{audio.name}</span>}
               </label>
+
+              <div className="border-t border-white/10 pt-4 text-[10px] leading-5 text-zinc-600">
+                Sound direction is translated into the generation prompt; model audio capabilities vary. Uploaded audio is passed as a reference where supported.
+              </div>
 
               <div className="border-t border-white/10 pt-4 text-[10px] leading-5 text-zinc-600">
                 {isSeedance
