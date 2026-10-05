@@ -56,20 +56,15 @@ export function GenerationPreview({
       return;
     }
 
-    // 実ステータスがあれば優先、なければ時間ベースのフォールバック
+    // 実ステータスが届いた場合だけステージを進める。
+    // 経過時間からバックエンド状態を推測すると、実際より先に
+    // 「完了」に見えてしまうため、推測値は表示しない。
     const fromStatus = generationStatusIndex(generationStatus);
-    if (fromStatus >= 0 && generationStatus !== "idle") {
-      setStageIndex(Math.min(fromStatus, GENERATE_PROGRESS_STAGES.length - 1));
-      return;
-    }
-
-    setStageIndex(0);
-    const timers = [
-      window.setTimeout(() => setStageIndex(1), 2500),
-      window.setTimeout(() => setStageIndex(2), 6000),
-      window.setTimeout(() => setStageIndex(3), 12000),
-    ];
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    setStageIndex(
+      fromStatus >= 0 && generationStatus !== "idle"
+        ? Math.min(fromStatus, GENERATE_PROGRESS_STAGES.length - 1)
+        : 0
+    );
   }, [phase, generationStatus]);
 
   if (phase === "complete") return null;
@@ -94,26 +89,35 @@ export function GenerationPreview({
   }
 
   if (phase === "generating") {
-    const pct = Math.round(
-      ((stageIndex + 1) / GENERATE_PROGRESS_STAGES.length) * 100
-    );
+    const hasMeasuredStatus =
+      generationStatus !== "idle" &&
+      generationStatusIndex(generationStatus) >= 0;
+    const pct = hasMeasuredStatus
+      ? Math.round(
+          ((stageIndex + 1) / GENERATE_PROGRESS_STAGES.length) * 100
+        )
+      : null;
     return (
       <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-950/15 p-5 sm:p-6">
         <h3 className="text-base font-semibold text-amber-100">
           AI動画を作成中...
         </h3>
         <p className="mt-1 text-xs text-amber-200/70">
-          {getGenerationStatusLabel(
-            generationStatus === "idle" ? "generating" : generationStatus
-          )}
+          {hasMeasuredStatus
+            ? getGenerationStatusLabel(generationStatus)
+            : "サーバーで生成処理を実行しています"}
           {" — "}
           完了まで数十秒〜数分かかることがあります
         </p>
 
         <div className="mt-5 h-2 overflow-hidden rounded-full bg-zinc-800">
           <div
-            className="h-full rounded-full bg-amber-400 transition-all duration-700"
-            style={{ width: `${pct}%` }}
+            className={
+              hasMeasuredStatus
+                ? "h-full rounded-full bg-amber-400 transition-all duration-700"
+                : "h-full w-1/3 animate-pulse rounded-full bg-amber-400"
+            }
+            style={hasMeasuredStatus ? { width: `${pct}%` } : undefined}
           />
         </div>
 
