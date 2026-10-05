@@ -59,12 +59,19 @@ export function AiVideoWorkspace() {
   const rendering = isGenerating;
 
   useEffect(() => {
+    if (!supportsSound && sound) {
+      setSound(false);
+      setBgm(false);
+      setNarration(false);
+      setSfx(false);
+      return;
+    }
     if (!sound) {
       setBgm(false);
       setNarration(false);
       setSfx(false);
     }
-  }, [sound]);
+  }, [sound, supportsSound]);
 
   useEffect(() => {
     if (!video) {
@@ -693,7 +700,7 @@ export function AiVideoWorkspace() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">05 / RENDER</p>
-              <p className="mt-1 text-sm text-zinc-400">
+              <p aria-live="polite" className="mt-1 text-sm text-zinc-400">
                 {status || "Everything is ready. Make the move."}
               </p>
             </div>
@@ -718,8 +725,17 @@ export function AiVideoWorkspace() {
           )}
 
           {error && (
-            <div className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
-              {error}
+            <div role="alert" className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
+              <div>{error}</div>
+              {!rendering && (
+                <button
+                  type="button"
+                  onClick={() => void generate()}
+                  className="mt-3 border border-red-300/20 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-red-200 transition hover:border-red-300/50"
+                >
+                  Try again
+                </button>
+              )}
             </div>
           )}
         </div>
