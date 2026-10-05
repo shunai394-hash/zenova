@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
       narration ? "include spoken narration or voiceover" : "no spoken narration",
       sfx ? "include purposeful sound effects" : "no added sound effects",
     ].join(", ");
-    const directedPrompt = `${prompt}\\n\\nAudio direction: ${audioDirections}.`;
+    const directedPrompt = `${prompt}\n\nAudio direction: ${audioDirections}.`;
     const imageUrl = image instanceof File ? await uploadMedia(image) : null;
     const videoUrl = video instanceof File ? await uploadMedia(video) : null;
     const audioUrl = audio instanceof File ? await uploadMedia(audio) : null;
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
     if (seedance && videoUrl) {
       endpointModel = "bytedance/seedance-2.5/video-edit";
       input = {
-        prompt,
+        prompt: directedPrompt,
         video_url: videoUrl,
         duration,
         resolution: "720p",
@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
     } else if (seedance && (imageUrl || audioUrl)) {
       endpointModel = "bytedance/seedance-2.5/reference-to-video";
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         resolution: "720p",
         aspect_ratio: aspectRatio,
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
     } else if (seedance) {
       endpointModel = "bytedance/seedance-2.5/text-to-video";
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         resolution: "720p",
         aspect_ratio: aspectRatio,
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
       };
     } else if (model === "alibaba/wan-3.0-prime/image-to-video") {
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         image_url: imageUrl,
         aspect_ratio: aspectRatio,
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
       };
     } else if (model === "minimax/h3/image-to-video") {
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         image_url: imageUrl,
         aspect_ratio: aspectRatio,
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
       };
     } else if (model === "kling-video/v3.0/pro/image-to-video") {
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         image_url: imageUrl,
         sound: sound ? "on" : "off",
@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
       };
     } else {
       input = {
-        prompt,
+        prompt: directedPrompt,
         duration,
         image_url: imageUrl,
         resolution: "720p",
@@ -261,6 +261,7 @@ export async function POST(req: NextRequest) {
       duration_sec: duration,
       aspect_ratio: aspectRatio,
       sound,
+      audio_direction: { bgm, narration, sfx },
       inputs: {
         image: Boolean(imageUrl),
         video: Boolean(videoUrl),
