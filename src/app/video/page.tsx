@@ -27,7 +27,9 @@ export default function VideoPage() {
                   <span className="text-zinc-500">Make it move.</span>
                 </h1>
                 <p className="mt-8 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
-                  画像、動画、音声、そしてあなたの言葉から、ひとつの映像をつくる。\n                  <br className="hidden sm:block" />\n                  プロダクト、物語、キャラクター、ショートフィルムまで。
+                  画像、動画、音声、そしてあなたの言葉から、ひとつの映像をつくる。
+                  <br className="hidden sm:block" />
+                  プロダクト、物語、キャラクター、ショートフィルムまで。
                 </p>
               </div>
 
