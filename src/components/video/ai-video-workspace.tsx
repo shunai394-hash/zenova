@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Result = {
   video_url: string;
@@ -129,7 +129,7 @@ export function AiVideoWorkspace() {
       .catch(() => {});
   }, []);
 
-  async function pollVideo(
+  const pollVideo = useCallback(async (
     requestId: string,
     meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound">,
     cancelToken: string
@@ -176,7 +176,7 @@ export function AiVideoWorkspace() {
     throw new Error(
       "生成に時間がかかっています。request_id を保持したまま再試行できる状態です。"
     );
-  }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -270,7 +270,7 @@ export function AiVideoWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [pollVideo]);
   
   function resumeActiveRender() {
     const raw = localStorage.getItem("zenova-video-active-job");
