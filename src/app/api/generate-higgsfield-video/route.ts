@@ -107,6 +107,9 @@ export async function POST(req: NextRequest) {
     const requestedDuration = Number(form.get("duration") || 5);
     const aspectRatio = String(form.get("aspect_ratio") || "9:16");
     const sound = String(form.get("sound") || "on") === "on";
+    const bgm = String(form.get("bgm") || "off") === "on";
+    const narration = String(form.get("narration") || "off") === "on";
+    const sfx = String(form.get("sfx") || "off") === "on";
 
     if (!SUPPORTED_MODELS.has(model)) {
       return NextResponse.json({ error: "model が不正です" }, { status: 400 });
@@ -152,6 +155,12 @@ export async function POST(req: NextRequest) {
     }
 
     const duration = modelDurationClamp(model, requestedDuration);
+    const audioDirections = [
+      bgm ? "include background music" : "no background music",
+      narration ? "include spoken narration or voiceover" : "no spoken narration",
+      sfx ? "include purposeful sound effects" : "no added sound effects",
+    ].join(", ");
+    const directedPrompt = `${prompt}\\n\\nAudio direction: ${audioDirections}.`;
     const imageUrl = image instanceof File ? await uploadMedia(image) : null;
     const videoUrl = video instanceof File ? await uploadMedia(video) : null;
     const audioUrl = audio instanceof File ? await uploadMedia(audio) : null;
@@ -168,16 +177,13 @@ export async function POST(req: NextRequest) {
         video_url: videoUrl,
         duration,
         resolution: "720p",
-        aspect_ratio: aspectRatio,
         output_format: "mp4",
         generate_audio: sound,
         ...(imageUrl ? { image_urls: [imageUrl] } : {}),
         ...(audioUrl ? { audio_urls: [audioUrl] } : {}),
       };
-    } else if (seedance) {
-      endpointModel = imageUrl
-        ? "bytedance/seedance-2.5/reference-to-video"
-        : "bytedance/seedance-2.5/text-to-video";
+    } else if (seedance && (imageUrl || audioUrl)) {
+      endpointModel = "bytedance/seedance-2.5/reference-to-video";
       input = {
         prompt,
         duration,
@@ -187,6 +193,16 @@ export async function POST(req: NextRequest) {
         generate_audio: sound,
         ...(imageUrl ? { image_urls: [imageUrl] } : {}),
         ...(audioUrl ? { audio_urls: [audioUrl] } : {}),
+      };
+    } else if (seedance) {
+      endpointModel = "bytedance/seedance-2.5/text-to-video";
+      input = {
+        prompt,
+        duration,
+        resolution: "720p",
+        aspect_ratio: aspectRatio,
+        output_format: "mp4",
+        generate_audio: sound,
       };
     } else if (model === "alibaba/wan-3.0-prime/image-to-video") {
       input = {
