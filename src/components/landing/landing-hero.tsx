@@ -63,6 +63,7 @@ export function LandingHero() {
   return (
     <section
       id="hero"
+      aria-busy={loading}
       className="scroll-mt-20 border-b border-zinc-900 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14"
     >
       <div className="mx-auto max-w-3xl text-center">
@@ -92,16 +93,17 @@ export function LandingHero() {
               disabled={loading}
               className="min-h-12 w-full flex-1 rounded-xl bg-black px-4 py-3.5 text-base text-white outline-none ring-1 ring-zinc-700 placeholder:text-gray-500 focus:ring-zinc-400 disabled:opacity-50"
               aria-label="商品URL"
+              aria-describedby={error ? "hero-url-error" : undefined}
             />
             <button
               type="button"
               onClick={submitUrl}
               disabled={loading}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black outline-none transition hover:-translate-y-0.5 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
             >
               {loading ? (
                 <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" aria-hidden="true" />
                   準備中...
                 </>
               ) : (
@@ -123,7 +125,7 @@ export function LandingHero() {
           </div>
 
           {error && (
-            <p className="mt-3 text-left text-sm text-red-300" role="alert">
+            <p id="hero-url-error" className="mt-3 text-left text-sm text-red-300" role="alert">
               {error}
             </p>
           )}
@@ -148,7 +150,7 @@ export function LandingHero() {
             type="button"
             disabled={loading}
             onClick={() => fileRef.current?.click()}
-            className="min-h-12 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-50"
+            className="min-h-12 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 outline-none transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:opacity-50"
           >
             {CTA_UPLOAD_IMAGE}
           </button>
