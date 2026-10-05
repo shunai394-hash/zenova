@@ -184,6 +184,7 @@ export async function POST(req: NextRequest) {
       effectiveBgm ? "include background music" : "no background music",
       effectiveNarration ? "include spoken narration or voiceover" : "no spoken narration",
       effectiveSfx ? "include purposeful sound effects" : "no added sound effects",
+      audioUrl ? "use the uploaded audio reference where supported" : "no uploaded audio reference",
     ].join(", ");
     const directedPrompt = `${prompt}\n\nAudio direction: ${audioDirections}.`;
     const imageUrl = image instanceof File ? await uploadMedia(image) : null;
