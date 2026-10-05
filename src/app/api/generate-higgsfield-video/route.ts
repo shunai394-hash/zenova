@@ -114,8 +114,6 @@ export async function POST(req: NextRequest) {
       }, { status: 402 });
     }
 
-    recordVideoGenerationAttempt(user.id);
-
     const form = await req.formData();
     const image = form.get("image");
     const video = form.get("video");
@@ -266,6 +264,9 @@ export async function POST(req: NextRequest) {
         resolution: "720p",
       };
     }
+
+    // Count only a validated generation attempt, not malformed input.
+    recordVideoGenerationAttempt(user.id);
 
     const submit = await hfFetch(`/${endpointModel}`, {
       method: "POST",
