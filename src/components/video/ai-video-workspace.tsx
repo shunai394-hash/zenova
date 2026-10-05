@@ -805,10 +805,10 @@ export function AiVideoWorkspace() {
             <button
               type="button"
               onClick={() => void generate()}
-              disabled={rendering}
+              disabled={rendering || recoverable}
               className="border border-white bg-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
             >
-              {rendering ? (recovering ? "Recovering…" : "Rendering…") : result ? "Create next take" : "Create film"}
+              {rendering ? (recovering ? "Recovering…" : "Rendering…") : recoverable ? "Resume existing render" : result ? "Create next take" : "Create film"}
             </button>
           </div>
 
