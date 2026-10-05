@@ -446,6 +446,7 @@ export function AiVideoWorkspace() {
     }
 
     setIsGenerating(true);
+    setProviderStatus("queued");
     setStartedAt(Date.now());
     setActiveRequestId(null);
     setStatus("素材を準備しています…");
@@ -515,7 +516,7 @@ export function AiVideoWorkspace() {
       };
       setResult(completedWithContext);
       setHistory((current) => {
-        const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
+        const next = [completedWithContext, ...current.filter((item) => item.video_url !== completedWithContext.video_url)].slice(0, 6);
         localStorage.setItem("zenova-video-history", JSON.stringify(next));
         return next;
       });
