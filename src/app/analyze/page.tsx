@@ -446,6 +446,7 @@ export default function Home() {
   const [salesVideoHook, setSalesVideoHook] = useState<string | null>(null);
   const [salesVideoAngle, setSalesVideoAngle] = useState<string | null>(null);
   const [salesVideoError, setSalesVideoError] = useState<string | null>(null);
+  const [salesVideoWarnings, setSalesVideoWarnings] = useState<string[]>([]);
   const [enginePrepMessage, setEnginePrepMessage] = useState<string | null>(
     null
   );
@@ -820,6 +821,7 @@ export default function Home() {
     setSalesVideoHook(null);
     setSalesVideoAngle(null);
     setSalesVideoError(null);
+    setSalesVideoWarnings([]);
     setSalesVideoSteps(EMPTY_SALES_VIDEO_STEPS);
     setGenerationStatus("idle");
   };
