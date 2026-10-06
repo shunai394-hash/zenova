@@ -2451,7 +2451,7 @@ export default function Home() {
                   </p>
                   <Link
                     href="/preview"
-                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-gray-200"
+                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                   >
                     動画プレビュー画面を開く
                   </Link>
@@ -2504,7 +2504,7 @@ export default function Home() {
                         }
                       })();
                     }}
-                    className="w-full rounded-xl bg-white px-5 py-4 text-base font-semibold text-black hover:bg-gray-100 disabled:opacity-40"
+                    className="w-full rounded-xl bg-white px-5 py-4 text-base font-semibold text-black transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-40"
                   >
                     {salesVideoDownloading
                       ? "ダウンロード中..."
@@ -2514,7 +2514,7 @@ export default function Home() {
                     type="button"
                     onClick={() => void createSalesVideo()}
                     disabled={!canCreateSalesVideo}
-                    className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-gray-300 hover:bg-zinc-800 disabled:opacity-40"
+                    className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-gray-300 transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-40"
                   >
                     もう一度生成する
                   </button>
