@@ -17,6 +17,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "session_id is required" }, { status: 400 });
     }
 
+    const metadata = body.metadata && typeof body.metadata === "object" && !Array.isArray(body.metadata) ? body.metadata : {};
+    if (JSON.stringify(metadata).length > 4000) {
+      return NextResponse.json({ error: "metadata too large" }, { status: 413 });
+    }
+
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -28,9 +33,7 @@ export async function POST(req: NextRequest) {
       medium: typeof body.medium === "string" ? body.medium.slice(0, 100) : null,
       campaign: typeof body.campaign === "string" ? body.campaign.slice(0, 200) : null,
       content: typeof body.content === "string" ? body.content.slice(0, 200) : null,
-      metadata: body.metadata && typeof body.metadata === "object" && !Array.isArray(body.metadata)
-        ? body.metadata
-        : {},
+      metadata,
       userId: user?.id ?? null,
     });
 
