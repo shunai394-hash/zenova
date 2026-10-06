@@ -153,7 +153,7 @@ function CheckoutContent() {
             </p>
             <Link
               href="/pricing"
-              className="inline-block rounded border border-zinc-700 px-4 py-2 text-sm text-gray-300 hover:bg-zinc-900"
+              className="inline-block rounded border border-zinc-700 px-4 py-2 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               料金プランへ戻る
             </Link>
@@ -220,13 +220,13 @@ function CheckoutContent() {
               )}
               <Link
                 href="/pricing"
-                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900"
+                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 プランを選び直す
               </Link>
               <Link
                 href="/analyze"
-                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900"
+                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Analyze へ
               </Link>
