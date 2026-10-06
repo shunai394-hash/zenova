@@ -270,7 +270,7 @@ export function AiVideoWorkspace() {
       )
         .then((completed) => {
           if (cancelled) return;
-          setResult(completed);
+          setResult({ ...completed, source_model: job.source_model || job.model });
           setHistory((current) => {
             const next = [
               completed,
