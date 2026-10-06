@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PlanRecord } from "@/lib/usage";
 import { SiteHeader } from "@/components/site-header";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 const PLAN_ORDER = ["free", "starter", "pro"] as const;
 
@@ -78,6 +79,7 @@ export default function PricingPage() {
   const [usage, setUsage] = useState<UsageView | null>(null);
 
   useEffect(() => {
+    trackSalesFunnel("pricing_view");
     let cancelled = false;
     void (async () => {
       setLoading(true);
@@ -292,7 +294,8 @@ export default function PricingPage() {
                     </Link>
                   ) : (
                     <Link
-                      href={`/checkout?plan=${encodeURIComponent(plan.id)}`}
+                      onClick={() => trackSalesFunnel("checkout_started", { plan_id: plan.id, stage: "pricing" })}
+                      href={`/checkout?plan=${encodeURIComponent(plan.id)}`
                       className={`mt-6 block w-full rounded px-4 py-2.5 text-center text-sm font-medium transition ${
                         recommended
                           ? "bg-white text-black hover:bg-gray-200"
