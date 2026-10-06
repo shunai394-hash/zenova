@@ -9,6 +9,7 @@ import {
   DEMO_SECTION_TITLE,
   type DemoCompositionItem,
 } from "@/lib/landing/demo-compositions";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 function PlayIcon({ className }: { className?: string }) {
   return (
@@ -82,6 +83,7 @@ function DemoCard({
           プレビューを見る
         </button>
         <Link
+          onClick={() => trackSalesFunnel("cta_click", { mode: "sample_create", template: demo.templateKey })}
           href={buildAnalyzeDemoHref(demo.templateKey)}
           className="inline-flex w-full items-center justify-center rounded-xl bg-white px-3 py-2.5 text-center text-xs font-semibold text-black transition hover:bg-gray-200"
         >
