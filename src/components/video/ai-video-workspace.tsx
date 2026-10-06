@@ -139,7 +139,7 @@ export function AiVideoWorkspace() {
     requestId: string,
     meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound">,
     cancelToken: string
-  ): Promise<Result> {
+  ): Promise<Result> => {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
 
     let transientErrors = 0;
