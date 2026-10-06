@@ -3,7 +3,7 @@
 const SESSION_KEY = "zenova:funnel-session";
 const ATTR_KEY = "zenova:funnel-attribution";
 
-function getSessionId(): string {
+export function getSalesFunnelSessionId(): string {
   try {
     const existing = window.localStorage.getItem(SESSION_KEY);
     if (existing) return existing;
@@ -34,15 +34,12 @@ function getAttribution() {
   }
 }
 
-export function trackSalesFunnel(
-  event: string,
-  metadata: Record<string, unknown> = {}
-): void {
+export function trackSalesFunnel(event: string, metadata: Record<string, unknown> = {}): void {
   if (typeof window === "undefined") return;
   const oncePerSession = event === "landing_view" || event === "pricing_view";
   if (oncePerSession) {
     try {
-      const key = `zenova:funnel-once:${event}`;
+      const key = "zenova:funnel-once:" + event;
       if (window.sessionStorage.getItem(key) === "1") return;
       window.sessionStorage.setItem(key, "1");
     } catch {}
@@ -55,10 +52,20 @@ export function trackSalesFunnel(
     keepalive: true,
     body: JSON.stringify({
       event,
-      session_id: getSessionId(),
+      session_id: getSalesFunnelSessionId(),
       path: window.location.pathname,
       ...attribution,
       metadata,
     }),
+  }).catch(() => {});
+}
+
+export function claimSalesFunnelSession(): void {
+  if (typeof window === "undefined") return;
+  void fetch("/api/funnel/claim", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ session_id: getSalesFunnelSessionId() }),
   }).catch(() => {});
 }
