@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { PlanRecord } from "@/lib/usage";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 function formatPrice(price: number): string {
   if (price <= 0) return "¥0";
@@ -24,6 +25,7 @@ function CheckoutContent() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
+    trackSalesFunnel(success ? "checkout_succeeded" : canceled ? "pricing_view" : "checkout_started", { plan_id: planId, result: success ? "success" : canceled ? "canceled" : "view" });
     let cancelled = false;
     void (async () => {
       setLoading(true);
@@ -57,6 +59,7 @@ function CheckoutContent() {
 
   const startCheckout = async () => {
     if (!selected || selected.id === "free") return;
+    trackSalesFunnel("checkout_started", { plan_id: selected.id, stage: "checkout" });
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
