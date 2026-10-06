@@ -232,6 +232,7 @@ export function AiVideoWorkspace() {
         cancelToken?: string;
         startedAt?: number;
         model?: string;
+        source_model?: string;
         duration_sec?: number;
         aspect_ratio?: string;
         sound?: boolean;
@@ -331,6 +332,7 @@ export function AiVideoWorkspace() {
         cancelToken?: string;
         startedAt?: number;
         model?: string;
+        source_model?: string;
         duration_sec?: number;
         aspect_ratio?: string;
         sound?: boolean;
@@ -353,6 +355,7 @@ export function AiVideoWorkspace() {
         job.requestId,
         {
           model: job.model,
+          source_model: job.source_model,
           duration_sec: Number(job.duration_sec),
           aspect_ratio: job.aspect_ratio,
           sound: Boolean(job.sound),
@@ -927,7 +930,7 @@ export function AiVideoWorkspace() {
   if (typeof item.sfx === "boolean") setSfx(item.sfx);
   setDuration(String(item.duration_sec));
   setAspectRatio(item.aspect_ratio);
-  setModel(item.model);
+  setModel(item.source_model || item.model);
   setSound(item.sound);
   setError("");
   setStatus("Take restored. You can direct the next version.");
