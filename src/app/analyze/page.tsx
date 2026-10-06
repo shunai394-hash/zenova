@@ -79,6 +79,7 @@ import {
 } from "@/lib/analyze/recommend-settings";
 import { resolveSampleTemplateKey } from "@/lib/landing/sample-videos";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 import {
   buildApiProductName,
   buildApiTarget,
@@ -1697,6 +1698,7 @@ export default function Home() {
       const imageBase64 = await blobToBase64(sourceBlob);
 
       const creative = planBriefToCreativePayload(effectiveBrief);
+      trackSalesFunnel("analysis_started", { platform, has_product_url: Boolean(productUrl), has_image: Boolean(productImagePreview) });
       const res = await fetch("/api/create-sales-video", {
         method: "POST",
         credentials: "same-origin",
