@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -40,6 +41,7 @@ function LoginForm() {
           },
         });
         if (signUpError) throw signUpError;
+        trackSalesFunnel("lead_captured", { method: "email", stage: "signup" });
         setMessage(
           "確認メールを送信しました。メール内のリンクからログインを完了してください。"
         );
