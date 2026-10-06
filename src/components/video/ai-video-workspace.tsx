@@ -27,6 +27,8 @@ type Usage = {
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
+type PollMeta = Pick<Result, "model" | "source_model" | "duration_sec" | "aspect_ratio" | "sound">;
+
 export function AiVideoWorkspace() {
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
@@ -136,11 +138,12 @@ export function AiVideoWorkspace() {
       .catch(() => {});
   }, []);
 
-  const pollVideo = useCallback(async (
-    requestId: string,
-    meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound"> & Pick<Result, "source_model">,
-    cancelToken: string
-  ): Promise<Result> => {
+  const pollVideo = useCallback(
+    async (
+      requestId: string,
+      meta: PollMeta,
+      cancelToken: string
+    ): Promise<Result> => {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
 
     let transientErrors = 0;
@@ -217,10 +220,12 @@ export function AiVideoWorkspace() {
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
 
-    throw new Error(
-      "生成に時間がかかっています。request_id を保持したまま再試行できる状態です。"
-    );
-  }, []);
+      throw new Error(
+        "生成に時間がかかっています。request_id を保持したまま再試行できる状態です。"
+      );
+    },
+    []
+  );
 
   useEffect(() => {
     let cancelled = false;
