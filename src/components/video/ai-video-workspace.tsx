@@ -138,7 +138,7 @@ export function AiVideoWorkspace() {
 
   const pollVideo = useCallback(async (
     requestId: string,
-    meta: Pick<Result, "model" | "source_model" | "duration_sec" | "aspect_ratio" | "sound">,
+    meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound"> & Pick<Result, "source_model">,
     cancelToken: string
   ): Promise<Result> => {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
