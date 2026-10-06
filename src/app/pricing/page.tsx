@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PlanRecord } from "@/lib/usage";
 import { SiteHeader } from "@/components/site-header";
-import { trackSalesFunnel } from "@/lib/sales-funnel/client";
+import { claimSalesFunnelSession, trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 const PLAN_ORDER = ["free", "starter", "pro"] as const;
 
@@ -79,6 +79,7 @@ export default function PricingPage() {
   const [usage, setUsage] = useState<UsageView | null>(null);
 
   useEffect(() => {
+    claimSalesFunnelSession();
     trackSalesFunnel("pricing_view");
     let cancelled = false;
     void (async () => {
