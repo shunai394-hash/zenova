@@ -39,6 +39,14 @@ export function trackSalesFunnel(
   metadata: Record<string, unknown> = {}
 ): void {
   if (typeof window === "undefined") return;
+  const oncePerSession = event === "landing_view" || event === "pricing_view";
+  if (oncePerSession) {
+    try {
+      const key = `zenova:funnel-once:${event}`;
+      if (window.sessionStorage.getItem(key) === "1") return;
+      window.sessionStorage.setItem(key, "1");
+    } catch {}
+  }
   const attribution = getAttribution();
   void fetch("/api/funnel/event", {
     method: "POST",
