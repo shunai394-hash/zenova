@@ -1885,6 +1885,7 @@ export default function Home() {
               <input
                 id="product-url"
                 type="url"
+                maxLength={2048}
                 value={productUrl}
                 onChange={(e) => {
                   setProductUrl(e.target.value);
@@ -1929,6 +1930,7 @@ export default function Home() {
             <input
               id="product"
               type="text"
+              maxLength={200}
               value={productName}
               onChange={(e) => {
                 setProductName(e.target.value);
@@ -1950,6 +1952,7 @@ export default function Home() {
             <textarea
               id="description"
               rows={5}
+              maxLength={5000}
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
@@ -2008,6 +2011,7 @@ export default function Home() {
             <input
               id="target"
               type="text"
+              maxLength={300}
               value={target}
               onChange={(e) => {
                 setTarget(e.target.value);
@@ -2231,6 +2235,7 @@ export default function Home() {
                         </label>
                         <textarea
                           rows={2}
+                          maxLength={1000}
                           value={perfNotes}
                           onChange={(e) => setPerfNotes(e.target.value)}
                           disabled={busy}
