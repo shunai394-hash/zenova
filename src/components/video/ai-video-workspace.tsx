@@ -138,7 +138,7 @@ export function AiVideoWorkspace() {
 
   const pollVideo = useCallback(async (
     requestId: string,
-    meta: Pick<Result, "model" | "duration_sec" | "aspect_ratio" | "sound">,
+    meta: Pick<Result, "model" | "source_model" | "duration_sec" | "aspect_ratio" | "sound">,
     cancelToken: string
   ): Promise<Result> => {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
@@ -196,6 +196,7 @@ export function AiVideoWorkspace() {
           video_url: String(data.video_url),
           request_id: requestId,
           model: meta.model,
+          source_model: meta.source_model,
           duration_sec: meta.duration_sec,
           aspect_ratio: meta.aspect_ratio,
           sound: meta.sound,
@@ -273,7 +274,7 @@ export function AiVideoWorkspace() {
           setResult({ ...completed, source_model: job.source_model || job.model });
           setHistory((current) => {
             const next = [
-              completed,
+              { ...completed, source_model: completed.source_model || job.source_model || job.model },
               ...current.filter((item) => item.video_url !== completed.video_url),
             ].slice(0, 6);
             localStorage.setItem("zenova-video-history", JSON.stringify(next));
@@ -365,7 +366,7 @@ export function AiVideoWorkspace() {
         .then((completed) => {
           setResult(completed);
           setHistory((current) => {
-            const next = [completed, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
+            const next = [{ ...completed, source_model: completed.source_model || job.source_model || job.model }, ...current.filter((item) => item.video_url !== completed.video_url)].slice(0, 6);
             localStorage.setItem("zenova-video-history", JSON.stringify(next));
             return next;
           });
