@@ -50,7 +50,7 @@ function CheckoutContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [canceled, planId, success]);
 
   const selected = useMemo(
     () => plans.find((p) => p.id === planId) ?? null,
@@ -129,7 +129,7 @@ function CheckoutContent() {
         )}
 
         {loading && (
-          <p className="mt-10 text-sm text-gray-500">読み込み中...</p>
+          <p className="mt-10 text-sm text-gray-500" role="status" aria-live="polite">読み込み中...</p>
         )}
 
         {!loading && !planId && (
@@ -195,7 +195,7 @@ function CheckoutContent() {
             </dl>
 
             {checkoutError && (
-              <p className="mt-4 text-sm text-red-300">{checkoutError}</p>
+              <p className="mt-4 text-sm text-red-300" role="alert" aria-live="assertive">{checkoutError}</p>
             )}
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -211,7 +211,8 @@ function CheckoutContent() {
                   type="button"
                   onClick={() => void startCheckout()}
                   disabled={checkoutLoading}
-                  className="rounded bg-white px-4 py-2.5 text-sm font-medium text-black disabled:opacity-40"
+                  aria-busy={checkoutLoading}
+                  className="rounded bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {checkoutLoading
                     ? "準備中..."
