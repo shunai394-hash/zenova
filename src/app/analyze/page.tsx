@@ -2395,7 +2395,7 @@ export default function Home() {
               />
 
               {(generatePhase === "complete" || salesVideoError) && (
-                <div className="mt-6 rounded-xl border border-zinc-800 bg-black/40 p-4">
+                <div className="mt-6 rounded-xl border border-zinc-800 bg-black/40 p-4" aria-live="polite">
                   <h3 className="text-sm font-medium text-gray-300">
                     {generatePhase === "complete" ? "生成結果" : "生成進捗"}
                   </h3>
@@ -2478,6 +2478,7 @@ export default function Home() {
                     src={salesVideoUrl}
                     controls
                     playsInline
+                    aria-label="生成された販売動画"
                     className="w-full max-w-md rounded border border-zinc-800 bg-black"
                   />
                   <button
