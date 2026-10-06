@@ -768,7 +768,7 @@ export function AiVideoWorkspace() {
                   ))}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <input aria-label="Refine the next take" value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
+                  <input aria-label="Refine the next take" maxLength={1000} value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
                   <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
                 </div>
               </div>
