@@ -12,6 +12,7 @@ const LABELS: Record<string, string> = {
   analysis_started: "分析開始",
   video_generation_started: "動画生成開始",
   video_generation_succeeded: "動画生成成功",
+  video_generation_failed: "動画生成失敗",
   pricing_view: "料金ページ",
   checkout_started: "Checkout開始",
   checkout_succeeded: "決済成功",
