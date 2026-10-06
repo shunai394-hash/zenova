@@ -820,7 +820,6 @@ export default function Home() {
     setSalesVideoHook(null);
     setSalesVideoAngle(null);
     setSalesVideoError(null);
-    setSalesVideoWarnings([]);
     setSalesVideoSteps(EMPTY_SALES_VIDEO_STEPS);
     setGenerationStatus("idle");
   };
