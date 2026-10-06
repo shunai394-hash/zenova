@@ -509,6 +509,7 @@ export function AiVideoWorkspace() {
         requestId,
         {
           model: String(data.model || model),
+          source_model: model,
           duration_sec: Number(data.duration_sec || duration),
           aspect_ratio: String(data.aspect_ratio || aspectRatio),
           sound: Boolean(data.sound),
@@ -624,7 +625,7 @@ export function AiVideoWorkspace() {
               />
             </label>
 
-            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white">Remove source ×</button>}
+            {(image || video) && <button type="button" onClick={() => { setImage(null); setVideo(null); setError(""); }} className="mt-3 text-[9px] uppercase tracking-[0.18em] text-zinc-600 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808]">Remove source ×</button>}
 
             {video && <div className="mt-4 overflow-hidden border border-white/10 bg-black"><video src={videoPreview || undefined} controls muted playsInline className="max-h-72 w-full object-contain" /></div>}
 
@@ -724,7 +725,7 @@ export function AiVideoWorkspace() {
                         <button
                           type="button"
                           onClick={() => void cancelGeneration()}
-                          className="mt-3 border border-white/15 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-zinc-500 transition hover:border-white/40 hover:text-white"
+                          className="mt-3 border border-white/15 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-zinc-500 transition hover:border-white/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
                         >
                           Cancel render
                         </button>
@@ -769,7 +770,7 @@ export function AiVideoWorkspace() {
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input aria-label="Refine the next take" maxLength={1000} value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
-                  <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
+                  <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
                 </div>
               </div>
             )}
