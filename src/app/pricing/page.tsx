@@ -297,6 +297,7 @@ export default function PricingPage() {
                     <Link
                       onClick={() => trackSalesFunnel("checkout_started", { plan_id: plan.id, stage: "pricing" })}
                       href={`/checkout?plan=${encodeURIComponent(plan.id)}`}
+                      aria-label={`${plan.name}プランを選択してチェックアウトへ進む`}
                       className={`mt-6 block w-full rounded px-4 py-2.5 text-center text-sm font-medium transition ${
                         recommended
                           ? "bg-white text-black hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
