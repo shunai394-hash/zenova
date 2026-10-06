@@ -6,6 +6,7 @@ type Result = {
   video_url: string;
   request_id: string;
   model: string;
+  source_model?: string;
   duration_sec: number;
   aspect_ratio: string;
   sound: boolean;
@@ -259,6 +260,7 @@ export function AiVideoWorkspace() {
         job.requestId,
         {
           model: job.model,
+          source_model: job.source_model,
           duration_sec: Number(job.duration_sec),
           aspect_ratio: job.aspect_ratio,
           sound: Boolean(job.sound),
@@ -492,6 +494,7 @@ export function AiVideoWorkspace() {
           cancelToken,
           startedAt: Date.now(),
           model: String(data.model || model),
+          source_model: model,
           duration_sec: Number(data.duration_sec || duration),
           aspect_ratio: String(data.aspect_ratio || aspectRatio),
           sound: Boolean(data.sound),
