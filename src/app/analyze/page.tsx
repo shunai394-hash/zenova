@@ -2428,7 +2428,7 @@ export default function Home() {
                   </ul>
 
                   {salesVideoWarnings.length > 0 && (
-                    <div className="mt-4 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3">
+                    <div className="mt-4 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3" role="status" aria-live="polite">
                       <p className="text-xs font-medium text-amber-200">生成時の注意</p>
                       <ul className="mt-2 space-y-1 text-xs text-amber-300">
                         {salesVideoWarnings.map((warning) => (
@@ -2439,7 +2439,7 @@ export default function Home() {
                   )}
 
                   {salesVideoError && (
-                    <p className="mt-4 text-sm text-red-300" role="alert">
+                    <p className="mt-4 text-sm text-red-300" role="alert" aria-live="assertive">
                       {salesVideoError}
                     </p>
                   )}
