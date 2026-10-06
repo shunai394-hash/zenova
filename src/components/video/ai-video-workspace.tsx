@@ -517,6 +517,7 @@ export function AiVideoWorkspace() {
 
       const completedWithContext: Result = {
         ...completed,
+        source_model: model,
         prompt: effectivePrompt,
         bgm,
         narration,
