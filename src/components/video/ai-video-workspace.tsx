@@ -669,7 +669,7 @@ export function AiVideoWorkspace() {
                   key={label}
                   type="button"
                   onClick={() => setPrompt((current) => current.trim() ? current : value)}
-                  className="border border-white/10 px-2.5 py-2 text-[9px] uppercase tracking-[0.12em] text-zinc-600 transition hover:border-white/30 hover:text-white"
+                  className="border border-white/10 px-2.5 py-2 text-[9px] uppercase tracking-[0.12em] text-zinc-600 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808]"
                 >
                   {label}
                 </button>
@@ -763,13 +763,13 @@ export function AiVideoWorkspace() {
                 </div>
                 <div className="flex flex-wrap gap-2" aria-label="Quick refinement directions">
                   {["Closer", "Slower", "Darker", "More cinematic"].map((direction) => (
-                    <button key={direction} type="button" disabled={rendering} onClick={() => setRefinePrompt(direction)} className="border border-white/10 px-3 py-2 text-[9px] uppercase tracking-[0.14em] text-zinc-500 transition hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                    <button key={direction} type="button" disabled={rendering} onClick={() => setRefinePrompt(direction)} className="border border-white/10 px-3 py-2 text-[9px] uppercase tracking-[0.14em] text-zinc-500 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-40">
                       {direction}
                     </button>
                   ))}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <input aria-label="Refine the next take" maxLength={1000} value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none" />
+                  <input aria-label="Refine the next take" maxLength={1000} value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="Make the next take darker, slower, closer…" className="border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]" />
                   <button type="button" disabled={rendering || !refinePrompt.trim()} onClick={() => { const next = refinePrompt.trim(); if (!next) return; const nextPrompt = `${prompt.trim()}\n\nRefinement: ${next}`; setRefinePrompt(""); setPrompt(nextPrompt); void generate(nextPrompt); }} className="border border-white/20 px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-zinc-300 transition hover:border-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] disabled:cursor-not-allowed disabled:opacity-40">Refine ↗</button>
                 </div>
               </div>
@@ -951,7 +951,7 @@ export function AiVideoWorkspace() {
                     <button
                       type="button"
                       onClick={resumeActiveRender}
-                      className="border border-white/25 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-white transition hover:border-white/60"
+                      className="border border-white/25 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-white transition hover:border-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
                     >
                       Resume render
                     </button>
@@ -960,7 +960,7 @@ export function AiVideoWorkspace() {
                     <button
                       type="button"
                       onClick={() => void generate()}
-                      className="border border-red-300/20 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-red-200 transition hover:border-red-300/50"
+                      className="border border-red-300/20 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-red-200 transition hover:border-red-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
                     >
                       Start a new take
                     </button>
