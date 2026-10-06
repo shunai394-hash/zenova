@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BRAND_NAME,
   CTA_UPLOAD_IMAGE,
@@ -13,6 +13,7 @@ import {
   VIDEO_CREATE_CTA,
 } from "@/lib/landing/copy";
 import { isValidHttpUrl, uploadProductImage } from "@/lib/landing/upload";
+import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 export function LandingHero() {
   const router = useRouter();
@@ -20,6 +21,10 @@ export function LandingHero() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    trackSalesFunnel("landing_view");
+  }, []);
 
   const submitUrl = () => {
     const trimmed = url.trim();
@@ -32,6 +37,8 @@ export function LandingHero() {
       return;
     }
     setError(null);
+    trackSalesFunnel("cta_click", { mode: "url" });
+    trackSalesFunnel("product_input", { mode: "url" });
     setLoading(true);
     router.push(`/analyze?url=${encodeURIComponent(trimmed)}`);
   };
@@ -39,6 +46,8 @@ export function LandingHero() {
   const onPickImage = async (file: File | null) => {
     if (!file) return;
     setError(null);
+    trackSalesFunnel("cta_click", { mode: "image" });
+    trackSalesFunnel("product_input", { mode: "image" });
     setLoading(true);
     try {
       const result = await uploadProductImage(file);
