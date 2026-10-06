@@ -723,6 +723,7 @@ export function AiVideoWorkspace() {
                       </div>
                     </div>
                   </div>
+                  </div>
                 ) : result ? (
                   <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
                 ) : preview ? (
