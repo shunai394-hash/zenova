@@ -17,14 +17,14 @@ export function LandingBottomCta() {
           <a
             onClick={() => trackSalesFunnel("cta_click", { mode: "bottom" })}
             href="#hero"
-            className="inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black hover:bg-gray-100"
+            className="inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
           >
             {CTA_CREATE_VIDEO}
           </a>
           <Link
             onClick={() => trackSalesFunnel("cta_click", { mode: "products" })}
             href="/products"
-            className="inline-flex rounded-xl border border-zinc-700 px-5 py-3 text-sm font-medium text-gray-200 hover:bg-zinc-800"
+            className="inline-flex rounded-xl border border-zinc-700 px-5 py-3 text-sm font-medium text-gray-200 transition hover:-translate-y-0.5 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
           >
             売れてる商品を見る
           </Link>
