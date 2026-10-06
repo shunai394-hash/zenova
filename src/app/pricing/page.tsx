@@ -159,7 +159,7 @@ export default function PricingPage() {
           </div>
           <Link
             href="/analyze"
-            className="rounded border border-zinc-700 px-3 py-2 text-sm text-gray-300 hover:bg-zinc-900"
+            className="rounded border border-zinc-700 px-3 py-2 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             ← Analyze
           </Link>
@@ -187,13 +187,13 @@ export default function PricingPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               <Link
                 href="/analyze"
-                className="inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-gray-200"
+                className="inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Analyze で動画生成を試す
               </Link>
               <Link
                 href="/video"
-                className="inline-flex rounded-lg border border-white/40 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
+                className="inline-flex rounded-lg border border-white/40 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Video Workspace で試す
               </Link>
@@ -289,7 +289,7 @@ export default function PricingPage() {
                   {plan.id === "free" ? (
                     <Link
                       href="/analyze"
-                      className="mt-6 block w-full rounded border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-gray-200 transition hover:bg-zinc-900"
+                      className="mt-6 block w-full rounded border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-gray-200 transition hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                     >
                       Free で続ける
                     </Link>
@@ -299,8 +299,8 @@ export default function PricingPage() {
                       href={`/checkout?plan=${encodeURIComponent(plan.id)}`}
                       className={`mt-6 block w-full rounded px-4 py-2.5 text-center text-sm font-medium transition ${
                         recommended
-                          ? "bg-white text-black hover:bg-gray-200"
-                          : "border border-zinc-700 text-gray-200 hover:bg-zinc-900"
+                          ? "bg-white text-black hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                          : "border border-zinc-700 text-gray-200 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                       }`}
                     >
                       このプランを選択
