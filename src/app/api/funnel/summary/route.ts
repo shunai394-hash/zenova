@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 const ORDER = [
   "landing_view","cta_click","product_input","analysis_started",
-  "video_generation_started","video_generation_succeeded",
+  "video_generation_started","video_generation_succeeded","video_generation_failed",
   "pricing_view","checkout_started","checkout_succeeded","lead_captured",
 ] as const;
 
