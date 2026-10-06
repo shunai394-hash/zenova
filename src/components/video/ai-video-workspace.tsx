@@ -732,7 +732,7 @@ export function AiVideoWorkspace() {
                   </div>
                   </div>
                 ) : result ? (
-                  <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+                  <video src={result.video_url} controls playsInline aria-label="Generated ZENOVA film" className="h-full w-full object-contain" />
                 ) : preview ? (
                   <>
                     <img src={preview} alt="" className="h-full w-full object-contain opacity-70" />
@@ -935,7 +935,7 @@ export function AiVideoWorkspace() {
   setSound(item.sound);
   setError("");
   setStatus("Take restored. You can direct the next version.");
-}} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
+}} aria-label={"Restore take " + item.duration_sec + " seconds, " + item.aspect_ratio} className="group overflow-hidden border border-white/10 bg-black text-left transition hover:border-white/30"><video src={item.video_url} muted playsInline preload="metadata" className="aspect-video w-full object-cover opacity-70 transition group-hover:opacity-100" /><span className="block px-2 py-2 text-[8px] uppercase tracking-[0.14em] text-zinc-600">{item.duration_sec}s · {item.aspect_ratio}</span></button>)}
               </div>
             </div>
           )}
