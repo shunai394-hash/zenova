@@ -687,7 +687,7 @@ export function AiVideoWorkspace() {
               <span className="text-[9px] uppercase tracking-[0.16em] text-zinc-700">Live output</span>
             </div>
 
-            <div className="mt-6 flex min-h-[420px] items-center justify-center border border-white/10 bg-black p-4">
+            <div aria-busy={rendering} aria-live="polite" className="mt-6 flex min-h-[420px] items-center justify-center border border-white/10 bg-black p-4">
               <div
                 className={`relative flex max-h-[560px] w-full items-center justify-center overflow-hidden bg-[#050505] ${
                   aspectRatio === "9:16"
