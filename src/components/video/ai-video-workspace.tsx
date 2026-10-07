@@ -148,77 +148,77 @@ export function AiVideoWorkspace() {
 
       let transientErrors = 0;
 
-    while (Date.now() < deadline) {
-      let res: Response;
-      let data: Record<string, unknown> = {};
+      while (Date.now() < deadline) {
+        let res: Response;
+        let data: Record<string, unknown> = {};
 
-      try {
-        res = await fetch(
-          `/api/generate-higgsfield-video/status?request_id=${encodeURIComponent(requestId)}&cancel_token=${encodeURIComponent(cancelToken)}`,
-          { credentials: "same-origin", cache: "no-store" }
+        try {
+          res = await fetch(
+            `/api/generate-higgsfield-video/status?request_id=${encodeURIComponent(requestId)}&cancel_token=${encodeURIComponent(cancelToken)}`,
+            { credentials: "same-origin", cache: "no-store" }
+          );
+          data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        } catch {
+          transientErrors += 1;
+          if (transientErrors >= 8) {
+            throw new Error("生成状態の確認に連続して失敗しました。保存したリクエストから再開できます。");
+          }
+          setStatus("生成状態を再確認しています…");
+          await new Promise((resolve) => setTimeout(resolve, Math.min(10000, 2500 * transientErrors)));
+          continue;
+        }
+
+        if (!res.ok && data.status !== "processing") {
+          const retryable = [429, 500, 502, 503, 504].includes(res.status);
+          if (!retryable) {
+            throw new Error(String(data.error || `ステータス取得失敗 (HTTP ${res.status})`));
+          }
+          transientErrors += 1;
+          if (transientErrors >= 8) {
+            throw new Error(String(data.error || "生成状態の確認に連続して失敗しました。保存したリクエストから再開できます。"));
+          }
+          setStatus("生成状態を再確認しています…");
+          await new Promise((resolve) => setTimeout(resolve, Math.min(10000, 2500 * transientErrors)));
+          continue;
+        }
+
+        transientErrors = 0;
+        const current = String(data.status || "processing").toLowerCase();
+
+        if (current === "queued" || current === "processing") {
+          setProviderStatus(current);
+        } else if (current === "completed") {
+          setProviderStatus("completed");
+        } else if (current === "failed" || current === "error" || current === "nsfw" || current === "canceled" || current === "cancelled") {
+          setProviderStatus("failed");
+        }
+
+        if (current === "completed") {
+          if (!data.video_url) throw new Error("動画URLが返りませんでした");
+          return {
+            video_url: String(data.video_url),
+            request_id: requestId,
+            model: meta.model,
+            source_model: meta.source_model,
+            duration_sec: meta.duration_sec,
+            aspect_ratio: meta.aspect_ratio,
+            sound: meta.sound,
+          };
+        }
+
+        if (current === "failed" || current === "error") {
+          // Provider has reached a terminal state; the saved job is no longer resumable.
+          localStorage.removeItem("zenova-video-active-job");
+          throw new Error(String(data.error || "Higgsfieldで動画生成に失敗しました"));
+        }
+
+        setStatus(
+          current === "queued"
+            ? "生成キューに入りました…"
+            : "Higgsfieldで動画を生成しています…"
         );
-        data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      } catch {
-        transientErrors += 1;
-        if (transientErrors >= 8) {
-          throw new Error("生成状態の確認に連続して失敗しました。保存したリクエストから再開できます。");
-        }
-        setStatus("生成状態を再確認しています…");
-        await new Promise((resolve) => setTimeout(resolve, Math.min(10000, 2500 * transientErrors)));
-        continue;
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       }
-
-      if (!res.ok && data.status !== "processing") {
-        const retryable = [429, 500, 502, 503, 504].includes(res.status);
-        if (!retryable) {
-          throw new Error(String(data.error || `ステータス取得失敗 (HTTP ${res.status})`));
-        }
-        transientErrors += 1;
-        if (transientErrors >= 8) {
-          throw new Error(String(data.error || "生成状態の確認に連続して失敗しました。保存したリクエストから再開できます。"));
-        }
-        setStatus("生成状態を再確認しています…");
-        await new Promise((resolve) => setTimeout(resolve, Math.min(10000, 2500 * transientErrors)));
-        continue;
-      }
-
-      transientErrors = 0;
-      const current = String(data.status || "processing").toLowerCase();
-
-      if (current === "queued" || current === "processing") {
-        setProviderStatus(current);
-      } else if (current === "completed") {
-        setProviderStatus("completed");
-      } else if (current === "failed" || current === "error" || current === "nsfw" || current === "canceled" || current === "cancelled") {
-        setProviderStatus("failed");
-      }
-
-      if (current === "completed") {
-        if (!data.video_url) throw new Error("動画URLが返りませんでした");
-        return {
-          video_url: String(data.video_url),
-          request_id: requestId,
-          model: meta.model,
-          source_model: meta.source_model,
-          duration_sec: meta.duration_sec,
-          aspect_ratio: meta.aspect_ratio,
-          sound: meta.sound,
-        };
-      }
-
-      if (current === "failed" || current === "error") {
-        // Provider has reached a terminal state; the saved job is no longer resumable.
-        localStorage.removeItem("zenova-video-active-job");
-        throw new Error(String(data.error || "Higgsfieldで動画生成に失敗しました"));
-      }
-
-      setStatus(
-        current === "queued"
-          ? "生成キューに入りました…"
-          : "Higgsfieldで動画を生成しています…"
-      );
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-    }
 
       throw new Error(
         "生成に時間がかかっています。request_id を保持したまま再試行できる状態です。"
