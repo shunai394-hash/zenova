@@ -144,9 +144,9 @@ export function AiVideoWorkspace() {
       meta: PollMeta,
       cancelToken: string
     ): Promise<Result> => {
-    const deadline = Date.now() + POLL_TIMEOUT_MS;
+      const deadline = Date.now() + POLL_TIMEOUT_MS;
 
-    let transientErrors = 0;
+      let transientErrors = 0;
 
     while (Date.now() < deadline) {
       let res: Response;
