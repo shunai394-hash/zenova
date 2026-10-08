@@ -35,7 +35,7 @@ function DemoCard({
         className="relative block w-full aspect-[9/14] overflow-hidden bg-gradient-to-b from-zinc-800 via-zinc-900 to-black text-left sm:aspect-video"
         aria-label={`${demo.title}をプレビュー`}
       >
-        {demo.thumbnail ? (
+        {demo.thumbnail || demo.videoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={demo.thumbnail}
@@ -160,7 +160,7 @@ function DemoPreviewModal({
               {demo.title}
             </h3>
             <p className="mt-1 text-xs text-gray-400">
-              Zenova AI生成デモ · {demo.duration}
+              Zenova concept · {demo.duration}
             </p>
           </div>
           <button
@@ -177,6 +177,7 @@ function DemoPreviewModal({
         <div className="relative aspect-video bg-black">
           {demo.videoUrl ? (
             <video
+              aria-label={`${demo.title} demo video`}
               key={demo.videoUrl}
               src={demo.videoUrl}
               poster={demo.thumbnail ?? undefined}
@@ -196,10 +197,7 @@ function DemoPreviewModal({
             <div className="flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-black px-6 text-center">
               <PlayIcon className="h-16 w-16 opacity-60" />
               <p className="text-sm text-gray-400">
-                デモ動画は準備中です。ファイル差し替え後に再生されます。
-              </p>
-              <p className="text-xs text-gray-600">
-                例: public/demos/{demo.id.replace("demo-", "")}.mp4
+                このカードは構成プレビューです。生成した実動画はVideo Studioで制作できます。
               </p>
             </div>
           )}
@@ -234,7 +232,7 @@ function DemoPreviewModal({
 
           <Link
             href={buildAnalyzeDemoHref(demo.templateKey)}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-400"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             この構成で動画を作る
           </Link>
