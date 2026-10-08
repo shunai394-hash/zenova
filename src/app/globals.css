@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
-  --background: #050505;
-  --foreground: #ededed;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
 @theme inline {
@@ -13,6 +12,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
 
 html {
   scroll-behavior: smooth;
@@ -21,9 +26,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  font-feature-settings: "ss01" 1, "cv11" 1;
-  text-rendering: optimizeLegibility;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 ::selection {
@@ -34,13 +37,6 @@ body {
 :focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 3px;
-}
-
-@media (pointer: fine) {
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #050505; }
-  ::-webkit-scrollbar-thumb { background: #272727; border: 3px solid #050505; }
-  ::-webkit-scrollbar-thumb:hover { background: #454545; }
 }
 
 @media (prefers-reduced-motion: reduce) {

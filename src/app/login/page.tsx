@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { claimSalesFunnelSession, trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -41,8 +40,6 @@ function LoginForm() {
           },
         });
         if (signUpError) throw signUpError;
-        claimSalesFunnelSession();
-        trackSalesFunnel("lead_captured", { method: "email", stage: "signup" });
         setMessage(
           "確認メールを送信しました。メール内のリンクからログインを完了してください。"
         );
@@ -55,7 +52,6 @@ function LoginForm() {
       });
       if (signInError) throw signInError;
 
-      claimSalesFunnelSession();
       // Cookie セッション確立後にフル遷移（API がセッションを読めるようにする）
       window.location.assign(safeNext);
     } catch (err) {

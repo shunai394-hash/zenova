@@ -1,5 +1,4 @@
 import { SiteHeader } from "@/components/site-header";
-import Link from "next/link";
 import { AiVideoWorkspace } from "@/components/video/ai-video-workspace";
 
 export default function VideoPage() {
@@ -57,16 +56,16 @@ export default function VideoPage() {
             </div>
           </header>
 
-          <div id="studio" className="scroll-mt-24 grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
             <div>
-              <div className="mb-5 flex items-end justify-between gap-4">
+              <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="text-[9px] uppercase tracking-[0.28em] text-zinc-600">Creative console</p>
                   <p className="mt-1 text-xs text-zinc-500">Assets → Direction → Render</p>
                 </div>
-                <Link href="#studio" className="hidden text-[9px] uppercase tracking-[0.2em] text-zinc-500 transition hover:text-white sm:block">
-                  ENTER STUDIO ↘
-                </Link>
+                <span className="hidden text-[9px] uppercase tracking-[0.2em] text-zinc-700 sm:block">
+                  16:9 · 9:16 · 1:1
+                </span>
               </div>
               <AiVideoWorkspace />
             </div>
@@ -91,10 +90,10 @@ export default function VideoPage() {
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                   <div className="flex items-end justify-between">
                     <div>
-                      <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Creative quality</p>
-                      <p className="mt-2 text-lg font-medium tracking-tight">Intent over noise.</p>
+                      <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Quality check</p>
+                      <p className="mt-2 text-lg font-medium tracking-tight">Clarity over clutter.</p>
                     </div>
-                    <span className="text-[10px] tracking-[0.2em] text-zinc-600">QA / 04</span>
+                    <span className="text-[10px] text-zinc-600">∞</span>
                   </div>
                   <div className="mt-5 space-y-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
                     <div className="flex justify-between border-t border-white/5 pt-2"><span>Intent</span><span>01</span></div>

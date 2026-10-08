@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   BRAND_NAME,
   CTA_UPLOAD_IMAGE,
@@ -13,7 +13,6 @@ import {
   VIDEO_CREATE_CTA,
 } from "@/lib/landing/copy";
 import { isValidHttpUrl, uploadProductImage } from "@/lib/landing/upload";
-import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 export function LandingHero() {
   const router = useRouter();
@@ -21,10 +20,6 @@ export function LandingHero() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    trackSalesFunnel("landing_view");
-  }, []);
 
   const submitUrl = () => {
     const trimmed = url.trim();
@@ -37,8 +32,6 @@ export function LandingHero() {
       return;
     }
     setError(null);
-    trackSalesFunnel("cta_click", { mode: "url" });
-    trackSalesFunnel("product_input", { mode: "url" });
     setLoading(true);
     router.push(`/analyze?url=${encodeURIComponent(trimmed)}`);
   };
@@ -46,8 +39,6 @@ export function LandingHero() {
   const onPickImage = async (file: File | null) => {
     if (!file) return;
     setError(null);
-    trackSalesFunnel("cta_click", { mode: "image" });
-    trackSalesFunnel("product_input", { mode: "image" });
     setLoading(true);
     try {
       const result = await uploadProductImage(file);
@@ -72,7 +63,6 @@ export function LandingHero() {
   return (
     <section
       id="hero"
-      aria-busy={loading}
       className="scroll-mt-20 border-b border-zinc-900 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14"
     >
       <div className="mx-auto max-w-3xl text-center">
@@ -102,18 +92,16 @@ export function LandingHero() {
               disabled={loading}
               className="min-h-12 w-full flex-1 rounded-xl bg-black px-4 py-3.5 text-base text-white outline-none ring-1 ring-zinc-700 placeholder:text-gray-500 focus:ring-zinc-400 disabled:opacity-50"
               aria-label="商品URL"
-              aria-describedby={error ? "hero-url-error" : undefined}
-              aria-invalid={error ? true : undefined}
             />
             <button
               type="button"
               onClick={submitUrl}
               disabled={loading}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black outline-none transition hover:-translate-y-0.5 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:shrink-0"
             >
               {loading ? (
                 <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" aria-hidden="true" />
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
                   準備中...
                 </>
               ) : (
@@ -135,7 +123,7 @@ export function LandingHero() {
           </div>
 
           {error && (
-            <p id="hero-url-error" className="mt-3 text-left text-sm text-red-300" role="alert" aria-live="assertive">
+            <p className="mt-3 text-left text-sm text-red-300" role="alert">
               {error}
             </p>
           )}
@@ -160,7 +148,7 @@ export function LandingHero() {
             type="button"
             disabled={loading}
             onClick={() => fileRef.current?.click()}
-            className="min-h-12 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 outline-none transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:opacity-50"
+            className="min-h-12 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm font-medium text-gray-200 transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-50"
           >
             {CTA_UPLOAD_IMAGE}
           </button>
@@ -168,8 +156,7 @@ export function LandingHero() {
             jpg / png / webp ・ 10MBまで
           </p>
 
-          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ" aria-describedby="hero-flow-description">
-            <span id="hero-flow-description" className="sr-only">商品を入力し、ストーリーを作り、映像を生成する3ステップです。</span>
+          <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ">
             {[
               ["01", "INPUT", "商品"],
               ["02", "STORY", "フック・台本"],

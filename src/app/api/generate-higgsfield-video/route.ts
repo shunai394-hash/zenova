@@ -10,7 +10,6 @@ const DEFAULT_MODEL = "bytedance/seedance-2.5/text-to-video";
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
-const MAX_PROMPT_CHARS = 5000;
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
@@ -115,6 +114,8 @@ export async function POST(req: NextRequest) {
       }, { status: 402 });
     }
 
+    recordVideoGenerationAttempt(user.id);
+
     const form = await req.formData();
     const image = form.get("image");
     const video = form.get("video");
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (!prompt) {
       return NextResponse.json({ error: "動画の内容を自然文で入力してください" }, { status: 400 });
     }
-    if (prompt.length > MAX_PROMPT_CHARS) {
+    if (prompt.length > 5000) {
       return NextResponse.json({ error: "プロンプトは 5,000 文字以内で入力してください" }, { status: 400 });
     }
 
@@ -265,9 +266,6 @@ export async function POST(req: NextRequest) {
         resolution: "720p",
       };
     }
-
-    // Count only a validated generation attempt, not malformed input.
-    recordVideoGenerationAttempt(user.id);
 
     const submit = await hfFetch(`/${endpointModel}`, {
       method: "POST",

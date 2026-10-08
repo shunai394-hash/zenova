@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { PlanRecord } from "@/lib/usage";
-import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 
 function formatPrice(price: number): string {
   if (price <= 0) return "¥0";
@@ -25,7 +24,6 @@ function CheckoutContent() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
-    trackSalesFunnel(success ? "checkout_succeeded" : canceled ? "pricing_view" : "checkout_started", { plan_id: planId, result: success ? "success" : canceled ? "canceled" : "view" });
     let cancelled = false;
     void (async () => {
       setLoading(true);
@@ -50,7 +48,7 @@ function CheckoutContent() {
     return () => {
       cancelled = true;
     };
-  }, [canceled, planId, success]);
+  }, []);
 
   const selected = useMemo(
     () => plans.find((p) => p.id === planId) ?? null,
@@ -59,7 +57,6 @@ function CheckoutContent() {
 
   const startCheckout = async () => {
     if (!selected || selected.id === "free") return;
-    trackSalesFunnel("checkout_started", { plan_id: selected.id, stage: "checkout" });
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
@@ -129,7 +126,7 @@ function CheckoutContent() {
         )}
 
         {loading && (
-          <p className="mt-10 text-sm text-gray-500" role="status" aria-live="polite">読み込み中...</p>
+          <p className="mt-10 text-sm text-gray-500">読み込み中...</p>
         )}
 
         {!loading && !planId && (
@@ -153,7 +150,7 @@ function CheckoutContent() {
             </p>
             <Link
               href="/pricing"
-              className="inline-block rounded border border-zinc-700 px-4 py-2 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-block rounded border border-zinc-700 px-4 py-2 text-sm text-gray-300 hover:bg-zinc-900"
             >
               料金プランへ戻る
             </Link>
@@ -195,7 +192,7 @@ function CheckoutContent() {
             </dl>
 
             {checkoutError && (
-              <p className="mt-4 text-sm text-red-300" role="alert" aria-live="assertive">{checkoutError}</p>
+              <p className="mt-4 text-sm text-red-300">{checkoutError}</p>
             )}
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -211,8 +208,7 @@ function CheckoutContent() {
                   type="button"
                   onClick={() => void startCheckout()}
                   disabled={checkoutLoading}
-                  aria-busy={checkoutLoading}
-                  className="rounded bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded bg-white px-4 py-2.5 text-sm font-medium text-black disabled:opacity-40"
                 >
                   {checkoutLoading
                     ? "準備中..."
@@ -221,13 +217,13 @@ function CheckoutContent() {
               )}
               <Link
                 href="/pricing"
-                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900"
               >
                 プランを選び直す
               </Link>
               <Link
                 href="/analyze"
-                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                className="rounded border border-zinc-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-zinc-900"
               >
                 Analyze へ
               </Link>
