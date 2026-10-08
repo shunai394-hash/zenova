@@ -91,16 +91,18 @@ export default function VideoPage() {
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.24em] text-zinc-600">Quality check</p>
-                      <p className="mt-2 text-lg font-medium tracking-tight">Clarity over clutter.</p>
+                      <p className="mt-2 text-lg font-medium tracking-tight">Craft before effects.</p>
                     </div>
                     <span className="text-[10px] text-zinc-600">∞</span>
                   </div>
                   <div className="mt-5 space-y-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Intent</span><span>01</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion</span><span>02</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Sound</span><span>03</span></div>
-                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Next take</span><span>04</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Concept</span><span>01</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Composition</span><span>02</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Motion</span><span>03</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Sound</span><span>04</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2"><span>Brand clarity</span><span>05</span></div>
                   </div>
+                  <p className="mt-4 border-t border-white/5 pt-4 text-[10px] leading-5 text-zinc-700">No invented scores. Each take is judged by the work it actually produces.</p>
                 </div>
               </div>
             </aside>
