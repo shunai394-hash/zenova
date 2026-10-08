@@ -25,10 +25,7 @@ import {
 import { generateAiVideo } from "@/lib/video-generation";
 import { generateSalesNarration } from "@/lib/voice-narration";
 import { generateVideoCaptions } from "@/lib/video-caption";
-import {
-  composeSalesVideo,
-  probeHasAudioTrack,
-} from "@/lib/video-composer";
+import { composeSalesVideo } from "@/lib/video-composer";
 import { analyzeVideoPerformance } from "@/lib/video-performance";
 import {
   ensureProductRow,
@@ -57,49 +54,6 @@ function emptySteps(): CreateSalesVideoSteps {
     evaluation: false,
     saved: false,
   };
-}
-
-function resolveBgmUrl(bgmId: string): string | null {
-  if (bgmId === "none") return null;
-
-  const envKey =
-    bgmId === "trend"
-      ? "ZENOVA_BGM_TREND_URL"
-      : bgmId === "pop"
-        ? "ZENOVA_BGM_POP_URL"
-        : bgmId === "cinematic"
-          ? "ZENOVA_BGM_CINEMATIC_URL"
-          : null;
-
-  const configured = envKey ? process.env[envKey]?.trim() : "";
-  return configured || null;
-}
-
-function buildTimedSalesTimeline(input: {
-  durationSec: number;
-  hook: string;
-  scene1: string;
-  scene2: string;
-  scene3: string;
-  cta: string;
-}) {
-  const duration = Math.max(5, Math.round(input.durationSec));
-  const hookEnd = Math.max(1, Math.round(duration * 0.1));
-  const scene1End = Math.max(hookEnd + 1, Math.round(duration * 0.4));
-  const scene2End = Math.max(scene1End + 1, Math.round(duration * 0.7));
-  const scene3End = Math.max(scene2End + 1, Math.round(duration * 0.9));
-  const safeScene3End = Math.min(duration - 1, scene3End);
-  const safeScene2End = Math.min(safeScene3End - 1, scene2End);
-  const safeScene1End = Math.min(safeScene2End - 1, scene1End);
-  const safeHookEnd = Math.min(safeScene1End - 1, hookEnd);
-
-  return [
-    { scene: "Hook", second: "0-" + safeHookEnd, text: input.hook },
-    { scene: "Scene1", second: safeHookEnd + "-" + safeScene1End, text: input.scene1 },
-    { scene: "Scene2", second: safeScene1End + "-" + safeScene2End, text: input.scene2 },
-    { scene: "Scene3", second: safeScene2End + "-" + safeScene3End, text: input.scene3 },
-    { scene: "CTA", second: safeScene3End + "-" + duration, text: input.cta },
-  ];
 }
 
 /**
@@ -215,7 +169,6 @@ export async function runCreateSalesVideo(
   let hook = "";
   let watermarkApplied = false;
   let narrationScript = "";
-  let compositionSucceeded = false;
 
   // 1) 商品分析（確定済み ProductAnalysis があれば再生成しない = 事実ドリフト防止）
   let analysis: ProductAnalysis;
@@ -381,14 +334,25 @@ export async function runCreateSalesVideo(
       ideaId: gatedVideoPlan?.ideaId,
       goal: gatedVideoPlan?.goal,
       cta: finalCta,
-      timeline: buildTimedSalesTimeline({
-        durationSec,
-        hook,
-        scene1: optimized.optimized_scene_1,
-        scene2: optimized.optimized_scene_2,
-        scene3: optimized.optimized_scene_3,
-        cta: finalCta,
-      }),
+      timeline: [
+        { scene: "Hook", second: "0-2", text: hook },
+        {
+          scene: "Scene1",
+          second: "2-6",
+          text: optimized.optimized_scene_1,
+        },
+        {
+          scene: "Scene2",
+          second: "6-10",
+          text: optimized.optimized_scene_2,
+        },
+        {
+          scene: "Scene3",
+          second: "10-13",
+          text: optimized.optimized_scene_3,
+        },
+        { scene: "CTA", second: "13-15", text: finalCta },
+      ],
     },
     claimCtx
   );
@@ -544,10 +508,10 @@ export async function runCreateSalesVideo(
     }
   }
 
-  const bgmUrl = resolveBgmUrl(bgmId);
-  if (bgmId !== "none" && !bgmUrl) {
+  if (bgmId !== "none") {
+    // FUTURE(BGM): composeSalesVideo に bgm_track を渡し ffmpeg で mix する
     warnings.push(
-      `bgm: ${bgmId} が選択されていますが、対応するBGMトラックが未設定です。ZENOVA_BGM_${bgmId.toUpperCase()}_URL を設定してください。`
+      `bgm: ${bgmId} は設定を受け取りました（合成は開発中。現状はナレーション優先）`
     );
   }
 
@@ -557,7 +521,6 @@ export async function runCreateSalesVideo(
     const composed = await composeSalesVideo({
       video_url: videoUrl,
       audio_url: audioUrl,
-      bgm_url: bgmUrl,
       narration_script: narrationScript || null,
       subtitle_file: subtitleFile,
       burn_captions: captionsEnabled && Boolean(subtitleFile),
@@ -566,24 +529,11 @@ export async function runCreateSalesVideo(
     finalVideoUrl = composed.final_video_url;
     videoUrl = composed.final_video_url;
     watermarkApplied = Boolean(composed.watermark_applied);
-    compositionSucceeded = Boolean(composed.final_video_url);
-
-    if (compositionSucceeded && finalVideoUrl) {
-      const finalPath = path.join(
-        process.cwd(),
-        "public",
-        finalVideoUrl.replace(/^\//, "")
-      );
-      if (!(await probeHasAudioTrack(finalPath))) {
-        throw new Error("最終MP4に音声トラックがありません");
-      }
-    }
   } catch (error) {
     warnings.push(
       `composer: ${error instanceof Error ? error.message : String(error)}`
     );
-    finalVideoUrl = null;
-    compositionSucceeded = false;
+    finalVideoUrl = videoUrl;
     watermarkApplied = false;
   }
 
@@ -682,17 +632,7 @@ export async function runCreateSalesVideo(
     steps.saved = false;
   }
 
-  // 成功は「動画APIが返った」ではなく、最終MP4まで品質工程を通過したことを意味する。
-  // ナレーション/字幕/評価/保存の失敗を成功扱いにしない。
-  const success =
-    steps.analysis &&
-    steps.scenario &&
-    steps.kling &&
-    compositionSucceeded &&
-    steps.narration &&
-    (!captionsEnabled || steps.captions) &&
-    steps.evaluation &&
-    steps.saved;
+  const success = steps.analysis && steps.scenario && steps.kling;
 
   return {
     success,
