@@ -70,33 +70,39 @@ export function AiVideoWorkspace() {
 
   useEffect(() => {
     if (!supportsSound && sound) {
-      setSound(false);
-      setBgm(false);
-      setNarration(false);
-      setSfx(false);
+      queueMicrotask(() => {
+        setSound(false);
+        setBgm(false);
+        setNarration(false);
+        setSfx(false);
+      });
       return;
     }
     if (!sound) {
-      setBgm(false);
-      setNarration(false);
-      setSfx(false);
+      queueMicrotask(() => {
+        setBgm(false);
+        setNarration(false);
+        setSfx(false);
+      });
     }
   }, [sound, supportsSound]);
 
   useEffect(() => {
     if (!video) {
-      setVideoPreview(null);
+      queueMicrotask(() => setVideoPreview(null));
       return;
     }
     const url = URL.createObjectURL(video);
-    setVideoPreview(url);
+    queueMicrotask(() => setVideoPreview(url));
     return () => URL.revokeObjectURL(url);
   }, [video]);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("zenova-video-history") || "[]");
-      if (Array.isArray(saved)) setHistory(saved.slice(0, 6));
+      if (Array.isArray(saved)) {
+        queueMicrotask(() => setHistory(saved.slice(0, 6)));
+      }
     } catch {
       localStorage.removeItem("zenova-video-history");
     }
@@ -104,7 +110,7 @@ export function AiVideoWorkspace() {
 
   useEffect(() => {
     if (!startedAt) {
-      setElapsed(0);
+      queueMicrotask(() => setElapsed(0));
       return;
     }
     const tick = () => setElapsed(Date.now() - startedAt);
@@ -115,11 +121,11 @@ export function AiVideoWorkspace() {
 
   useEffect(() => {
     if (!image) {
-      setPreview(null);
+      queueMicrotask(() => setPreview(null));
       return;
     }
     const url = URL.createObjectURL(image);
-    setPreview(url);
+    queueMicrotask(() => setPreview(url));
     return () => URL.revokeObjectURL(url);
   }, [image]);
 
@@ -255,13 +261,15 @@ export function AiVideoWorkspace() {
         return;
       }
 
-      setRecovering(true);
-      setIsGenerating(true);
-      setProviderStatus("processing");
-      setStartedAt(Number(job.startedAt) || Date.now());
-      setActiveRequestId(job.requestId);
-      setActiveCancelToken(job.cancelToken);
-      setStatus("前回の生成を復元しています…");
+      queueMicrotask(() => {
+        setRecovering(true);
+        setIsGenerating(true);
+        setProviderStatus("processing");
+        setStartedAt(Number(job.startedAt) || Date.now());
+        setActiveRequestId(job.requestId!);
+        setActiveCancelToken(job.cancelToken!);
+        setStatus("前回の生成を復元しています…");
+      });
 
       void pollVideo(
         job.requestId,
