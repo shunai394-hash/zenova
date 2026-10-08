@@ -8,7 +8,6 @@ export {
   getFfmpegPath,
   mergeVideoWithAudio,
   probeDurationSec,
-  probeHasAudioTrack,
   runFfmpeg,
   stillImageToVerticalVideo,
   toFfmpegSubtitleFilterPath,
