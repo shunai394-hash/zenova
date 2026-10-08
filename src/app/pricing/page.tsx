@@ -248,10 +248,12 @@ export default function PricingPage() {
                   </div>
 
                   {blurb && (
-                    <p className="mt-2 text-sm text-gray-400">{blurb}</p>
+                    <>
+                      <p className="mt-2 text-sm text-gray-400">{blurb}</p>
                     <p className="mt-4 border-l border-white/15 pl-3 text-xs leading-5 text-gray-500">
                       {plan.id === "free" ? "企画を試してから、必要なときだけ生成へ。" : plan.id === "starter" ? "まず販売動画を継続的に作る人へ。" : "複数商品の制作を止めずに回したい人へ。"}
                     </p>
+                    </>
                   )}
 
                   <p className="mt-5">
