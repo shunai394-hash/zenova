@@ -79,7 +79,6 @@ import {
 } from "@/lib/analyze/recommend-settings";
 import { resolveSampleTemplateKey } from "@/lib/landing/sample-videos";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { trackSalesFunnel } from "@/lib/sales-funnel/client";
 import {
   buildApiProductName,
   buildApiTarget,
@@ -218,36 +217,9 @@ async function fetchProductFromUrl(url: string): Promise<{
   productName?: string;
   description?: string;
   target?: string;
-  imageUrl?: string | null;
-}> {
-  const res = await fetch("/api/parse-product-url", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  const data = await res.json();
-  if (!res.ok || data?.success === false) {
-    throw new Error(
-      typeof data?.error === "string"
-        ? data.error
-        : "商品ページを解析できませんでした"
-    );
-  }
-  return {
-    productName:
-      typeof data?.product?.productName === "string"
-        ? data.product.productName
-        : undefined,
-    description:
-      typeof data?.product?.description === "string"
-        ? data.product.description
-        : undefined,
-    imageUrl:
-      typeof data?.product?.imageUrl === "string"
-        ? data.product.imageUrl
-        : null,
-  };
+} | null> {
+  void url;
+  return null;
 }
 
 function AnalysisList({
@@ -446,10 +418,10 @@ export default function Home() {
   const [salesVideoHook, setSalesVideoHook] = useState<string | null>(null);
   const [salesVideoAngle, setSalesVideoAngle] = useState<string | null>(null);
   const [salesVideoError, setSalesVideoError] = useState<string | null>(null);
-  const [salesVideoWarnings, setSalesVideoWarnings] = useState<string[]>([]);
   const [enginePrepMessage, setEnginePrepMessage] = useState<string | null>(
     null
   );
+  const [salesVideoProgressIndex, setSalesVideoProgressIndex] = useState(0);
   const [salesVideoDownloading, setSalesVideoDownloading] = useState(false);
   const [usageRefreshToken, setUsageRefreshToken] = useState(0);
 
@@ -551,6 +523,17 @@ export default function Home() {
   useEffect(() => {
     void refreshDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (!salesVideoLoading) return;
+    setSalesVideoProgressIndex(0);
+    const timer = window.setInterval(() => {
+      setSalesVideoProgressIndex((prev) =>
+        Math.min(prev + 1, SALES_VIDEO_STEPS.length - 1)
+      );
+    }, 12000);
+    return () => window.clearInterval(timer);
+  }, [salesVideoLoading]);
 
   useEffect(() => {
     return () => {
@@ -821,8 +804,8 @@ export default function Home() {
     setSalesVideoHook(null);
     setSalesVideoAngle(null);
     setSalesVideoError(null);
-    setSalesVideoWarnings([]);
     setSalesVideoSteps(EMPTY_SALES_VIDEO_STEPS);
+    setSalesVideoProgressIndex(0);
     setGenerationStatus("idle");
   };
 
@@ -1214,26 +1197,12 @@ export default function Home() {
         if (remote.productName) setProductName(remote.productName);
         if (remote.description) setDescription(remote.description);
         if (remote.target) setTarget(remote.target);
-        if (remote.imageUrl) {
-          if (productImagePreview?.startsWith("blob:")) {
-            URL.revokeObjectURL(productImagePreview);
-          }
-          setProductImage(null);
-          setProductImagePreview(remote.imageUrl);
-        }
-        const found = [
-          remote.productName ? "商品名" : null,
-          remote.description ? "説明" : null,
-          remote.imageUrl ? "商品画像" : null,
-        ].filter(Boolean);
-        setUrlHint(
-          found.length > 0
-            ? `商品URLから取得: ${found.join("・")}`
-            : "URLは取得できましたが、商品情報を自動取得できませんでした。"
-        );
+        setUrlHint("商品URLから情報を取得しました");
         markInputDirty();
       } else {
-        setUrlHint("URLは取得できましたが、商品情報を自動取得できませんでした。");
+        setUrlHint(
+          "URLを保存しました。商品ページ解析APIは未接続のため、商品名・説明は手動入力してください。"
+        );
       }
     } catch (err) {
       setUrlError(
@@ -1699,7 +1668,6 @@ export default function Home() {
       const imageBase64 = await blobToBase64(sourceBlob);
 
       const creative = planBriefToCreativePayload(effectiveBrief);
-      trackSalesFunnel("analysis_started", { platform, has_product_url: Boolean(productUrl), has_image: Boolean(productImagePreview) });
       const res = await fetch("/api/create-sales-video", {
         method: "POST",
         credentials: "same-origin",
@@ -1774,36 +1742,8 @@ export default function Home() {
         );
       }
 
-      // 進捗表示は経過時間で推測せず、生成APIが返した実測ステップだけを反映する。
-      // これにより「まだKling中なのにナレーション完了」のような誤表示を防ぐ。
-      if (data?.steps && typeof data.steps === "object") {
-        setSalesVideoSteps({
-          analysis: Boolean(data.steps.analysis),
-          scenario: Boolean(data.steps.scenario),
-          kling: Boolean(data.steps.kling),
-          narration: Boolean(data.steps.narration),
-          captions: Boolean(data.steps.captions),
-          evaluation: Boolean(data.steps.evaluation),
-          saved: Boolean(data.steps.saved),
-        });
-      }
-      setSalesVideoWarnings(
-        Array.isArray(data?.warnings)
-          ? data.warnings.filter((item: unknown): item is string => typeof item === "string")
-          : []
-      );
-
       if (typeof data.video_url === "string" && data.video_url) {
         setSalesVideoUrl(data.video_url);
-      }
-      if (typeof data.score === "number") {
-        setSalesVideoScore(data.score);
-      }
-      if (typeof data.hook === "string" && data.hook) {
-        setSalesVideoHook(data.hook);
-      }
-      if (typeof data.selling_angle === "string" && data.selling_angle) {
-        setSalesVideoAngle(data.selling_angle);
       }
       setUsageRefreshToken((n) => n + 1);
     } catch (gateErr) {
@@ -1885,7 +1825,6 @@ export default function Home() {
               <input
                 id="product-url"
                 type="url"
-                maxLength={2048}
                 value={productUrl}
                 onChange={(e) => {
                   setProductUrl(e.target.value);
@@ -1930,7 +1869,6 @@ export default function Home() {
             <input
               id="product"
               type="text"
-              maxLength={200}
               value={productName}
               onChange={(e) => {
                 setProductName(e.target.value);
@@ -1952,7 +1890,6 @@ export default function Home() {
             <textarea
               id="description"
               rows={5}
-              maxLength={5000}
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
@@ -2011,7 +1948,6 @@ export default function Home() {
             <input
               id="target"
               type="text"
-              maxLength={300}
               value={target}
               onChange={(e) => {
                 setTarget(e.target.value);
@@ -2235,7 +2171,6 @@ export default function Home() {
                         </label>
                         <textarea
                           rows={2}
-                          maxLength={1000}
                           value={perfNotes}
                           onChange={(e) => setPerfNotes(e.target.value)}
                           disabled={busy}
@@ -2351,8 +2286,6 @@ export default function Home() {
             {/* STEP 4: 動画生成開始 → 生成中 → 完成 → ダウンロード */}
             <div
               id="generate-video"
-              aria-busy={salesVideoLoading}
-              aria-live="polite"
               className="scroll-mt-24 rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6"
             >
               <div className="flex items-center gap-2">
@@ -2367,7 +2300,7 @@ export default function Home() {
                       : "AI生成"}
                 </h2>
               </div>
-              <p className="mt-2 text-sm text-gray-400" aria-live="polite">
+              <p className="mt-2 text-sm text-gray-400">
                 {generatePhase === "generating"
                   ? "商品特徴の分析から映像生成まで進行中です。このままお待ちください"
                   : generatePhase === "complete"
@@ -2400,13 +2333,17 @@ export default function Home() {
               />
 
               {(generatePhase === "complete" || salesVideoError) && (
-                <div className="mt-6 rounded-xl border border-zinc-800 bg-black/40 p-4" aria-live="polite">
+                <div className="mt-6 rounded-xl border border-zinc-800 bg-black/40 p-4">
                   <h3 className="text-sm font-medium text-gray-300">
                     {generatePhase === "complete" ? "生成結果" : "生成進捗"}
                   </h3>
                   <ul className="mt-3 space-y-2">
-                    {SALES_VIDEO_STEPS.map((step) => {
+                    {SALES_VIDEO_STEPS.map((step, index) => {
                       const done = salesVideoSteps[step.key];
+                      const running =
+                        salesVideoLoading &&
+                        !done &&
+                        index === salesVideoProgressIndex;
                       return (
                         <li
                           key={step.key}
@@ -2417,29 +2354,20 @@ export default function Home() {
                             className={
                               done
                                 ? "text-emerald-400"
-                                : "text-gray-600"
+                                : running
+                                  ? "text-amber-300"
+                                  : "text-gray-600"
                             }
                           >
-                            {done ? "完了" : salesVideoLoading ? "処理中" : "未完了"}
+                            {done ? "完了" : running ? "進行中..." : "待機"}
                           </span>
                         </li>
                       );
                     })}
                   </ul>
 
-                  {salesVideoWarnings.length > 0 && (
-                    <div className="mt-4 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3" role="status" aria-live="polite">
-                      <p className="text-xs font-medium text-amber-200">生成時の注意</p>
-                      <ul className="mt-2 space-y-1 text-xs text-amber-300">
-                        {salesVideoWarnings.map((warning) => (
-                          <li key={warning}>・{warning}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
                   {salesVideoError && (
-                    <p className="mt-4 text-sm text-red-300" role="alert" aria-live="assertive">
+                    <p className="mt-4 text-sm text-red-300">
                       {salesVideoError}
                     </p>
                   )}
@@ -2456,7 +2384,7 @@ export default function Home() {
                   </p>
                   <Link
                     href="/preview"
-                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    className="inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-gray-200"
                   >
                     動画プレビュー画面を開く
                   </Link>
@@ -2483,7 +2411,6 @@ export default function Home() {
                     src={salesVideoUrl}
                     controls
                     playsInline
-                    aria-label="生成された販売動画"
                     className="w-full max-w-md rounded border border-zinc-800 bg-black"
                   />
                   <button
@@ -2510,7 +2437,7 @@ export default function Home() {
                         }
                       })();
                     }}
-                    className="w-full rounded-xl bg-white px-5 py-4 text-base font-semibold text-black transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-40"
+                    className="w-full rounded-xl bg-white px-5 py-4 text-base font-semibold text-black hover:bg-gray-100 disabled:opacity-40"
                   >
                     {salesVideoDownloading
                       ? "ダウンロード中..."
@@ -2520,7 +2447,7 @@ export default function Home() {
                     type="button"
                     onClick={() => void createSalesVideo()}
                     disabled={!canCreateSalesVideo}
-                    className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-gray-300 transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-40"
+                    className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-gray-300 hover:bg-zinc-800 disabled:opacity-40"
                   >
                     もう一度生成する
                   </button>
