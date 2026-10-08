@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BRAND_NAME, NAV_LINKS } from "@/lib/landing/copy";
 import { AuthAccountStatus } from "@/components/auth-account-status";
 
@@ -16,52 +16,31 @@ function loginNextFromPath(pathname: string | null): string {
   return pathname;
 }
 
-function isActiveLink(pathname: string | null, href: string): boolean {
-  if (!pathname) return false;
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const loginNext = loginNextFromPath(pathname);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-xl supports-[backdrop-filter]:bg-black/65">
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
+    <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/90 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white outline-none transition-opacity hover:opacity-75 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          aria-label={`${BRAND_NAME} home`}
+          className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white"
         >
           {BRAND_NAME}
         </Link>
 
-        <nav aria-label="Primary navigation" className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => {
-            const active = isActiveLink(pathname, link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={active ? "page" : undefined}
-                className={[
-                  "relative rounded px-3 py-2 text-sm outline-none transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                  active ? "text-white" : "text-zinc-500 hover:text-white",
-                  "after:absolute after:inset-x-3 after:bottom-0 after:h-px after:origin-left after:transition-transform",
-                  active ? "after:scale-x-100 after:bg-white" : "after:scale-x-0 after:bg-white/60 hover:after:scale-x-100",
-                ].join(" ")}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="hidden items-center gap-5 text-sm text-gray-400 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded px-2 py-2 transition hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="hidden md:block">
@@ -70,10 +49,9 @@ export function SiteHeader() {
 
         <button
           type="button"
-          className="min-h-11 rounded-lg border border-white/10 px-3 text-xs text-zinc-300 outline-none transition hover:border-white/30 hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black md:hidden"
+          className="min-h-11 rounded-lg border border-zinc-700 px-3 text-xs text-gray-300 transition hover:border-zinc-500 md:hidden"
           aria-expanded={open}
-          aria-controls="mobile-primary-navigation"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label="メニュー"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "閉じる" : "メニュー"}
@@ -81,34 +59,23 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-primary-navigation" aria-label="Mobile navigation" className="border-t border-white/10 bg-black/95 px-4 py-4 md:hidden">
-          <div className="mx-auto max-w-[1440px]">
-            <div className="mb-4 border-b border-white/10 pb-4">
-              <AuthAccountStatus loginNext={loginNext} />
-            </div>
-            <ul className="space-y-1">
-              {NAV_LINKS.map((link) => {
-                const active = isActiveLink(pathname, link.href);
-                return (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      aria-current={active ? "page" : undefined}
-                      className={[
-                        "flex min-h-11 items-center justify-between rounded-lg px-3 py-3 text-sm outline-none transition",
-                        "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                        active ? "bg-white text-black" : "text-zinc-300 hover:bg-white/5 hover:text-white",
-                      ].join(" ")}
-                      onClick={() => setOpen(false)}
-                    >
-                      <span>{link.label}</span>
-                      {active && <span aria-hidden className="text-[9px] uppercase tracking-[0.18em]">Current</span>}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+        <nav className="border-t border-zinc-900 px-4 py-3 md:hidden">
+          <div className="mb-3 border-b border-zinc-900 pb-3">
+            <AuthAccountStatus loginNext={loginNext} />
           </div>
+          <ul className="space-y-2">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="block rounded-lg px-3 py-2.5 text-sm text-gray-200 hover:bg-zinc-900"
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </nav>
       )}
     </header>
