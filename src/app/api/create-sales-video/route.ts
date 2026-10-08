@@ -12,7 +12,6 @@ import {
   VIDEO_RATE_LIMIT_ERROR,
 } from "@/lib/billing/plans";
 import { requireAuthUser } from "@/lib/auth/session";
-import { trackGenerationFunnel } from "@/lib/sales-funnel/server";
 import {
   checkVideoLimit,
   consumeVideoUsage,
@@ -79,7 +78,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const image = String(body.image ?? body.image_base64 ?? "");
     const userId = user.id;
-    void trackGenerationFunnel({ userId, event: "video_generation_started" });
 
     const limit = await checkVideoLimit(userId, { email: user.email });
     if (!limit.allowed) {
@@ -233,7 +231,6 @@ export async function POST(req: NextRequest) {
 
     // 成功かつ generated_videos 保存時のみカウント（失敗はカウントしない）
     if (result.success && result.steps?.saved) {
-      void trackGenerationFunnel({ userId, event: "video_generation_succeeded", metadata: { video_id: result.video_id, score: result.score } });
       const consumed = await consumeVideoUsage(
         userId,
         {
@@ -251,10 +248,6 @@ export async function POST(req: NextRequest) {
           consumed.error
         );
       }
-    }
-
-    if (!result.success) {
-      void trackGenerationFunnel({ userId, event: "video_generation_failed", metadata: { warnings: result.warnings ?? [] } });
     }
 
     console.log(
