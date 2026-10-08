@@ -26,7 +26,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white"
+          aria-label={`${BRAND_NAME} ホーム`} className="shrink-0 rounded px-1 py-2 text-sm font-semibold tracking-[0.18em] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >
           {BRAND_NAME}
         </Link>
@@ -36,7 +36,8 @@ export function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded px-2 py-2 transition hover:text-white"
+              aria-current={pathname === link.href ? "page" : undefined}
+              className={`rounded px-2 py-2 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${pathname === link.href ? "text-white" : ""}`}
             >
               {link.label}
             </Link>
@@ -49,7 +50,7 @@ export function SiteHeader() {
 
         <button
           type="button"
-          className="min-h-11 rounded-lg border border-zinc-700 px-3 text-xs text-gray-300 transition hover:border-zinc-500 md:hidden"
+          className="min-h-11 rounded-lg border border-zinc-700 px-3 text-xs text-gray-300 transition hover:border-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:hidden"
           aria-expanded={open}
           aria-label="メニュー"
           onClick={() => setOpen((v) => !v)}
@@ -68,7 +69,8 @@ export function SiteHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="block rounded-lg px-3 py-2.5 text-sm text-gray-200 hover:bg-zinc-900"
+                  aria-current={pathname === link.href ? "page" : undefined}
+                  className={`block rounded-lg px-3 py-2.5 text-sm text-gray-200 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${pathname === link.href ? "bg-zinc-900 text-white" : ""}`}
                   onClick={() => setOpen(false)}
                 >
                   {link.label}

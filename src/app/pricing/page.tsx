@@ -156,7 +156,7 @@ export default function PricingPage() {
           </div>
           <Link
             href="/analyze"
-            className="rounded border border-zinc-700 px-3 py-2 text-sm text-gray-300 hover:bg-zinc-900"
+            className="rounded border border-zinc-700 px-3 py-2 text-sm text-gray-300 transition hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             ← Analyze
           </Link>
@@ -199,7 +199,7 @@ export default function PricingPage() {
         )}
 
         {warning && (
-          <p className="mt-6 text-sm text-amber-300/90">
+          <p role="alert" className="mt-6 text-sm text-amber-300/90">
             {warning}
             {plans.length === 0
               ? "（Supabase の plans テーブルを確認してください）"
@@ -208,7 +208,7 @@ export default function PricingPage() {
         )}
 
         {loading && (
-          <p className="mt-10 text-sm text-gray-500">プランを読み込み中...</p>
+          <p aria-live="polite" className="mt-10 text-sm text-gray-500">プランを読み込み中...</p>
         )}
 
         {!loading && plans.length === 0 && (
@@ -248,7 +248,12 @@ export default function PricingPage() {
                   </div>
 
                   {blurb && (
-                    <p className="mt-2 text-sm text-gray-400">{blurb}</p>
+                    <>
+                      <p className="mt-2 text-sm text-gray-400">{blurb}</p>
+                    <p className="mt-4 border-l border-white/15 pl-3 text-xs leading-5 text-gray-500">
+                      {plan.id === "free" ? "企画を試してから、必要なときだけ生成へ。" : plan.id === "starter" ? "まず販売動画を継続的に作る人へ。" : "複数商品の制作を止めずに回したい人へ。"}
+                    </p>
+                    </>
                   )}
 
                   <p className="mt-5">
@@ -286,14 +291,14 @@ export default function PricingPage() {
                   {plan.id === "free" ? (
                     <Link
                       href="/analyze"
-                      className="mt-6 block w-full rounded border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-gray-200 transition hover:bg-zinc-900"
+                      className="mt-6 block w-full rounded border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-gray-200 transition hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                     >
                       Free で続ける
                     </Link>
                   ) : (
                     <Link
                       href={`/checkout?plan=${encodeURIComponent(plan.id)}`}
-                      className={`mt-6 block w-full rounded px-4 py-2.5 text-center text-sm font-medium transition ${
+                      className={`mt-6 block w-full rounded px-4 py-2.5 text-center text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
                         recommended
                           ? "bg-white text-black hover:bg-gray-200"
                           : "border border-zinc-700 text-gray-200 hover:bg-zinc-900"
