@@ -181,24 +181,24 @@ function HistoryContent() {
       </header>
 
       {warning && (
-        <p className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-sm text-amber-200">
+        <p role="status" aria-live="polite" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-sm text-amber-200">
           {warning}
         </p>
       )}
       {error && (
-        <p className="mb-4 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+        <p role="alert" aria-live="assertive" className="mb-4 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
           {error}
         </p>
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-500">読み込み中...</p>
+        <p aria-live="polite" className="text-sm text-gray-500">読み込み中...</p>
       ) : videos.length === 0 ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center">
           <p className="text-sm text-gray-400">まだ生成動画がありません</p>
           <Link
             href="/analyze"
-            className="mt-4 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black"
+            className="mt-4 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             動画を作る
           </Link>
