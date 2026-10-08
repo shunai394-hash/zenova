@@ -21,7 +21,6 @@ export const metadata: Metadata = {
     description:
       "画像でも、言葉でも。アイデアをそのまま映像へ。",
   },
-  themeColor: "#050505",
   twitter: {
     card: "summary_large_image",
     title: "ZENOVA — AI Video Studio",
