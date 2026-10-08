@@ -38,7 +38,7 @@ function DemoCard({
         {demo.thumbnail || demo.videoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={demo.thumbnail}
+            src={demo.thumbnail ?? undefined}
             alt={demo.title}
             loading="lazy"
             decoding="async"
