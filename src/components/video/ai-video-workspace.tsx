@@ -495,7 +495,10 @@ export function AiVideoWorkspace() {
               <span className="pt-1 text-[9px] uppercase tracking-[0.18em] text-zinc-600">{prompt.length}/5000</span>
             </div>
 
+            <label htmlFor="zenova-video-prompt" className="sr-only">映像の演出指示</label>
             <textarea
+              id="zenova-video-prompt"
+              aria-describedby="zenova-video-prompt-help"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={8}
@@ -505,7 +508,7 @@ export function AiVideoWorkspace() {
             />
 
             <div className="mt-3 flex items-center justify-between gap-4 text-[9px] uppercase tracking-[0.16em] text-zinc-700">
-              <span>Natural language direction</span>
+              <span id="zenova-video-prompt-help">Natural language direction</span>
               <span className="hidden sm:inline">Camera · Light · Pace · Mood · Story</span>
             </div>
           </section>
@@ -550,6 +553,7 @@ export function AiVideoWorkspace() {
                         <button
                           type="button"
                           onClick={() => void cancelGeneration()}
+                          aria-label="動画生成をキャンセル"
                           className="mt-3 border border-white/15 px-3 py-2 text-[9px] uppercase tracking-[0.16em] text-zinc-500 transition hover:border-white/40 hover:text-white"
                         >
                           Cancel render
@@ -558,7 +562,7 @@ export function AiVideoWorkspace() {
                     </div>
                   </div>
                 ) : result ? (
-                  <video src={result.video_url} controls playsInline className="h-full w-full object-contain" />
+                  <video src={result.video_url} controls playsInline preload="metadata" aria-label="生成された動画" className="h-full w-full object-contain" />
                 ) : preview ? (
                   <>
                     <img src={preview} alt="" className="h-full w-full object-contain opacity-70" />
@@ -659,13 +663,13 @@ export function AiVideoWorkspace() {
               </label>
 
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4" aria-label="Sound direction">
-                <button type="button" disabled={!sound} onClick={() => setBgm((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} onClick={() => setBgm((value) => !value)} aria-pressed={bgm} aria-label={`BGM ${bgm ? "オン" : "オフ"}`} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${bgm ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   BGM
                 </button>
-                <button type="button" disabled={!sound} onClick={() => setNarration((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} onClick={() => setNarration((value) => !value)} aria-pressed={narration} aria-label={`ナレーション ${narration ? "オン" : "オフ"}`} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${narration ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   Narration
                 </button>
-                <button type="button" disabled={!sound} onClick={() => setSfx((value) => !value)} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
+                <button type="button" disabled={!sound} onClick={() => setSfx((value) => !value)} aria-pressed={sfx} aria-label={`効果音 ${sfx ? "オン" : "オフ"}`} className={`border px-2 py-3 text-[9px] uppercase tracking-[0.12em] transition ${sfx ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-600"} disabled:cursor-not-allowed disabled:opacity-30`}>
                   SFX
                 </button>
               </div>
@@ -730,7 +734,7 @@ export function AiVideoWorkspace() {
           )}
 
           {error && (
-            <div role="alert" className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
+            <div role="alert" aria-live="assertive" className="mt-4 border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-300">
               <div>{error}</div>
               {!rendering && (
                 <button

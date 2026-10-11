@@ -28,41 +28,46 @@ function DemoCard({
   onOpen: (demo: DemoCompositionItem) => void;
 }) {
   return (
-    <article className="group overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 transition duration-300 hover:scale-[1.02] hover:border-zinc-600">
+    <article className="group overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 transition duration-300 hover:scale-[1.02] hover:border-zinc-600 motion-reduce:transform-none motion-reduce:transition-none">
       <button
         type="button"
         onClick={() => onOpen(demo)}
-        className="relative block w-full aspect-[9/14] overflow-hidden bg-gradient-to-b from-zinc-800 via-zinc-900 to-black text-left sm:aspect-video"
+        className="relative block aspect-[9/14] w-full overflow-hidden bg-gradient-to-b from-zinc-800 via-zinc-900 to-black text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white sm:aspect-video"
         aria-label={`${demo.title}をプレビュー`}
       >
         {demo.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={demo.thumbnail}
-            alt={demo.title}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            alt={`${demo.title}の動画サムネイル`}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transition-none"
           />
         ) : (
           <div
             className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b ${demo.accent} px-4 text-center`}
           >
             <span className="rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-medium tracking-wide text-emerald-300">
-              AI生成デモ
+              {demo.videoUrl ? "動画プレビュー" : "AI生成デモ構成"}
             </span>
             <span className="text-sm font-medium text-gray-200">
               {demo.title}
             </span>
-            <span className="text-[10px] tracking-[0.2em] text-gray-600">
+            <span className="text-[10px] tracking-[0.2em] text-gray-400">
               ZENOVA ORIGINAL
             </span>
           </div>
         )}
 
-        <div className="absolute inset-0 flex items-center justify-center opacity-90 transition group-hover:opacity-100">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-90 transition group-hover:opacity-100 motion-reduce:transition-none"
+        >
           <PlayIcon className="h-14 w-14" />
         </div>
 
-        <span className="absolute bottom-3 right-3 rounded bg-black/70 px-2 py-0.5 text-[11px] font-medium text-gray-200">
+        <span className="absolute bottom-3 right-3 rounded bg-black/80 px-2 py-1 text-[11px] font-medium text-gray-100">
           {demo.duration}
         </span>
       </button>
@@ -77,13 +82,13 @@ function DemoCard({
         <button
           type="button"
           onClick={() => onOpen(demo)}
-          className="w-full rounded-xl border border-zinc-700 px-3 py-2 text-xs text-gray-200 transition hover:bg-zinc-800"
+          className="w-full rounded-xl border border-zinc-700 px-3 py-2.5 text-xs text-gray-200 transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white motion-reduce:transition-none"
         >
           プレビューを見る
         </button>
         <Link
           href={buildAnalyzeDemoHref(demo.templateKey)}
-          className="inline-flex w-full items-center justify-center rounded-xl bg-white px-3 py-2.5 text-center text-xs font-semibold text-black transition hover:bg-gray-200"
+          className="inline-flex w-full items-center justify-center rounded-xl bg-white px-3 py-3 text-center text-xs font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white motion-reduce:transition-none"
         >
           この構成で動画を作る
         </Link>
@@ -104,7 +109,10 @@ function DemoPreviewModal({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -133,8 +141,11 @@ function DemoPreviewModal({
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const focusFrame = window.requestAnimationFrame(() =>
+      closeButtonRef.current?.focus()
+    );
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
       previouslyFocused?.focus();
@@ -160,14 +171,14 @@ function DemoPreviewModal({
               {demo.title}
             </h3>
             <p className="mt-1 text-xs text-gray-400">
-              Zenova AI生成デモ · {demo.duration}
+              Zenova concept · {demo.duration}
             </p>
           </div>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-zinc-700 px-2.5 py-1 text-sm text-gray-300 hover:bg-zinc-800"
+            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-gray-300 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label="閉じる"
           >
             ×
@@ -177,29 +188,32 @@ function DemoPreviewModal({
         <div className="relative aspect-video bg-black">
           {demo.videoUrl ? (
             <video
+              aria-label={`${demo.title} demo video`}
               key={demo.videoUrl}
               src={demo.videoUrl}
               poster={demo.thumbnail ?? undefined}
               controls
               playsInline
               autoPlay
+              preload="metadata"
               className="h-full w-full object-contain"
             />
           ) : demo.thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={demo.thumbnail}
-              alt={demo.title}
+              alt={`${demo.title}のプレビュー`}
+              decoding="async"
               className="h-full w-full object-contain"
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-black px-6 text-center">
+            <div className={`flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br ${demo.accent} px-6 text-center`}>
               <PlayIcon className="h-16 w-16 opacity-60" />
-              <p className="text-sm text-gray-400">
-                デモ動画は準備中です。ファイル差し替え後に再生されます。
+              <p className="text-sm font-medium text-white">
+                {demo.title} — 動画構成プレビュー
               </p>
-              <p className="text-xs text-gray-600">
-                例: public/demos/{demo.id.replace("demo-", "")}.mp4
+              <p className="max-w-md text-sm leading-relaxed text-gray-400">
+                これは実動画ではなく構成サンプルです。各カットの流れを確認し、この構成を使って動画制作を開始できます。
               </p>
             </div>
           )}
@@ -207,7 +221,7 @@ function DemoPreviewModal({
 
         <div className="space-y-4 border-t border-zinc-800 px-4 py-4 sm:px-5">
           <div>
-            <p className="text-xs font-medium text-gray-500">
+            <p className="text-xs font-medium text-gray-400">
               Zenovaオリジナル構成
             </p>
             <ol className="mt-3 space-y-2">
@@ -234,7 +248,7 @@ function DemoPreviewModal({
 
           <Link
             href={buildAnalyzeDemoHref(demo.templateKey)}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-400"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none"
           >
             この構成で動画を作る
           </Link>
@@ -252,10 +266,16 @@ export function LandingSampleVideos() {
   const [active, setActive] = useState<DemoCompositionItem | null>(null);
 
   return (
-    <section className="border-y border-zinc-900 bg-zinc-950/40 px-4 py-16 sm:px-6 sm:py-20">
+    <section
+      aria-labelledby="landing-samples-title"
+      className="border-y border-zinc-900 bg-zinc-950/40 px-4 py-16 sm:px-6 sm:py-20"
+    >
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2
+            id="landing-samples-title"
+            className="text-2xl font-bold tracking-tight sm:text-3xl"
+          >
             {DEMO_SECTION_TITLE}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-gray-400 sm:text-base">
@@ -271,7 +291,10 @@ export function LandingSampleVideos() {
       </div>
 
       {active && (
-        <DemoPreviewModal demo={active} onClose={() => setActive(null)} />
+        <DemoPreviewModal
+          demo={active}
+          onClose={() => setActive(null)}
+        />
       )}
     </section>
   );

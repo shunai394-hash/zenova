@@ -20,6 +20,7 @@ export function LandingHero() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   const submitUrl = () => {
     const trimmed = url.trim();
@@ -122,6 +123,8 @@ export function LandingHero() {
             </p>
           </div>
 
+          <p className="sr-only" aria-live="polite">{loading ? "動画制作の準備をしています" : "入力待機中"}</p>
+
           {error && (
             <p className="mt-3 text-left text-sm text-red-300" role="alert">
               {error}
@@ -132,6 +135,25 @@ export function LandingHero() {
             <div className="h-px flex-1 bg-zinc-800" />
             <span>または</span>
             <div className="h-px flex-1 bg-zinc-800" />
+          </div>
+
+          <div
+            className={[
+              "mt-5 rounded-xl border border-dashed px-4 py-5 text-center transition",
+              dragActive ? "border-white/60 bg-white/[0.06]" : "border-zinc-800 bg-black/30 hover:border-zinc-600",
+            ].join(" ")}
+            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragActive(false);
+              void onPickImage(e.dataTransfer.files?.[0] ?? null);
+            }}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+              {dragActive ? "Drop to start" : "Or drop your product image"}
+            </p>
+            <p className="mt-1 text-xs text-zinc-600">JPG / PNG / WebP · 10MB</p>
           </div>
 
           <input
@@ -155,6 +177,25 @@ export function LandingHero() {
           <p className="mt-2 text-left text-xs text-gray-600">
             jpg / png / webp ・ 10MBまで
           </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800 sm:grid-cols-4" aria-label="ZENOVA workflow highlights">
+            {[
+              ["01", "INPUT", "URL / image"],
+              ["02", "STORY", "Hook + script"],
+              ["03", "MOTION", "AI video"],
+              ["04", "READY", "Post-ready take"],
+            ].map(([step, label, detail]) => (
+              <div key={label} className="bg-black/70 px-3 py-3 text-left">
+                <p className="font-mono text-[9px] tracking-[0.18em] text-zinc-600">{step}</p>
+                <p className="mt-1 text-[10px] font-semibold tracking-[0.14em] text-zinc-300">{label}</p>
+                <p className="mt-1 text-[10px] text-zinc-600">{detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[9px] uppercase tracking-[0.18em] text-zinc-600">
+            <span>Product-first</span><span>AI-directed</span><span>Sound-aware</span><span>Mobile-ready</span>
+          </div>
 
           <div className="mt-6 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-5" aria-label="動画生成の流れ">
             {[
