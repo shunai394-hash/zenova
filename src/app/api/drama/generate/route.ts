@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json", Accept: "application/json", ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
       body: JSON.stringify({
         video_subject: `${title} / ${genre}`, video_script: script, video_terms: terms,
-        video_aspect: "portrait", video_fit_mode: "cover", image_motion: "zoom",
-        video_concat_mode: "sequential", video_transition_mode: "none",
+        video_aspect: "9:16", video_fit_mode: "cover", image_motion: "zoom",
+        video_concat_mode: "sequential", video_transition_mode: null,
         video_clip_duration: 5, video_clip_speed: 1, video_count: 1,
         match_materials_to_script: true, video_source: source, video_language: "ja-JP",
         voice_name: "ja-JP-NanamiNeural", voice_volume: 1, voice_rate: 1,
