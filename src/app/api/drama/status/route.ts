@@ -9,12 +9,15 @@ export async function GET() {
 
   try {
     const apiKey = process.env.MPT_API_KEY?.trim();
-    const response = await fetch(`${base}/ping`, {
-      headers: { Accept: "text/plain", ...(apiKey ? { "x-api-key": apiKey } : {}) },
+    const response = await fetch(`${base}/api/v1/tasks?page=1&page_size=1`, {
+      headers: { Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) },
       cache: "no-store",
       signal: AbortSignal.timeout(7000),
     });
-    const payload = await response.json().catch(() => ({}));\n    if (!response.ok || payload.status !== 200) return NextResponse.json({ ready: false, message: `MoneyPrinterTurboに接続できません（HTTP ${response.status}）。APIキーも確認してください。` });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.status !== 200) {
+      return NextResponse.json({ ready: false, message: `MoneyPrinterTurboに接続できません（HTTP ${response.status}）。APIキーも確認してください。` });
+    }
   } catch {
     return NextResponse.json({ ready: false, message: "MoneyPrinterTurbo APIに接続できません。API URLとネットワーク設定を確認してください。" });
   }
