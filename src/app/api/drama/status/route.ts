@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const apiKey = process.env.MPT_API_KEY?.trim();
     const response = await fetch(`${base}/api/v1/tasks?page=1&page_size=1`, {
-      headers: { Accept: "application/json", ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+      headers: { Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) },
       cache: "no-store",
       signal: AbortSignal.timeout(7000),
     });
