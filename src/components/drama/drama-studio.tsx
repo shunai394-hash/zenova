@@ -85,7 +85,7 @@ export function DramaStudio() {
       const response = await fetch("/api/drama/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, genre, script, keywords, clip_clip_duration_sec: Number(clipDuration), captions_on: captions, materials }),
+        body: JSON.stringify({ title, genre, script, keywords, clip_duration_sec: Number(clipDuration), captions_on: captions, materials }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "動画生成を開始できませんでした");
