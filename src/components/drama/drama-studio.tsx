@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 
 type Job = { taskId: string; state: number; progress: number; videos: string[]; error?: string | null };
@@ -22,7 +22,7 @@ export function DramaStudio() {
   const [error, setError] = useState("");
   const scriptLength = useMemo(() => script.trim().length, [script]);
 
-  async function checkConnection() {
+  useEffect(() => {\n    let cancelled = false;\n    fetch("/api/drama/status", { cache: "no-store" })\n      .then(async (response) => response.json())\n      .then((data) => {\n        if (cancelled) return;\n        setStatus(data.ready ? "ready" : "missing");\n        setStatusMessage(data.message || "動画生成エンジンの設定を確認してください");\n      })\n      .catch(() => {\n        if (cancelled) return;\n        setStatus("error");\n        setStatusMessage("接続状態を確認できません");\n      });\n    return () => { cancelled = true; };\n  }, []);\n\n  async function checkConnection() {
     setStatus("checking");
     setStatusMessage("MoneyPrinterTurboへの接続を確認中");
     try {
