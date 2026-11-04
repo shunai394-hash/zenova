@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.MPT_API_KEY?.trim();
     const response = await fetch(`${base}/api/v1/videos`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json", ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) },
       body: JSON.stringify({
         video_subject: `${title} / ${genre}`, video_script: script, video_terms: terms,
         video_aspect: "9:16", video_fit_mode: "cover", image_motion: "zoom",
