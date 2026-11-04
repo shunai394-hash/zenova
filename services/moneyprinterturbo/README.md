@@ -31,6 +31,23 @@ Set these server-side environment variables in the Zenova deployment:
 
 Do not put the MPT key in a NEXT_PUBLIC_* variable.
 
+## Deploy to Cloud Run with Cloud Build
+
+One-time setup (replace PROJECT_ID with the Google Cloud project ID):
+
+    gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com
+    gcloud artifacts repositories create zenova --repository-format=docker --location=asia-northeast1
+    openssl rand -hex 32
+    printf '%s' 'PASTE_THE_GENERATED_SECRET' | gcloud secrets create MPT_API_KEY --data-file=-
+
+Grant the Cloud Run runtime service account access to the MPT_API_KEY secret (Secret Manager Secret Accessor). Grant the Cloud Build service account Artifact Registry Writer, Cloud Run Admin, and Service Account User permissions.
+
+Then, from the Zenova repository root:
+
+    gcloud builds submit --config services/moneyprinterturbo/cloudbuild.yaml .
+
+The build deploys a service named zenova-moneyprinterturbo in asia-northeast1. Copy its HTTPS service URL into Zenova's server-side MPT_API_URL. Set the same MPT_API_KEY in Zenova's server-side environment variables, then set MPT_VIDEO_SOURCE=local and MPT_VIDEO_SOURCE_IS_FREE=true for the no-external-provider workflow.
+
 ## Google Cloud Run notes
 
 Build from the repository root and point Cloud Build at this Dockerfile. Deploy the resulting image to Cloud Run with:
