@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const source = process.env.MPT_VIDEO_SOURCE?.trim();
   const markedFree = process.env.MPT_VIDEO_SOURCE_IS_FREE === "true";
   if (!base || !source) return NextResponse.json({ error: "MoneyPrinterTurboまたは動画プロバイダーが未設定です。生成は開始していません。" }, { status: 503 });
-  if (!markedFree || /metaso|minimax|kling|luma|muapi|runway|sora|hailuo/i.test(source)) return NextResponse.json({ error: "選択中の動画プロバイダーは有料、または無料と確認できないため、課金防止のため生成を停止しました。" }, { status: 409 });
+  if (!markedFree || (/metaso|minimax|kling|luma|muapi|runway|sora|hailuo|pexels|pixabay/i.test(source) || source.toLowerCase() === "local")) return NextResponse.json({ error: "選択中の動画プロバイダーは有料、または無料と確認できないため、課金防止のため生成を停止しました。" }, { status: 409 });
 
   try {
     const input = await request.json();
