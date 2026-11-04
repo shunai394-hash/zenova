@@ -9,7 +9,7 @@ export async function GET() {
   const markedFree = process.env.MPT_VIDEO_SOURCE_IS_FREE === "true";
   if (!base) return NextResponse.json({ ready: false, message: "MoneyPrinterTurbo API URL が未設定です。制作エンジンの接続先を設定する必要があります。" });
   if (!source) return NextResponse.json({ ready: false, message: "動画素材プロバイダーが未設定です。Pexelsには自動で切り替えません。" });
-  if (!markedFree || /metaso|minimax|kling|luma|muapi|runway|sora|hailuo/i.test(source)) return NextResponse.json({ ready: false, message: "選択中の動画プロバイダーは有料、または無料と確認できません。課金防止のため生成を停止しています。" });
+  if (!markedFree || (/metaso|minimax|kling|luma|muapi|runway|sora|hailuo|pexels|pixabay/i.test(source) || source.toLowerCase() === "local")) return NextResponse.json({ ready: false, message: "選択中の動画プロバイダーは有料、または無料と確認できません。課金防止のため生成を停止しています。" });
 
   try {
     const apiKey = process.env.MPT_API_KEY?.trim();
