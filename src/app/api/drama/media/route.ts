@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const apiKey = process.env.MPT_API_KEY?.trim();
     const upstream = await fetch(`${base}/${normalized.split("/").map(encodeURIComponent).join("/")}`, {
-      headers: { ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+      headers: { ...(apiKey ? { "x-api-key": apiKey } : {}) },
       cache: "no-store", signal: AbortSignal.timeout(30000),
     });
     if (!upstream.ok || !upstream.body) return new Response("Media unavailable", { status: upstream.status || 502 });
