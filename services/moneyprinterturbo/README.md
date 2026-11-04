@@ -33,14 +33,18 @@ Do not put the MPT key in a NEXT_PUBLIC_* variable.
 
 ## Deploy to Cloud Run with Cloud Build
 
-One-time setup (replace PROJECT_ID with the Google Cloud project ID):
+One-time setup (run in PowerShell; replace PROJECT_ID with the Google Cloud project ID):
 
     gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com
     gcloud artifacts repositories create zenova --repository-format=docker --location=asia-northeast1
-    openssl rand -hex 32
-    printf '%s' 'PASTE_THE_GENERATED_SECRET' | gcloud secrets create MPT_API_KEY --data-file=-
+    $bytes = New-Object byte[] 32
+    [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $MPT_API_KEY = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
+    Set-Content -NoNewline -Path .\mpt-api-key.txt -Value $MPT_API_KEY
+    gcloud secrets create MPT_API_KEY --data-file=.\mpt-api-key.txt
+    Remove-Item .\mpt-api-key.txt
 
-Grant the Cloud Run runtime service account access to the MPT_API_KEY secret (Secret Manager Secret Accessor). Grant the Cloud Build service account Artifact Registry Writer, Cloud Run Admin, and Service Account User permissions.
+Grant the Cloud Run runtime service account Secret Manager Secret Accessor. Grant the Cloud Build service account Artifact Registry Writer, Cloud Run Admin, and Service Account User permissions.
 
 Then, from the Zenova repository root:
 
