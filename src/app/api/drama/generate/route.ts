@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const genre = safeText(input.genre, 80);
     const script = safeText(input.script, 12000);
     const terms = safeText(input.keywords, 2000).split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean).slice(0, 30);
+    const clipDuration = Math.min(15, Math.max(1, Number(input.clip_duration_sec) || 5));
     if (!title || !script || !terms.length) return NextResponse.json({ error: "作品タイトル、シナリオ、シーンキーワードを入力してください。" }, { status: 400 });
 
     const apiKey = process.env.MPT_API_KEY?.trim();
