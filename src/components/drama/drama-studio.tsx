@@ -158,8 +158,8 @@ export function DramaStudio() {
                 <label className="mt-5 block text-xs text-zinc-400">シーン・映像キーワード（カンマ区切り）<textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm leading-6 text-white outline-none focus:border-violet-400" /></label>
                 <div className="mt-4 rounded-xl border border-white/10 bg-black/50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div><p className="text-xs font-medium text-zinc-200">映像素材を追加</p><p className="mt-1 text-[11px] text-zinc-500">MP4・MOV・WEBM・画像など、合計100MB以下／1ファイル</p></div>
-                    <label className="cursor-pointer rounded-lg border border-white/15 px-4 py-2 text-xs text-zinc-200 hover:bg-white/5">{uploading ? "アップロード中…" : "ファイルを選択"}<input type="file" multiple accept="video/*,image/jpeg,image/png,image/webp" disabled={uploading} onChange={(event) => { uploadMaterials(event.currentTarget.files); event.currentTarget.value = ""; }} className="hidden" /></label>
+                    <div><p className="text-xs font-medium text-zinc-200">映像素材を追加</p><p className="mt-1 text-[11px] text-zinc-500">動画は200MB以下、画像は20MB以下／1ファイル</p></div>
+                    <label className="cursor-pointer rounded-lg border border-white/15 px-4 py-2 text-xs text-zinc-200 hover:bg-white/5">{uploading ? "アップロード中…" : "ファイルを選択"}<input type="file" multiple accept=".mp4,.mov,.avi,.flv,.mkv,.webm,.jpg,.jpeg,.png,.bmp" disabled={uploading} onChange={(event) => { uploadMaterials(event.currentTarget.files); event.currentTarget.value = ""; }} className="hidden" /></label>
                   </div>
                   <p className="mt-3 text-[11px] text-zinc-400">アップロード済み：{materials.length}ファイル</p>
                   {materials.length > 0 && <ul className="mt-2 space-y-1 text-[11px] text-emerald-200">{materials.map((item) => <li key={item}>✓ {item}</li>)}</ul>}
