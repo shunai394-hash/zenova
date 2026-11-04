@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ZENOVA — Short Drama Studio",
   description:
-    "画像でも、言葉でも。Higgsfieldの生成モデルで、アイデアをそのまま映像へ。",
+    "ショートドラマの脚本、シーン設計、音声、字幕、縦型動画制作をまとめるスタジオ。",
   openGraph: {
     title: "ZENOVA — Short Drama Studio",
     description:
-      "画像でも、言葉でも。アイデアをそのまま映像へ。",
+      "ショートドラマの脚本から縦型動画までを制作。",
   },
   twitter: {
     card: "summary_large_image",
