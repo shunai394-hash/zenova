@@ -22,7 +22,24 @@ export function DramaStudio() {
   const [error, setError] = useState("");
   const scriptLength = useMemo(() => script.trim().length, [script]);
 
-  useEffect(() => {\n    let cancelled = false;\n    fetch("/api/drama/status", { cache: "no-store" })\n      .then(async (response) => response.json())\n      .then((data) => {\n        if (cancelled) return;\n        setStatus(data.ready ? "ready" : "missing");\n        setStatusMessage(data.message || "動画生成エンジンの設定を確認してください");\n      })\n      .catch(() => {\n        if (cancelled) return;\n        setStatus("error");\n        setStatusMessage("接続状態を確認できません");\n      });\n    return () => { cancelled = true; };\n  }, []);\n\n  async function checkConnection() {
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/drama/status", { cache: "no-store" })
+      .then(async (response) => response.json())
+      .then((data) => {
+        if (cancelled) return;
+        setStatus(data.ready ? "ready" : "missing");
+        setStatusMessage(data.message || "動画生成エンジンの設定を確認してください");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStatus("error");
+        setStatusMessage("接続状態を確認できません");
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function checkConnection() {
     setStatus("checking");
     setStatusMessage("MoneyPrinterTurboへの接続を確認中");
     try {
