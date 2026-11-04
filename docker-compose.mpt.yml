@@ -1,0 +1,17 @@
+services:
+  moneyprinterturbo:
+    build:
+      context: .
+      dockerfile: services/moneyprinterturbo/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      MPT_HOME: /data
+      MPT_API_KEY: ${MPT_API_KEY:?Set MPT_API_KEY in your shell}
+    volumes:
+      - mpt-data:/data
+    restart: unless-stopped
+
+volumes:
+  mpt-data:

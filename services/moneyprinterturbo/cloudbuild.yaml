@@ -1,0 +1,53 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - services/moneyprinterturbo/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/moneyprinterturbo:$SHORT_SHA
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/moneyprinterturbo:$SHORT_SHA
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/moneyprinterturbo:$SHORT_SHA
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --cpu
+      - "2"
+      - --memory
+      - 4Gi
+      - --concurrency
+      - "1"
+      - --min
+      - "1"
+      - --max
+      - "1"
+      - --timeout
+      - "3600"
+      - --no-cpu-throttling
+      - --set-env-vars
+      - MPT_HOME=/data,PORT=8080
+      - --set-secrets
+      - MPT_API_KEY=MPT_API_KEY:latest
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/moneyprinterturbo:$SHORT_SHA
+substitutions:
+  _REGION: asia-northeast1
+  _REPOSITORY: zenova
+  _SERVICE: zenova-moneyprinterturbo
+options:
+  logging: CLOUD_LOGGING_ONLY
