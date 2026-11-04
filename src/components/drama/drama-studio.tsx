@@ -13,7 +13,7 @@ export function DramaStudio() {
   const [genre, setGenre] = useState("恋愛・ミステリー");
   const [script, setScript] = useState(initialScript);
   const [keywords, setKeywords] = useState("深夜の寝室, 光るスマートフォン, 雨の駅, 無人のホーム, 窓の外の人影");
-  const [duration, setDuration] = useState("30");
+  const [clipDuration, setClipDuration] = useState("5");
   const [captions, setCaptions] = useState(true);
   const [status, setStatus] = useState<"checking" | "ready" | "missing" | "error">("checking");
   const [statusMessage, setStatusMessage] = useState("制作エンジンの接続を確認しています");
@@ -61,7 +61,7 @@ export function DramaStudio() {
       const response = await fetch("/api/drama/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, genre, script, keywords, duration_sec: Number(duration), captions_on: captions }),
+        body: JSON.stringify({ title, genre, script, keywords, clip_duration_sec: Number(clipDuration), captions_on: captions }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "動画生成を開始できませんでした");
@@ -133,10 +133,10 @@ export function DramaStudio() {
                 <p className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">02 / Visual direction</p><h2 className="mt-2 text-xl font-semibold">映像素材・編集設定</h2>
                 <label className="mt-5 block text-xs text-zinc-400">シーン・映像キーワード（カンマ区切り）<textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm leading-6 text-white outline-none focus:border-violet-400" /></label>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <label className="block text-xs text-zinc-400">完成尺<select value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white"><option value="15">約15秒</option><option value="30">約30秒</option><option value="45">約45秒</option><option value="60">約60秒</option></select></label>
+                  <label className="block text-xs text-zinc-400">映像素材1カットの長さ<select value={clipDuration} onChange={(e) => setClipDuration(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white"><option value="3">3秒</option><option value="5">5秒</option><option value="8">8秒</option><option value="10">10秒</option><option value="15">15秒</option></select></label>
                   <label className="flex items-center gap-3 self-end rounded-xl border border-white/10 bg-black px-4 py-3 text-xs text-zinc-300"><input type="checkbox" checked={captions} onChange={(e) => setCaptions(e.target.checked)} className="h-4 w-4 accent-violet-400" />日本語字幕を焼き込む</label>
                 </div>
-                <div className="mt-5 rounded-xl border border-white/10 bg-black/50 p-4 text-xs leading-6 text-zinc-500">出力形式：縦型 9:16 ／ 1080×1920 ／ 1本ずつ生成。動画素材プロバイダーはサーバー側で固定し、Pexelsへの意図しない切り替えを防ぎます。</div>
+                <div className="mt-5 rounded-xl border border-white/10 bg-black/50 p-4 text-xs leading-6 text-zinc-500">出力形式：縦型 9:16 ／ 1080×1920 ／ 1本ずつ生成。完成尺はナレーション原稿の長さで決まり、ここでは素材1カットの長さを指定します。Pexelsへの意図しない切り替えは行いません。</div>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
