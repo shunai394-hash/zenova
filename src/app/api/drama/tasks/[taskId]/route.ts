@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ ta
   try {
     const apiKey = process.env.MPT_API_KEY?.trim();
     const response = await fetch(`${base}/api/v1/tasks/${encodeURIComponent(taskId)}`, {
-      headers: { Accept: "application/json", ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+      headers: { Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) },
       cache: "no-store", signal: AbortSignal.timeout(10000),
     });
     const payload = await response.json().catch(() => ({}));
