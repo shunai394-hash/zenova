@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
     const imageFile = /[.](jpg|jpeg|png|bmp)$/i.test(file.name);
     const videoFile = /[.](mp4|mov|avi|flv|mkv|webm)$/i.test(file.name);
     if (!imageFile && !videoFile) return NextResponse.json({ error: "対応形式はMP4、MOV、AVI、FLV、MKV、WEBM、JPG、PNG、BMPです。" }, { status: 400 });
-    const maxBytes = imageFile ? 20 * 1024 * 1024 : 200 * 1024 * 1024;
-    if (file.size > maxBytes) return NextResponse.json({ error: imageFile ? "画像は20MB以下にしてください。" : "動画は200MB以下にしてください。" }, { status: 413 });
+    if (file.size > 4 * 1024 * 1024) return NextResponse.json({ error: "現在のWebアップロード経路では1ファイル4MB以下にしてください。" }, { status: 413 });
 
     const body = new FormData();
     body.append("file", file, file.name);
